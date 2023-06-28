@@ -34,7 +34,6 @@ import static org.apache.camel.util.ObjectHelper.notNull;
 /**
  * A helper class for working with predicates
  */
-//CHECKSTYLE:OFF
 public class PredicateBuilder {
     /**
      * Converts the given expression into an {@link Predicate}
@@ -90,8 +89,8 @@ public class PredicateBuilder {
     }
 
     /**
-     * A helper method to combine two predicates by a logical OR.
-     * If you want to combine multiple predicates see {@link #in(Predicate...)}
+     * A helper method to combine two predicates by a logical OR. If you want to combine multiple predicates see
+     * {@link #in(Predicate...)}
      */
     public static Predicate or(final Predicate left, final Predicate right) {
         notNull(left, "left");
@@ -115,11 +114,10 @@ public class PredicateBuilder {
     }
 
     /**
-     * Concat the given predicates into a single predicate, which matches
-     * if at least one predicates matches.
+     * Concat the given predicates into a single predicate, which matches if at least one predicates matches.
      *
-     * @param predicates predicates
-     * @return a single predicate containing all the predicates
+     * @param  predicates predicates
+     * @return            a single predicate containing all the predicates
      */
     public static Predicate or(List<Predicate> predicates) {
         Predicate answer = null;
@@ -134,11 +132,10 @@ public class PredicateBuilder {
     }
 
     /**
-     * Concat the given predicates into a single predicate, which matches
-     * if at least one predicates matches.
+     * Concat the given predicates into a single predicate, which matches if at least one predicates matches.
      *
-     * @param predicates predicates
-     * @return a single predicate containing all the predicates
+     * @param  predicates predicates
+     * @return            a single predicate containing all the predicates
      */
     public static Predicate or(Predicate... predicates) {
         return or(Arrays.asList(predicates));
@@ -459,24 +456,22 @@ public class PredicateBuilder {
     }
 
     /**
-     * Returns a predicate which is true if the expression matches the given
-     * regular expression
+     * Returns a predicate which is true if the expression matches the given regular expression
      *
-     * @param expression the expression to evaluate
-     * @param regex the regular expression to match against
-     * @return a new predicate
+     * @param  expression the expression to evaluate
+     * @param  regex      the regular expression to match against
+     * @return            a new predicate
      */
     public static Predicate regex(final Expression expression, final String regex) {
         return regex(expression, Pattern.compile(regex));
     }
 
     /**
-     * Returns a predicate which is true if the expression matches the given
-     * regular expression
+     * Returns a predicate which is true if the expression matches the given regular expression
      *
-     * @param expression the expression to evaluate
-     * @param pattern the regular expression to match against
-     * @return a new predicate
+     * @param  expression the expression to evaluate
+     * @param  pattern    the regular expression to match against
+     * @return            a new predicate
      */
     public static Predicate regex(final Expression expression, final Pattern pattern) {
         notNull(expression, "expression");
@@ -505,11 +500,10 @@ public class PredicateBuilder {
     }
 
     /**
-     * Concat the given predicates into a single predicate, which
-     * only matches if all the predicates matches.
+     * Concat the given predicates into a single predicate, which only matches if all the predicates matches.
      *
-     * @param predicates predicates
-     * @return a single predicate containing all the predicates
+     * @param  predicates predicates
+     * @return            a single predicate containing all the predicates
      */
     public static Predicate and(List<Predicate> predicates) {
         Predicate answer = null;
@@ -524,11 +518,10 @@ public class PredicateBuilder {
     }
 
     /**
-     * Concat the given predicates into a single predicate, which only matches
-     * if all the predicates matches.
+     * Concat the given predicates into a single predicate, which only matches if all the predicates matches.
      *
-     * @param predicates predicates
-     * @return a single predicate containing all the predicates
+     * @param  predicates predicates
+     * @return            a single predicate containing all the predicates
      */
     public static Predicate and(Predicate... predicates) {
         return and(Arrays.asList(predicates));
@@ -537,8 +530,8 @@ public class PredicateBuilder {
     /**
      * A constant predicate.
      *
-     * @param answer the constant matches
-     * @return a predicate that always returns the given answer.
+     * @param  answer the constant matches
+     * @return        a predicate that always returns the given answer.
      */
     public static Predicate constant(final boolean answer) {
         return new Predicate() {

@@ -596,6 +596,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "bean", type = "array:org.apache.camel.model.app.RegistryBeanDefinition"),
                     @YamlProperty(name = "component-scan", type = "array:org.apache.camel.model.app.ComponentScanDefinition"),
                     @YamlProperty(name = "rest", type = "array:org.apache.camel.model.rest.RestDefinition"),
+                    @YamlProperty(name = "rest-configuration", type = "array:org.apache.camel.model.rest.RestConfigurationDefinition"),
                     @YamlProperty(name = "route", type = "array:org.apache.camel.model.RouteDefinition"),
                     @YamlProperty(name = "route-configuration", type = "array:org.apache.camel.model.RouteConfigurationDefinition"),
                     @YamlProperty(name = "route-template", type = "array:org.apache.camel.model.RouteTemplateDefinition"),
@@ -624,6 +625,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "component-scan": {
                     java.util.List<org.apache.camel.model.app.ComponentScanDefinition> val = asFlatList(node, org.apache.camel.model.app.ComponentScanDefinition.class);
                     target.setComponentScanning(val);
+                    break;
+                }
+                case "rest-configuration": {
+                    java.util.List<org.apache.camel.model.rest.RestConfigurationDefinition> val = asFlatList(node, org.apache.camel.model.rest.RestConfigurationDefinition.class);
+                    target.setRestConfigurations(val);
                     break;
                 }
                 case "rest": {
@@ -1203,6 +1209,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "bean", type = "array:org.apache.camel.model.app.RegistryBeanDefinition"),
                     @YamlProperty(name = "component-scan", type = "array:org.apache.camel.model.app.ComponentScanDefinition"),
                     @YamlProperty(name = "rest", type = "array:org.apache.camel.model.rest.RestDefinition"),
+                    @YamlProperty(name = "rest-configuration", type = "array:org.apache.camel.model.rest.RestConfigurationDefinition"),
                     @YamlProperty(name = "route", type = "array:org.apache.camel.model.RouteDefinition"),
                     @YamlProperty(name = "route-configuration", type = "array:org.apache.camel.model.RouteConfigurationDefinition"),
                     @YamlProperty(name = "route-template", type = "array:org.apache.camel.model.RouteTemplateDefinition"),
@@ -1231,6 +1238,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "component-scan": {
                     java.util.List<org.apache.camel.model.app.ComponentScanDefinition> val = asFlatList(node, org.apache.camel.model.app.ComponentScanDefinition.class);
                     target.setComponentScanning(val);
+                    break;
+                }
+                case "rest-configuration": {
+                    java.util.List<org.apache.camel.model.rest.RestConfigurationDefinition> val = asFlatList(node, org.apache.camel.model.rest.RestConfigurationDefinition.class);
+                    target.setRestConfigurations(val);
                     break;
                 }
                 case "rest": {
@@ -8825,6 +8837,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "steps", type = "array:org.apache.camel.model.ProcessorDefinition"),
                     @YamlProperty(name = "stop-on-exception", type = "boolean"),
                     @YamlProperty(name = "streaming", type = "boolean"),
+                    @YamlProperty(name = "synchronous", type = "boolean"),
                     @YamlProperty(name = "timeout", type = "string")
             }
     )
@@ -8900,6 +8913,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "streaming": {
                     String val = asText(node);
                     target.setStreaming(val);
+                    break;
+                }
+                case "synchronous": {
+                    String val = asText(node);
+                    target.setSynchronous(val);
                     break;
                 }
                 case "timeout": {
@@ -11361,6 +11379,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "share-unit-of-work", type = "boolean"),
                     @YamlProperty(name = "stop-on-exception", type = "boolean"),
                     @YamlProperty(name = "streaming", type = "boolean"),
+                    @YamlProperty(name = "synchronous", type = "boolean"),
                     @YamlProperty(name = "timeout", type = "string")
             }
     )
@@ -11456,6 +11475,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "streaming": {
                     String val = asText(node);
                     target.setStreaming(val);
+                    break;
+                }
+                case "synchronous": {
+                    String val = asText(node);
+                    target.setSynchronous(val);
                     break;
                 }
                 case "timeout": {
@@ -12608,6 +12632,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
         }
     }
 
+    @YamlIn
     @YamlType(
             nodes = {
                     "rest-configuration",
@@ -15376,6 +15401,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "steps", type = "array:org.apache.camel.model.ProcessorDefinition"),
                     @YamlProperty(name = "stop-on-exception", type = "boolean"),
                     @YamlProperty(name = "streaming", type = "boolean"),
+                    @YamlProperty(name = "synchronous", type = "boolean"),
                     @YamlProperty(name = "timeout", type = "string")
             }
     )
@@ -15461,6 +15487,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "streaming": {
                     String val = asText(node);
                     target.setStreaming(val);
+                    break;
+                }
+                case "synchronous": {
+                    String val = asText(node);
+                    target.setSynchronous(val);
                     break;
                 }
                 case "timeout": {

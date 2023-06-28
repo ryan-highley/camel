@@ -1459,6 +1459,9 @@
           "streaming" : {
             "type" : "boolean"
           },
+          "synchronous" : {
+            "type" : "boolean"
+          },
           "timeout" : {
             "type" : "string"
           }
@@ -1922,6 +1925,9 @@
             "type" : "boolean"
           },
           "streaming" : {
+            "type" : "boolean"
+          },
+          "synchronous" : {
             "type" : "boolean"
           },
           "timeout" : {
@@ -2852,6 +2858,9 @@
           "streaming" : {
             "type" : "boolean"
           },
+          "synchronous" : {
+            "type" : "boolean"
+          },
           "timeout" : {
             "type" : "string"
           }
@@ -3582,6 +3591,12 @@
               "$ref" : "#/items/definitions/org.apache.camel.model.rest.RestDefinition"
             }
           },
+          "restConfiguration" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/items/definitions/org.apache.camel.model.rest.RestConfigurationDefinition"
+            }
+          },
           "route" : {
             "type" : "array",
             "items" : {
@@ -3652,6 +3667,12 @@
             "type" : "array",
             "items" : {
               "$ref" : "#/items/definitions/org.apache.camel.model.rest.RestDefinition"
+            }
+          },
+          "restConfiguration" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/items/definitions/org.apache.camel.model.rest.RestConfigurationDefinition"
             }
           },
           "route" : {
@@ -8151,6 +8172,9 @@
       },
       "templatedRoute" : {
         "$ref" : "#/items/definitions/org.apache.camel.model.TemplatedRouteDefinition"
+      },
+      "restConfiguration" : {
+        "$ref" : "#/items/definitions/org.apache.camel.model.rest.RestConfigurationDefinition"
       },
       "rest" : {
         "$ref" : "#/items/definitions/org.apache.camel.model.rest.RestDefinition"

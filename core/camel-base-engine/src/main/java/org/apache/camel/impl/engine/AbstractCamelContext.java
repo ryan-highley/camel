@@ -710,21 +710,30 @@ public abstract class AbstractCamelContext extends BaseService
             answer.add(oldEndpoint);
             stopServices(oldEndpoint);
         } else {
-            List<NormalizedUri> toRemove = new ArrayList<>();
-            for (Map.Entry<NormalizedUri, Endpoint> entry : endpoints.entrySet()) {
-                oldEndpoint = entry.getValue();
-                if (EndpointHelper.matchEndpoint(this, oldEndpoint.getEndpointUri(), uri)) {
-                    try {
-                        stopServices(oldEndpoint);
-                    } catch (Exception e) {
-                        LOG.warn("Error stopping endpoint {}. This exception will be ignored.", oldEndpoint, e);
-                    }
-                    answer.add(oldEndpoint);
-                    toRemove.add(entry.getKey());
-                }
+            String decodeUri = URISupport.getDecodeQuery(uri);
+            if (decodeUri != null) {
+                oldEndpoint = endpoints.remove(getEndpointKey(decodeUri));
             }
-            for (NormalizedUri key : toRemove) {
-                endpoints.remove(key);
+            if (oldEndpoint != null) {
+                answer.add(oldEndpoint);
+                stopServices(oldEndpoint);
+            } else {
+                List<NormalizedUri> toRemove = new ArrayList<>();
+                for (Map.Entry<NormalizedUri, Endpoint> entry : endpoints.entrySet()) {
+                    oldEndpoint = entry.getValue();
+                    if (EndpointHelper.matchEndpoint(this, oldEndpoint.getEndpointUri(), uri)) {
+                        try {
+                            stopServices(oldEndpoint);
+                        } catch (Exception e) {
+                            LOG.warn("Error stopping endpoint {}. This exception will be ignored.", oldEndpoint, e);
+                        }
+                        answer.add(oldEndpoint);
+                        toRemove.add(entry.getKey());
+                    }
+                }
+                for (NormalizedUri key : toRemove) {
+                    endpoints.remove(key);
+                }
             }
         }
 

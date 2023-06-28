@@ -102,10 +102,10 @@ function runTest() {
   echo ""
 
   echo "Logging test to ${logDir}/${component/\//-}.log"
-  ../../../mvnw -l "${logDir}/${component/\//-}.log" -Psourcecheck ${MVND_OPTS} verify
+  ${basedir}/mvnw -l "${logDir}/${component/\//-}.log" -Psourcecheck ${MVND_OPTS} verify
   if [[ $? -ne 0 ]]; then
     ((failures++))
-    notifyError "${component} test" "${total}" "${current}" "${failures}"
+    notifyError "${component}" "${total}" "${current}" "${failures}"
   else
     ((successes++))
     notifySuccess "${component}" "${total}" "${current}" "${failures}"
