@@ -442,6 +442,7 @@
         <swagger-request-validator-version>2.37.0</swagger-request-validator-version>
         <stax-api-version>1.0.1</stax-api-version>
         <stringtemplate-version>4.3.4</stringtemplate-version>
+        <tahu-version>1.0.4</tahu-version>
         <testcontainers-version>1.19.1</testcontainers-version>
         <thymeleaf-version>3.1.2.RELEASE</thymeleaf-version>
         <tika-version>2.9.1</tika-version>
@@ -2141,6 +2142,11 @@
             <dependency>
                 <groupId>org.apache.camel</groupId>
                 <artifactId>camel-soap</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.camel</groupId>
+                <artifactId>camel-sparkplug-b</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

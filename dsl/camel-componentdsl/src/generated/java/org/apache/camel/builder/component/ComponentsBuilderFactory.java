@@ -3749,6 +3749,19 @@ public interface ComponentsBuilderFactory {
         return org.apache.camel.builder.component.dsl.SnmpComponentBuilderFactory.snmp();
     }
     /**
+     * Camel :: Sparkplug B (camel-sparkplug-b)
+     * Sparkplug B component which does bla bla.
+     * 
+     * Category: database
+     * Since: 4.0.0-SNAPSHOT
+     * Maven coordinates: org.apache.camel:camel-sparkplug-b
+     * 
+     * @return the dsl builder
+     */
+    static org.apache.camel.builder.component.dsl.SparkplugComponentBuilderFactory.SparkplugComponentBuilder sparkplug() {
+        return org.apache.camel.builder.component.dsl.SparkplugComponentBuilderFactory.sparkplug();
+    }
+    /**
      * Splunk (camel-splunk)
      * Publish or search for events in Splunk.
      * 
