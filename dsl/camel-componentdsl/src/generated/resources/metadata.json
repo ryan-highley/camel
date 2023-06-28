@@ -6102,6 +6102,28 @@
     "producerOnly": false,
     "lenientProperties": false
   },
+  "SparkplugComponentBuilderFactory": {
+    "kind": "component",
+    "name": "sparkplug",
+    "title": "Camel :: Sparkplug B",
+    "description": "Sparkplug B component which does bla bla.",
+    "deprecated": false,
+    "firstVersion": "4.0.0-SNAPSHOT",
+    "label": "database",
+    "javaType": "org.apache.camel.component.sparkplug.SparkplugBComponent",
+    "supportLevel": "Preview",
+    "groupId": "org.apache.camel",
+    "artifactId": "camel-sparkplug-b",
+    "version": "4.0.0-SNAPSHOT",
+    "scheme": "sparkplug",
+    "extendsScheme": "",
+    "syntax": "sparkplug:name",
+    "async": false,
+    "api": false,
+    "consumerOnly": false,
+    "producerOnly": false,
+    "lenientProperties": false
+  },
   "SplunkComponentBuilderFactory": {
     "kind": "component",
     "name": "splunk",

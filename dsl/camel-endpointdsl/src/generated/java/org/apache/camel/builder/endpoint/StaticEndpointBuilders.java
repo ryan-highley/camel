@@ -12748,6 +12748,49 @@ public class StaticEndpointBuilders {
         return org.apache.camel.builder.endpoint.dsl.SnmpEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
+     * Camel :: Sparkplug B (camel-sparkplug-b)
+     * Sparkplug B component which does bla bla.
+     * 
+     * Category: database
+     * Since: 4.0.0-SNAPSHOT
+     * Maven coordinates: org.apache.camel:camel-sparkplug-b
+     * 
+     * Syntax: <code>sparkplug:name</code>
+     * 
+     * Path parameter: name (required)
+     * Some description of this option, and what it does
+     * 
+     * @param path name
+     * @return the dsl builder
+     */
+    public static org.apache.camel.builder.endpoint.dsl.SparkplugBEndpointBuilderFactory.SparkplugBEndpointBuilder sparkplug(
+            String path) {
+        return org.apache.camel.builder.endpoint.dsl.SparkplugBEndpointBuilderFactory.endpointBuilder("sparkplug", path);
+    }
+    /**
+     * Camel :: Sparkplug B (camel-sparkplug-b)
+     * Sparkplug B component which does bla bla.
+     * 
+     * Category: database
+     * Since: 4.0.0-SNAPSHOT
+     * Maven coordinates: org.apache.camel:camel-sparkplug-b
+     * 
+     * Syntax: <code>sparkplug:name</code>
+     * 
+     * Path parameter: name (required)
+     * Some description of this option, and what it does
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path name
+     * @return the dsl builder
+     */
+    public static org.apache.camel.builder.endpoint.dsl.SparkplugBEndpointBuilderFactory.SparkplugBEndpointBuilder sparkplug(
+            String componentName,
+            String path) {
+        return org.apache.camel.builder.endpoint.dsl.SparkplugBEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
      * Splunk (camel-splunk)
      * Publish or search for events in Splunk.
      * 
