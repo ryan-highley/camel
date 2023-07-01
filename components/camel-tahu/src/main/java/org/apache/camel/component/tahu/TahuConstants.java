@@ -14,19 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.camel.component.sparkplug;
+package org.apache.camel.component.tahu;
 
-import java.util.Map;
+import org.apache.camel.spi.Metadata;
 
-import org.apache.camel.Endpoint;
-import org.apache.camel.support.DefaultComponent;
+public final class TahuConstants {
 
-@org.apache.camel.spi.annotations.Component("sparkplug")
-public class SparkplugBComponent extends DefaultComponent {
+    @Metadata(description = "The ID of the group", javaType = "String")
+    public static final String GROUP_ID = "CamelTahuGroupId";
 
-    protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
-        Endpoint endpoint = new SparkplugBEndpoint(uri, this);
-        setProperties(endpoint, parameters);
-        return endpoint;
+    @Metadata(description = "The name of the edge node", javaType = "String")
+    public static final String EDGE_NODE = "CamelTahuEdgeNode";
+
+    @Metadata(description = "The ID of the device", javaType = "String")
+    public static final String DEVICE_ID = "CamelTahuDeviceId";
+
+    private TahuConstants() {
     }
 }
