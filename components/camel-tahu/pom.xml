@@ -41,13 +41,12 @@
             <artifactId>camel-support</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.tahu</groupId>
-            <artifactId>tahu-edge</artifactId>
-            <version>${tahu-version}</version>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-paho</artifactId>
         </dependency>
         <dependency>
             <groupId>org.eclipse.tahu</groupId>
-            <artifactId>tahu-host</artifactId>
+            <artifactId>tahu-edge</artifactId>
             <version>${tahu-version}</version>
         </dependency>
 
