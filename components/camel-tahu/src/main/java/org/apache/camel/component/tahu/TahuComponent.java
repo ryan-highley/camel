@@ -19,40 +19,51 @@ package org.apache.camel.component.tahu;
 import java.util.Map;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.Endpoint;
+import org.apache.camel.SSLContextParametersAware;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
 import org.apache.camel.support.DefaultComponent;
-import org.eclipse.tahu.edge.EdgeClient;
+import org.apache.camel.util.ObjectHelper;
 
-@Component("sparkplug")
-public class TahuComponent extends DefaultComponent {
-
-    @Metadata
-    private TahuConfiguration configuration = new TahuConfiguration();
+@Component("tahu")
+public class TahuComponent extends DefaultComponent implements SSLContextParametersAware {
 
     @Metadata(label = "advanced")
-    private EdgeClient client;
+    private TahuConfiguration configuration = new TahuConfiguration();
+
+    @Metadata(label = "security", defaultValue = "false")
+    private boolean useGlobalSslContextParameters;
 
     public TahuComponent() {
-        this(null);
     }
 
     public TahuComponent(CamelContext context) {
         super(context);
-
-        // registerExtension(new SparkplugBComponentVerifierExtension());
     }
 
-    protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
-        // Each endpoint can have its own configuration so make
-        // a copy of the configuration
-        TahuConfiguration spbConfig = getConfiguration().copy();
+    protected TahuEndpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
 
-        TahuEndpoint answer = new TahuEndpoint(uri, remaining, this, spbConfig);
-        answer.setClient(client);
+        if (ObjectHelper.isEmpty(remaining)) {
+            throw new IllegalArgumentException(
+                    "Group Id and Edge Node Id must be configured on endpoint for edge nodes using syntax "
+                                               + TahuConstants.EDGE_NODE_ENDPOINT_URL_SYNTAX
+                                               + " ; Group Id, Edge Node Id, and Device Id must be configured on endpoint for edge node devices using syntax "
+                                               + TahuConstants.DEVICE_ENDPOINT_URL_SYNTAX
+                                               + " ; or Host ID must be configured on endpoint for host applications using syntax "
+                                               + TahuConstants.HOST_APP_ENDPOINT_URL_SYNTAX);
+        }
+
+        // Each endpoint can have its own configuration so make a copy of the configuration
+        TahuConfiguration tahuConfig = getConfiguration().copy();
+
+        TahuEndpoint answer = new TahuEndpoint(uri, this, tahuConfig, remaining);
 
         setProperties(answer, parameters);
+
+        if (tahuConfig.getSslContextParameters() == null) {
+            tahuConfig.setSslContextParameters(retrieveGlobalSslContextParameters());
+        }
+
         return answer;
     }
 
@@ -61,22 +72,23 @@ public class TahuComponent extends DefaultComponent {
     }
 
     /**
-     * To use a shared Sparkplug B configuration
-     *
-     * @param configuration
+     * To use a shared Tahu configuration
      */
     public void setConfiguration(TahuConfiguration configuration) {
         this.configuration = configuration;
     }
 
-    public EdgeClient getClient() {
-        return client;
+    @Override
+    public boolean isUseGlobalSslContextParameters() {
+        return this.useGlobalSslContextParameters;
     }
 
     /**
-     * To use an existing Tahu edge node client
+     * Enable/disable global SSL context parameters use
      */
-    public void setClient(EdgeClient client) {
-        this.client = client;
+    @Override
+    public void setUseGlobalSslContextParameters(boolean useGlobalSslContextParameters) {
+        this.useGlobalSslContextParameters = useGlobalSslContextParameters;
     }
+
 }

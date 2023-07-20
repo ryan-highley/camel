@@ -20,14 +20,31 @@ import org.apache.camel.spi.Metadata;
 
 public final class TahuConstants {
 
+    public static final String COMPONENT_SCHEME = "tahu";
+
+    public static final String MAJOR_SEPARATOR = "/";
+    public static final String MINOR_SEPARATOR = "+";
+
+    public static final String EDGE_NODE_ENDPOINT_URL_SYNTAX = COMPONENT_SCHEME + ":groupId" + MAJOR_SEPARATOR + "edgeNode";
+
+    public static final String DEVICE_ENDPOINT_URL_SYNTAX = EDGE_NODE_ENDPOINT_URL_SYNTAX + MAJOR_SEPARATOR + "deviceId";
+
+    public static final String HOST_APP_ENDPOINT_URL_SYNTAX = COMPONENT_SCHEME + ":hostId";
+
     @Metadata(description = "The ID of the group", javaType = "String")
     public static final String GROUP_ID = "CamelTahuGroupId";
 
-    @Metadata(description = "The name of the edge node", javaType = "String")
+    @Metadata(description = "The ID of the edge node", javaType = "String")
     public static final String EDGE_NODE = "CamelTahuEdgeNode";
 
     @Metadata(description = "The ID of the device", javaType = "String")
     public static final String DEVICE_ID = "CamelTahuDeviceId";
+
+    @Metadata(description = "The ID of the host application", javaType = "String")
+    public static final String HOST_ID = "CamelTahuHostId";
+
+    @Metadata(description = "The Camel Message Header prefix denoting a Sparkplug Metric")
+    public static final String METRIC_HEADER_PREFIX = "CamelTahuMetric.";
 
     private TahuConstants() {
     }

@@ -14193,6 +14193,55 @@ public class StaticEndpointBuilders {
         return org.apache.camel.builder.endpoint.dsl.StubEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
+     * Tahu (camel-tahu)
+     * Tahu component which does bla bla.
+     * 
+     * Category: messaging,iot,monitoring
+     * Since: 4.0.0-SNAPSHOT
+     * Maven coordinates: org.apache.camel:camel-tahu
+     * 
+     * Syntax: <code>tahu:groupId:edgeNode</code>
+     * 
+     * Path parameter: groupId (required)
+     * ID of the group
+     * 
+     * Path parameter: edgeNode (required)
+     * Name of the edge node
+     * 
+     * @param path groupId:edgeNode
+     * @return the dsl builder
+     */
+    public static org.apache.camel.builder.endpoint.dsl.TahuEndpointBuilderFactory.TahuEndpointBuilder tahu(
+            String path) {
+        return org.apache.camel.builder.endpoint.dsl.TahuEndpointBuilderFactory.endpointBuilder("tahu", path);
+    }
+    /**
+     * Tahu (camel-tahu)
+     * Tahu component which does bla bla.
+     * 
+     * Category: messaging,iot,monitoring
+     * Since: 4.0.0-SNAPSHOT
+     * Maven coordinates: org.apache.camel:camel-tahu
+     * 
+     * Syntax: <code>tahu:groupId:edgeNode</code>
+     * 
+     * Path parameter: groupId (required)
+     * ID of the group
+     * 
+     * Path parameter: edgeNode (required)
+     * Name of the edge node
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path groupId:edgeNode
+     * @return the dsl builder
+     */
+    public static org.apache.camel.builder.endpoint.dsl.TahuEndpointBuilderFactory.TahuEndpointBuilder tahu(
+            String componentName,
+            String path) {
+        return org.apache.camel.builder.endpoint.dsl.TahuEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
      * Telegram (camel-telegram)
      * Send and receive messages acting as a Telegram Bot Telegram Bot API.
      * 

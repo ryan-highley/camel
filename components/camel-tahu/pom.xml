@@ -17,66 +17,138 @@
     limitations under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-    <modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.apache.camel</groupId>
-        <artifactId>components</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
-    </parent>
+  <parent>
+    <groupId>org.apache.camel</groupId>
+    <artifactId>components</artifactId>
+    <version>4.0.0-SNAPSHOT</version>
+  </parent>
 
-    <artifactId>camel-sparkplug-b</artifactId>
-    <packaging>jar</packaging>
-    <name>Camel :: Sparkplug B</name>
-    <description>Camel Eclipse Sparkplug B support</description>
+  <artifactId>camel-tahu</artifactId>
+  <packaging>jar</packaging>
+  <name>Camel :: Tahu</name>
+  <description>Camel Eclipse Tahu support for Sparkplug B</description>
 
-    <properties>
-    </properties>
+  <properties>
+  </properties>
 
+  <dependencyManagement>
     <dependencies>
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-support</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-paho</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.tahu</groupId>
-            <artifactId>tahu-edge</artifactId>
-            <version>${tahu-version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-test-junit5</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <!-- test infra -->
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-test-infra-core</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>artemis-mqtt-protocol</artifactId>
-            <version>${activemq-artemis-version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-test-infra-artemis</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-            <type>test-jar</type>
-        </dependency>
-
+      <!-- Camel BOM -->
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-bom</artifactId>
+        <version>4.0.0-SNAPSHOT</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
     </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>org.eclipse.tahu</groupId>
+      <artifactId>tahu-edge</artifactId>
+      <version>${tahu-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.tahu</groupId>
+      <artifactId>tahu-host</artifactId>
+      <version>${tahu-version}</version>
+    </dependency>
+
+    <!-- camel -->
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-support</artifactId>
+    </dependency>
+    
+    <!-- testing -->
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-test-junit5</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest</artifactId>
+      <version>${hamcrest-version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- test infra -->
+    <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-test-infra-core</artifactId>
+        <version>${project.version}</version>
+        <scope>test</scope>
+        <type>test-jar</type>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>artemis-mqtt-protocol</artifactId>
+        <version>${activemq-artemis-version}</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-test-infra-artemis</artifactId>
+        <version>${project.version}</version>
+        <scope>test</scope>
+        <type>test-jar</type>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <defaultGoal>install</defaultGoal>
+
+    <plugins>
+      
+      <!-- generate camel meta-data -->
+      <plugin>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-component-maven-plugin</artifactId>
+        <version>${project.version}</version>
+        <executions>
+          <execution>
+            <id>generate</id>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <phase>process-classes</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.4.0</version>
+        <executions>
+          <execution>
+            <phase>initialize</phase>
+            <goals>
+              <goal>add-source</goal>
+              <goal>add-resource</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>src/generated/java</source>
+              </sources>
+              <resources>
+                <resource>
+                  <directory>src/generated/resources</directory>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
 
 </project>

@@ -3749,19 +3749,6 @@ public interface ComponentsBuilderFactory {
         return org.apache.camel.builder.component.dsl.SnmpComponentBuilderFactory.snmp();
     }
     /**
-     * Camel :: Sparkplug B (camel-sparkplug-b)
-     * Sparkplug B component which does bla bla.
-     * 
-     * Category: database
-     * Since: 4.0.0-SNAPSHOT
-     * Maven coordinates: org.apache.camel:camel-sparkplug-b
-     * 
-     * @return the dsl builder
-     */
-    static org.apache.camel.builder.component.dsl.SparkplugComponentBuilderFactory.SparkplugComponentBuilder sparkplug() {
-        return org.apache.camel.builder.component.dsl.SparkplugComponentBuilderFactory.sparkplug();
-    }
-    /**
      * Splunk (camel-splunk)
      * Publish or search for events in Splunk.
      * 
@@ -3997,6 +3984,20 @@ public interface ComponentsBuilderFactory {
      */
     static org.apache.camel.builder.component.dsl.StubComponentBuilderFactory.StubComponentBuilder stub() {
         return org.apache.camel.builder.component.dsl.StubComponentBuilderFactory.stub();
+    }
+    /**
+     * Tahu (camel-tahu)
+     * Sparkplug B Edge Node and Host Application support over MQTT using
+     * Eclipse Tahu
+     * 
+     * Category: messaging,iot,monitoring
+     * Since: 4.0
+     * Maven coordinates: org.apache.camel:camel-tahu
+     * 
+     * @return the dsl builder
+     */
+    static org.apache.camel.builder.component.dsl.TahuComponentBuilderFactory.TahuComponentBuilder tahu() {
+        return org.apache.camel.builder.component.dsl.TahuComponentBuilderFactory.tahu();
     }
     /**
      * Telegram (camel-telegram)

@@ -1549,11 +1549,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
-            <artifactId>camel-sparkplug-b</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.camel</groupId>
             <artifactId>camel-splunk</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -1660,6 +1655,11 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-syslog</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-tahu</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
