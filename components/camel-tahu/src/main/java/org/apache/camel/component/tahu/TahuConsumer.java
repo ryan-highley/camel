@@ -16,9 +16,11 @@
  */
 package org.apache.camel.component.tahu;
 
+import java.util.concurrent.ExecutorService;
+
+import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.support.DefaultConsumer;
-import org.eclipse.tahu.edge.EdgeClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,38 +29,56 @@ public class TahuConsumer extends DefaultConsumer {
 
     private static final Logger LOG = LoggerFactory.getLogger(TahuConsumer.class);
 
-    private EdgeClient client;
+    private final TahuEndpoint endpoint;
+    private final TahuConfiguration configuration;
+    private final EventBusHelper eventBusHelper;
+
+    private ExecutorService executorService;
 
     public TahuConsumer(TahuEndpoint endpoint, Processor processor) {
         super(endpoint, processor);
-    }
-
-    @Override
-    public TahuEndpoint getEndpoint() {
-        return (TahuEndpoint) super.getEndpoint();
-    }
-
-    public EdgeClient getClient() {
-        return client;
-    }
-
-    /**
-     * To use an existing Tahu edge node client
-     */
-    public void setClient(EdgeClient client) {
-        this.client = client;
+        this.endpoint = endpoint;
+        configuration = endpoint.getConfiguration().copy();
+        eventBusHelper = EventBusHelper.getInstance();
     }
 
     @Override
     protected void doStart() throws Exception {
-        // TODO Auto-generated method stub
         super.doStart();
+
+        // start a single threaded pool to monitor events
+        executorService = endpoint.createConsumerExecutor();
+
+        // submit task to the thread pool
+        executorService.submit(() -> {
+            // subscribe to an event
+            eventBusHelper.subscribe(this::onEventListener);
+        });
     }
 
     @Override
     protected void doStop() throws Exception {
-        // TODO Auto-generated method stub
         super.doStop();
+
+        // shutdown the thread pool gracefully
+        getEndpoint().getCamelContext().getExecutorServiceManager().shutdownGraceful(executorService);
     }
 
+    private void onEventListener(final Object event) {
+        final Exchange exchange = createExchange(false);
+
+        exchange.getIn().setBody("Hello World! The time is " + event);
+
+        try {
+            // send message to next processor in the route
+            getProcessor().process(exchange);
+        } catch (Exception e) {
+            exchange.setException(e);
+        } finally {
+            if (exchange.getException() != null) {
+                getExceptionHandler().handleException("Error processing exchange", exchange, exchange.getException());
+            }
+            releaseExchange(exchange, false);
+        }
+    }
 }

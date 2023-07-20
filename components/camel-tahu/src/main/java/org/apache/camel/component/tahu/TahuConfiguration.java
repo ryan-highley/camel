@@ -17,88 +17,131 @@
 package org.apache.camel.component.tahu;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriParams;
-import org.apache.camel.spi.UriPath;
+import org.apache.camel.support.jsse.SSLContextParameters;
+import org.apache.camel.util.ObjectHelper;
+import org.eclipse.tahu.message.model.EdgeNodeDescriptor;
+import org.eclipse.tahu.message.model.MessageType;
+import org.eclipse.tahu.message.model.SparkplugMeta;
+import org.eclipse.tahu.message.model.Topic;
 import org.eclipse.tahu.model.MqttServerDefinition;
+import org.eclipse.tahu.mqtt.MqttClientId;
+import org.eclipse.tahu.mqtt.MqttServerName;
+import org.eclipse.tahu.mqtt.MqttServerUrl;
 
 @UriParams
-public class TahuConfiguration {
+public class TahuConfiguration implements Cloneable {
 
-    @UriPath(description = "ID of the group")
+    private static final Pattern SERVER_DEF_PATTERN
+            = Pattern.compile("([^:]+):(?:(?!tcp|ssl)([^:]+):)?((?:tcp|ssl):(?://)?[\\p{Alnum}.-]+(?::\\d+)?),?");
+
+    @UriParam(label = "common",
+              description = "MQTT server definition list, given with the following syntax in a comma-separated list: MqttServerName:[MqttClientId:](tcp|ssl)://hostname[:port],...")
     @Metadata(required = true)
-    private String groupId;
+    private String servers;
 
-    @UriPath(description = "Name of the edge node")
-    @Metadata(required = true)
-    private String edgeNode;
+    @UriParam(label = "common",
+              description = "MQTT client ID to use for all server definitions, rather than specifying the same one for each",
+              defaultValueNote = "If neither the clientId parameter nor an MqttClientId defined for an MQTT Server, a random MQTT Client ID will generated, prefaced with \"Camel\"")
+    private String clientId;
 
-    @UriParam(description = "IDs of the edge node devices", multiValue = true)
-    private List<String> deviceIds;
+    @UriParam(label = "security", description = "Username for MQTT server authentication", secret = true)
+    private String username;
 
-    @UriParam(description = "Host ID for this Sparkplug B Host")
-    private String hostId;
+    @UriParam(label = "security", description = "Password for MQTT server authentication", secret = true)
+    private String password;
 
-    @UriParam(description = "MQTT server definition list", multiValue = true)
-    private List<MqttServerDefinition> serverDefinitions;
+    @UriParam(label = "producer,advanced", description = "Flag enabling support for metric aliases", defaultValue = "false")
+    private boolean useAliases = false;
 
-    @UriParam(description = "Flag enabling support for metric aliases", defaultValue = "false")
-    private boolean useAliases;
+    @UriParam(label = "common", description = "Delay before node a rebirth message will be sent", defaultValue = "5000")
+    private long rebirthDebounceDelay = 5000L;
 
-    @UriParam(description = "Delay before node a rebirth message will be sent", defaultValue = "5000")
-    private Long rebirthDebounceDelay;
+    @UriParam(label = "common", description = "Connection keep alive timeout in seconds", defaultValue = "30")
+    private int keepAliveTimeout = 30;
 
-    public String getGroupId() {
-        return groupId;
+    @UriParam(label = "security", description = "SSL configuration for MQTT server connections")
+    private SSLContextParameters sslContextParameters;
+
+    public String getServers() {
+        return servers;
     }
 
-    /**
-     * Sparkplug B group identifier
-     *
-     * @param groupId
-     */
-    public void setGroupId(String groupId) {
-        this.groupId = groupId;
+    public void setServers(String servers) {
+        this.servers = servers;
     }
 
-    public String getEdgeNode() {
-        return edgeNode;
+    public List<MqttServerDefinition> getServerDefinitionList(EdgeNodeDescriptor edgeNodeDescriptor) {
+        List<MqttServerDefinition> serverDefinitionList;
+        if (ObjectHelper.isEmpty(servers)) {
+            serverDefinitionList = List.of();
+        } else if (!SERVER_DEF_PATTERN.matcher(servers).find()) {
+            throw new RuntimeCamelException("Server definition list has invalid syntax: " + servers);
+        } else {
+            Matcher serverDefMatcher = SERVER_DEF_PATTERN.matcher(servers);
+            serverDefinitionList = serverDefMatcher.results().map(matchResult -> {
+
+                // MatchResult does not support named groups
+                String serverName = matchResult.group(1);
+                String clientId = matchResult.group(2);
+                String serverUrl = matchResult.group(3);
+
+                return parseFromUrlString(serverName, clientId, serverUrl, edgeNodeDescriptor);
+            }).toList();
+        }
+        return serverDefinitionList;
     }
 
-    /**
-     * Sparkplug B edge node name. The name must be unique within the group identifier.
-     *
-     * @param edgeNode
-     */
-    public void setEdgeNode(String edgeNode) {
-        this.edgeNode = edgeNode;
+    private MqttServerDefinition parseFromUrlString(
+            String serverName, String clientId, String serverUrl, EdgeNodeDescriptor edgeNodeDescriptor) {
+        if (ObjectHelper.isEmpty(serverName) || ObjectHelper.isEmpty(serverUrl)) {
+            throw new RuntimeCamelException("Both serverName and serverUrl must be specified in MQTT server definitions");
+        }
+
+        try {
+            MqttServerName mqttServerName = new MqttServerName(serverName);
+
+            clientId = Stream.of(clientId, this.clientId).filter(ObjectHelper::isNotEmpty).findFirst()
+                    .orElse(MqttClientId.generate("Camel"));
+            MqttClientId mqttClientId = new MqttClientId(clientId, true);
+
+            return new MqttServerDefinition(
+                    mqttServerName, mqttClientId, new MqttServerUrl(serverUrl), username, password, keepAliveTimeout,
+                    new Topic(SparkplugMeta.SPARKPLUG_B_TOPIC_PREFIX, edgeNodeDescriptor, MessageType.NDEATH));
+        } catch (Exception e) {
+            throw new RuntimeCamelException(e);
+        }
     }
 
-    public List<String> getDeviceIds() {
-        return deviceIds;
+    public String getClientId() {
+        return clientId;
     }
 
-    public void setDeviceIds(List<String> deviceIds) {
-        this.deviceIds = deviceIds;
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
-    public String getHostId() {
-        return hostId;
+    public String getUsername() {
+        return username;
     }
 
-    public void setHostId(String hostId) {
-        this.hostId = hostId;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
-    public List<MqttServerDefinition> getServerDefinitions() {
-        return serverDefinitions;
+    public String getPassword() {
+        return password;
     }
 
-    public void setServerDefinitions(List<MqttServerDefinition> serverDefinitions) {
-        this.serverDefinitions = serverDefinitions;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public boolean isUseAliases() {
@@ -109,12 +152,28 @@ public class TahuConfiguration {
         this.useAliases = useAliases;
     }
 
-    public Long getRebirthDebounceDelay() {
+    public long getRebirthDebounceDelay() {
         return rebirthDebounceDelay;
     }
 
-    public void setRebirthDebounceDelay(Long rebirthDebounceDelay) {
+    public void setRebirthDebounceDelay(long rebirthDebounceDelay) {
         this.rebirthDebounceDelay = rebirthDebounceDelay;
+    }
+
+    public int getKeepAliveTimeout() {
+        return keepAliveTimeout;
+    }
+
+    public void setKeepAliveTimeout(int keepAliveTimeout) {
+        this.keepAliveTimeout = keepAliveTimeout;
+    }
+
+    public SSLContextParameters getSslContextParameters() {
+        return sslContextParameters;
+    }
+
+    public void setSslContextParameters(SSLContextParameters sslContextParameters) {
+        this.sslContextParameters = sslContextParameters;
     }
 
     public TahuConfiguration copy() {
