@@ -131,6 +131,8 @@ function main() {
       fi
     fi
   fi
+
+  ./.github/actions/incremental-build/parse_errors.sh $log
 }
 
 main "$@"

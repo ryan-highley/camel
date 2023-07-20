@@ -577,9 +577,15 @@ public abstract class AbstractCamelContextFactoryBean<T extends ModelCamelContex
     }
 
     private static ValueHolder<String> createTransformerKey(TransformerDefinition def) {
-        return org.apache.camel.util.ObjectHelper.isNotEmpty(def.getScheme())
-                ? new TransformerKey(def.getScheme())
-                : new TransformerKey(new DataType(def.getFromType()), new DataType(def.getToType()));
+        if (org.apache.camel.util.ObjectHelper.isNotEmpty(def.getScheme())) {
+            return org.apache.camel.util.ObjectHelper.isNotEmpty(def.getName())
+                    ? new TransformerKey(def.getScheme() + ":" + def.getName()) : new TransformerKey(def.getScheme());
+        }
+        if (org.apache.camel.util.ObjectHelper.isNotEmpty(def.getName())) {
+            return new TransformerKey(def.getName());
+        } else {
+            return new TransformerKey(new DataType(def.getFromType()), new DataType(def.getToType()));
+        }
     }
 
     private void initValidators() {
@@ -758,6 +764,14 @@ public abstract class AbstractCamelContextFactoryBean<T extends ModelCamelContex
         } else {
             // stream-caching is default enabled
             getContext().getStreamCachingStrategy().setEnabled(true);
+        }
+        String allowClasses = CamelContextHelper.parseText(getContext(), streamCaching.getAllowClasses());
+        if (allowClasses != null) {
+            getContext().getStreamCachingStrategy().setAllowClasses(allowClasses);
+        }
+        String denyClasses = CamelContextHelper.parseText(getContext(), streamCaching.getDenyClasses());
+        if (denyClasses != null) {
+            getContext().getStreamCachingStrategy().setDenyClasses(denyClasses);
         }
         Boolean spoolEnabled = CamelContextHelper.parseBoolean(getContext(), streamCaching.getSpoolEnabled());
         if (spoolEnabled != null) {

@@ -630,6 +630,18 @@ abstract class ExportBaseCommand extends CamelCommand {
         return false;
     }
 
+    protected static int httpServerPort(File settings) {
+        try {
+            List<String> lines = Files.readAllLines(settings.toPath());
+            String port = lines.stream().filter(l -> l.startsWith("camel.jbang.platform-http.port="))
+                    .map(s -> StringHelper.after(s, "=")).findFirst().orElse("-1");
+            return Integer.parseInt(port);
+        } catch (Exception e) {
+            // ignore
+        }
+        return -1;
+    }
+
     protected static void safeCopy(File source, File target, boolean override) throws Exception {
         if (!source.exists()) {
             return;
@@ -756,7 +768,11 @@ abstract class ExportBaseCommand extends CamelCommand {
         properties.setProperty("camel.vault.aws.refreshEnabled", "true");
         properties.setProperty("camel.vault.aws.refreshPeriod", "30000");
         properties.setProperty("camel.vault.aws.secrets", "<secrets>");
-        properties.setProperty("camel.main.context-reload-enabled", "true");
+        if (runtime.equalsIgnoreCase("spring-boot")) {
+            properties.setProperty("camel.springboot.context-reload-enabled", "true");
+        } else {
+            properties.setProperty("camel.main.context-reload-enabled", "true");
+        }
     }
 
     protected void exportGcpSecretsRefreshProp(Properties properties) {
@@ -767,7 +783,11 @@ abstract class ExportBaseCommand extends CamelCommand {
         properties.setProperty("camel.vault.aws.refreshPeriod", "30000");
         properties.setProperty("camel.vault.gcp.secrets", "<secrets>");
         properties.setProperty("camel.vault.gcp.subscriptionName", "<subscriptionName>");
-        properties.setProperty("camel.main.context-reload-enabled", "true");
+        if (runtime.equalsIgnoreCase("spring-boot")) {
+            properties.setProperty("camel.springboot.context-reload-enabled", "true");
+        } else {
+            properties.setProperty("camel.main.context-reload-enabled", "true");
+        }
     }
 
     protected void exportAzureSecretsRefreshProp(Properties properties) {
@@ -782,7 +802,11 @@ abstract class ExportBaseCommand extends CamelCommand {
         properties.setProperty("camel.vault.azure.blobAccountName", "<blobAccountName>");
         properties.setProperty("camel.vault.azure.blobContainerName", "<blobContainerName>");
         properties.setProperty("camel.vault.azure.blobAccessKey", "<blobAccessKey>");
-        properties.setProperty("camel.main.context-reload-enabled", "true");
+        if (runtime.equalsIgnoreCase("spring-boot")) {
+            properties.setProperty("camel.springboot.context-reload-enabled", "true");
+        } else {
+            properties.setProperty("camel.main.context-reload-enabled", "true");
+        }
     }
 
     protected List<String> getSecretProviders() {
