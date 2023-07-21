@@ -597,6 +597,10 @@ public class Run extends CamelCommand {
             // run in another JVM with different camel version (foreground or background)
             boolean custom = camelVersion.contains("-") && !camelVersion.endsWith("-SNAPSHOT");
             if (custom) {
+                // regular camel versions can also be a milestone or release candidate
+                custom = !camelVersion.matches(".*-(RC|M)\\d$");
+            }
+            if (custom) {
                 // custom camel distribution
                 return runCustomCamelVersion(main);
             } else {
@@ -729,7 +733,7 @@ public class Run extends CamelCommand {
         String content = IOHelper.loadText(is);
         IOHelper.close(is);
 
-        content = content.replaceFirst("\\{\\{ \\.JavaVersion }}", "17"); // TODO: java 11 or 17
+        content = content.replaceFirst("\\{\\{ \\.JavaVersion }}", "17");
         if (repos != null) {
             content = content.replaceFirst("\\{\\{ \\.MavenRepositories }}", "//REPOS " + repos);
         } else {
