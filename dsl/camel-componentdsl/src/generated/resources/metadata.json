@@ -6589,7 +6589,7 @@
     "version": "4.0.0-SNAPSHOT",
     "scheme": "tahu",
     "extendsScheme": "",
-    "syntax": "tahu:groupId\/edgeNode",
+    "syntax": "tahu:groupId\/edgeNode\/deviceId",
     "alternativeSyntax": "tahu:hostId",
     "async": false,
     "api": false,

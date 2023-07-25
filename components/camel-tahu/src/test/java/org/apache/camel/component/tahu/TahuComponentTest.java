@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.hamcrest.Matchers.*;
 
+@SuppressWarnings("unused")
 public class TahuComponentTest extends TahuTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(TahuComponentTest.class);

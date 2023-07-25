@@ -115,21 +115,6 @@ public interface TahuComponentBuilderFactory {
             return this;
         }
         /**
-         * Flag enabling support for metric aliases.
-         * 
-         * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
-         * 
-         * Default: false
-         * Group: common
-         * 
-         * @param useAliases the value to set
-         * @return the dsl builder
-         */
-        default TahuComponentBuilder useAliases(boolean useAliases) {
-            doSetProperty("useAliases", useAliases);
-            return this;
-        }
-        /**
          * Allows for bridging the consumer to the Camel routing Error Handler,
          * which mean any exceptions occurred while the consumer is trying to
          * pickup incoming messages, or the likes, will now be processed as a
@@ -149,34 +134,6 @@ public interface TahuComponentBuilderFactory {
         default TahuComponentBuilder bridgeErrorHandler(
                 boolean bridgeErrorHandler) {
             doSetProperty("bridgeErrorHandler", bridgeErrorHandler);
-            return this;
-        }
-        /**
-         * ID for the host application.
-         * 
-         * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
-         * 
-         * Group: consumer
-         * 
-         * @param hostId the value to set
-         * @return the dsl builder
-         */
-        default TahuComponentBuilder hostId(java.lang.String hostId) {
-            doSetProperty("hostId", hostId);
-            return this;
-        }
-        /**
-         * IDs of the edge node's devices.
-         * 
-         * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
-         * 
-         * Group: producer
-         * 
-         * @param deviceIds the value to set
-         * @return the dsl builder
-         */
-        default TahuComponentBuilder deviceIds(java.lang.String deviceIds) {
-            doSetProperty("deviceIds", deviceIds);
             return this;
         }
         /**
@@ -203,18 +160,18 @@ public interface TahuComponentBuilderFactory {
             return this;
         }
         /**
-         * Host ID of the primary host application for this edge node.
+         * Flag enabling support for metric aliases.
          * 
-         * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
+         * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
          * 
-         * Group: producer
+         * Default: false
+         * Group: producer (advanced)
          * 
-         * @param primaryHostId the value to set
+         * @param useAliases the value to set
          * @return the dsl builder
          */
-        default TahuComponentBuilder primaryHostId(
-                java.lang.String primaryHostId) {
-            doSetProperty("primaryHostId", primaryHostId);
+        default TahuComponentBuilder useAliases(boolean useAliases) {
+            doSetProperty("useAliases", useAliases);
             return this;
         }
         /**
@@ -251,24 +208,6 @@ public interface TahuComponentBuilderFactory {
         default TahuComponentBuilder configuration(
                 org.apache.camel.component.tahu.TahuConfiguration configuration) {
             doSetProperty("configuration", configuration);
-            return this;
-        }
-        /**
-         * To use a custom org.apache.camel.spi.HeaderFilterStrategy to filter
-         * header to and from Camel message.
-         * 
-         * The option is a:
-         * &lt;code&gt;org.apache.camel.spi.HeaderFilterStrategy&lt;/code&gt;
-         * type.
-         * 
-         * Group: filter
-         * 
-         * @param headerFilterStrategy the value to set
-         * @return the dsl builder
-         */
-        default TahuComponentBuilder headerFilterStrategy(
-                org.apache.camel.spi.HeaderFilterStrategy headerFilterStrategy) {
-            doSetProperty("headerFilterStrategy", headerFilterStrategy);
             return this;
         }
         /**
@@ -359,12 +298,9 @@ public interface TahuComponentBuilderFactory {
             case "keepAliveTimeout": getOrCreateConfiguration((TahuComponent) component).setKeepAliveTimeout((int) value); return true;
             case "rebirthDebounceDelay": getOrCreateConfiguration((TahuComponent) component).setRebirthDebounceDelay((long) value); return true;
             case "servers": getOrCreateConfiguration((TahuComponent) component).setServers((java.lang.String) value); return true;
-            case "useAliases": getOrCreateConfiguration((TahuComponent) component).setUseAliases((boolean) value); return true;
             case "bridgeErrorHandler": ((TahuComponent) component).setBridgeErrorHandler((boolean) value); return true;
-            case "hostId": getOrCreateConfiguration((TahuComponent) component).setHostId((java.lang.String) value); return true;
-            case "deviceIds": getOrCreateConfiguration((TahuComponent) component).setDeviceIds((java.lang.String) value); return true;
             case "lazyStartProducer": ((TahuComponent) component).setLazyStartProducer((boolean) value); return true;
-            case "primaryHostId": getOrCreateConfiguration((TahuComponent) component).setPrimaryHostId((java.lang.String) value); return true;
+            case "useAliases": getOrCreateConfiguration((TahuComponent) component).setUseAliases((boolean) value); return true;
             case "autowiredEnabled": ((TahuComponent) component).setAutowiredEnabled((boolean) value); return true;
             case "configuration": ((TahuComponent) component).setConfiguration((org.apache.camel.component.tahu.TahuConfiguration) value); return true;
             case "password": getOrCreateConfiguration((TahuComponent) component).setPassword((java.lang.String) value); return true;

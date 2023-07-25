@@ -24,27 +24,36 @@ public final class TahuConstants {
 
     public static final String MAJOR_SEPARATOR = "/";
     public static final String MINOR_SEPARATOR = "+";
+    public static final String CONFIG_LIST_SEPARATOR = ",";
 
-    public static final String EDGE_NODE_ENDPOINT_URL_SYNTAX = COMPONENT_SCHEME + ":groupId" + MAJOR_SEPARATOR + "edgeNode";
+    public static final String EDGE_NODE_ENDPOINT_URI_SYNTAX = COMPONENT_SCHEME + ":groupId" + MAJOR_SEPARATOR + "edgeNode";
 
-    public static final String DEVICE_ENDPOINT_URL_SYNTAX = EDGE_NODE_ENDPOINT_URL_SYNTAX + MAJOR_SEPARATOR + "deviceId";
+    public static final String DEVICE_ENDPOINT_URI_SYNTAX = EDGE_NODE_ENDPOINT_URI_SYNTAX + MAJOR_SEPARATOR + "deviceId";
 
-    public static final String HOST_APP_ENDPOINT_URL_SYNTAX = COMPONENT_SCHEME + ":hostId";
+    public static final String HOST_APP_ENDPOINT_URI_SYNTAX = COMPONENT_SCHEME + ":hostId";
 
-    @Metadata(description = "The ID of the group", javaType = "String")
-    public static final String GROUP_ID = "CamelTahuGroupId";
-
-    @Metadata(description = "The ID of the edge node", javaType = "String")
-    public static final String EDGE_NODE = "CamelTahuEdgeNode";
-
-    @Metadata(description = "The ID of the device", javaType = "String")
-    public static final String DEVICE_ID = "CamelTahuDeviceId";
-
-    @Metadata(description = "The ID of the host application", javaType = "String")
-    public static final String HOST_ID = "CamelTahuHostId";
-
-    @Metadata(description = "The Camel Message Header prefix denoting a Sparkplug Metric")
+    @Metadata(description = "The Camel Message Header prefix denoting a Sparkplug metric", label = "producer,consumer")
     public static final String METRIC_HEADER_PREFIX = "CamelTahuMetric.";
+
+    @Metadata(description = "The Sparkplug message type of the message consumed by the host application", javaType = "String",
+              label = "consumer", enums = "NBIRTH,NDATA,NDEATH,DBIRTH,DDATA,DDEATH")
+    public static final String MESSAGE_TYPE = "CamelTahuMessageType";
+
+    @Metadata(description = "The Sparkplug edge node descriptor string source of a message or metric consumed by the host application",
+              javaType = "String", label = "consumer")
+    public static final String EDGE_NODE_DESCRIPTOR = "CamelTahuEdgeNodeDescriptor";
+
+    @Metadata(description = "The timestamp of a Sparkplug message consumed by the host application", javaType = "Long",
+              label = "consumer")
+    public static final String MESSAGE_TIMESTAMP = "CamelTahuMessageTimestamp";
+
+    @Metadata(description = "The UUID of a Sparkplug message consumed by the host application", javaType = "java.util.UUID",
+              label = "consumer")
+    public static final String MESSAGE_UUID = "CamelTahuMessageUUID";
+
+    @Metadata(description = "The sequence number of a Sparkplug message consumed by the host application", javaType = "Long",
+              label = "consumer")
+    public static final String MESSAGE_SEQUENCE_NUMBER = "CamelTahuMessageSequenceNumber";
 
     private TahuConstants() {
     }
