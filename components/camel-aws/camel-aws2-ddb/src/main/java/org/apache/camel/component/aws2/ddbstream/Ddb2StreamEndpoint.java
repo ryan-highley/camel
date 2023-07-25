@@ -87,6 +87,11 @@ public class Ddb2StreamEndpoint extends ScheduledPollEndpoint {
         super.doStop();
     }
 
+    @Override
+    public Ddb2StreamComponent getComponent() {
+        return (Ddb2StreamComponent) super.getComponent();
+    }
+
     public Ddb2StreamConfiguration getConfiguration() {
         return configuration;
     }
