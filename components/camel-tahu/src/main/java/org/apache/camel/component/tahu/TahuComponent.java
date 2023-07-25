@@ -17,6 +17,8 @@
 package org.apache.camel.component.tahu;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.SSLContextParametersAware;
@@ -24,9 +26,14 @@ import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
 import org.apache.camel.support.DefaultComponent;
 import org.apache.camel.util.ObjectHelper;
+import org.apache.camel.util.PropertiesHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component("tahu")
 public class TahuComponent extends DefaultComponent implements SSLContextParametersAware {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TahuComponent.class);
 
     @Metadata(label = "advanced")
     private TahuConfiguration configuration = new TahuConfiguration();
@@ -41,30 +48,52 @@ public class TahuComponent extends DefaultComponent implements SSLContextParamet
         super(context);
     }
 
-    protected TahuEndpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
+    private final ConcurrentMap<String, TahuEndpoint> endpoints = new ConcurrentHashMap<>();
 
-        if (ObjectHelper.isEmpty(remaining)) {
-            throw new IllegalArgumentException(
-                    "Group Id and Edge Node Id must be configured on endpoint for edge nodes using syntax "
-                                               + TahuConstants.EDGE_NODE_ENDPOINT_URL_SYNTAX
-                                               + " ; Group Id, Edge Node Id, and Device Id must be configured on endpoint for edge node devices using syntax "
-                                               + TahuConstants.DEVICE_ENDPOINT_URL_SYNTAX
-                                               + " ; or Host ID must be configured on endpoint for host applications using syntax "
-                                               + TahuConstants.HOST_APP_ENDPOINT_URL_SYNTAX);
+    @Override
+    protected TahuEndpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters)
+            throws Exception {
+
+        LOG.trace("Camel createEndpoint called: uri {} remaining {}", uri, remaining);
+
+        try {
+            if (ObjectHelper.isEmpty(remaining)) {
+                throw new IllegalArgumentException(
+                        "Group Id and Edge Node Id must be configured on endpoint for edge nodes using syntax "
+                                                   + TahuConstants.EDGE_NODE_ENDPOINT_URI_SYNTAX
+                                                   + " ; Group Id, Edge Node Id, and Device Id must be configured on endpoint for edge node devices using syntax "
+                                                   + TahuConstants.DEVICE_ENDPOINT_URI_SYNTAX
+                                                   + " ; or Host ID must be configured on endpoint for host applications using syntax "
+                                                   + TahuConstants.HOST_APP_ENDPOINT_URI_SYNTAX);
+            }
+
+            TahuEndpoint answer = endpoints.get(remaining);
+            if (answer == null) {
+                // Each endpoint can have its own configuration so make a copy of the
+                // configuration
+                TahuConfiguration tahuConfig = getConfiguration().copy();
+
+                if (tahuConfig.getSslContextParameters() == null) {
+                    tahuConfig.setSslContextParameters(retrieveGlobalSslContextParameters());
+                }
+
+                answer = new TahuEndpoint(uri, this, tahuConfig, remaining);
+
+                TahuEndpoint existingAnswer = endpoints.putIfAbsent(remaining, answer);
+                if (existingAnswer == null) {
+                    Map<String, Object> metricDataTypes = PropertiesHelper.extractProperties(parameters, "metric.");
+                    answer.setMetricDataTypes(metricDataTypes);
+
+                    setProperties(answer, parameters);
+                } else {
+                    answer = existingAnswer;
+                }
+            }
+
+            return answer;
+        } finally {
+            LOG.trace("Camel createEndpoint complete");
         }
-
-        // Each endpoint can have its own configuration so make a copy of the configuration
-        TahuConfiguration tahuConfig = getConfiguration().copy();
-
-        TahuEndpoint answer = new TahuEndpoint(uri, this, tahuConfig, remaining);
-
-        setProperties(answer, parameters);
-
-        if (tahuConfig.getSslContextParameters() == null) {
-            tahuConfig.setSslContextParameters(retrieveGlobalSslContextParameters());
-        }
-
-        return answer;
     }
 
     public TahuConfiguration getConfiguration() {

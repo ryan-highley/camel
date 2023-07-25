@@ -27,10 +27,6 @@ import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriParams;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.util.ObjectHelper;
-import org.eclipse.tahu.message.model.EdgeNodeDescriptor;
-import org.eclipse.tahu.message.model.MessageType;
-import org.eclipse.tahu.message.model.SparkplugMeta;
-import org.eclipse.tahu.message.model.Topic;
 import org.eclipse.tahu.model.MqttServerDefinition;
 import org.eclipse.tahu.mqtt.MqttClientId;
 import org.eclipse.tahu.mqtt.MqttServerName;
@@ -39,8 +35,8 @@ import org.eclipse.tahu.mqtt.MqttServerUrl;
 @UriParams
 public class TahuConfiguration implements Cloneable {
 
-    private static final Pattern SERVER_DEF_PATTERN
-            = Pattern.compile("([^:]+):(?:(?!tcp|ssl)([^:]+):)?((?:tcp|ssl):(?://)?[\\p{Alnum}.-]+(?::\\d+)?),?");
+    private static final Pattern SERVER_DEF_PATTERN = Pattern
+            .compile("([^:]+):(?:(?!tcp|ssl)([^:]+):)?((?:tcp|ssl):(?://)?[\\p{Alnum}.-]+(?::\\d+)?),?");
 
     @UriParam(label = "common",
               description = "MQTT server definition list, given with the following syntax in a comma-separated list: MqttServerName:[MqttClientId:](tcp|ssl)://hostname[:port],...")
@@ -57,9 +53,6 @@ public class TahuConfiguration implements Cloneable {
 
     @UriParam(label = "security", description = "Password for MQTT server authentication", secret = true)
     private String password;
-
-    @UriParam(label = "producer,advanced", description = "Flag enabling support for metric aliases", defaultValue = "false")
-    private boolean useAliases = false;
 
     @UriParam(label = "common", description = "Delay before node a rebirth message will be sent", defaultValue = "5000")
     private long rebirthDebounceDelay = 5000L;
@@ -78,7 +71,7 @@ public class TahuConfiguration implements Cloneable {
         this.servers = servers;
     }
 
-    public List<MqttServerDefinition> getServerDefinitionList(EdgeNodeDescriptor edgeNodeDescriptor) {
+    public List<MqttServerDefinition> getServerDefinitionList() {
         List<MqttServerDefinition> serverDefinitionList;
         if (ObjectHelper.isEmpty(servers)) {
             serverDefinitionList = List.of();
@@ -93,16 +86,17 @@ public class TahuConfiguration implements Cloneable {
                 String clientId = matchResult.group(2);
                 String serverUrl = matchResult.group(3);
 
-                return parseFromUrlString(serverName, clientId, serverUrl, edgeNodeDescriptor);
+                return parseFromUrlString(serverName, clientId, serverUrl);
             }).toList();
         }
         return serverDefinitionList;
     }
 
     private MqttServerDefinition parseFromUrlString(
-            String serverName, String clientId, String serverUrl, EdgeNodeDescriptor edgeNodeDescriptor) {
+            String serverName, String clientId, String serverUrl) {
         if (ObjectHelper.isEmpty(serverName) || ObjectHelper.isEmpty(serverUrl)) {
-            throw new RuntimeCamelException("Both serverName and serverUrl must be specified in MQTT server definitions");
+            throw new RuntimeCamelException(
+                    "Both serverName and serverUrl must be specified in MQTT server definitions");
         }
 
         try {
@@ -114,7 +108,7 @@ public class TahuConfiguration implements Cloneable {
 
             return new MqttServerDefinition(
                     mqttServerName, mqttClientId, new MqttServerUrl(serverUrl), username, password, keepAliveTimeout,
-                    new Topic(SparkplugMeta.SPARKPLUG_B_TOPIC_PREFIX, edgeNodeDescriptor, MessageType.NDEATH));
+                    null);
         } catch (Exception e) {
             throw new RuntimeCamelException(e);
         }
@@ -142,14 +136,6 @@ public class TahuConfiguration implements Cloneable {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public boolean isUseAliases() {
-        return useAliases;
-    }
-
-    public void setUseAliases(boolean useAliases) {
-        this.useAliases = useAliases;
     }
 
     public long getRebirthDebounceDelay() {

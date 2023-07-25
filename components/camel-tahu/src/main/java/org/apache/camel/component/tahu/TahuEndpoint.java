@@ -17,9 +17,11 @@
 package org.apache.camel.component.tahu;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.camel.*;
 import org.apache.camel.spi.*;
@@ -27,152 +29,286 @@ import org.apache.camel.support.DefaultEndpoint;
 import org.apache.camel.support.DefaultHeaderFilterStrategy;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.UnsafeUriCharactersEncoder;
-import org.eclipse.tahu.message.model.EdgeNodeDescriptor;
-import org.eclipse.tahu.message.model.MetricDataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * Sparkplug B Edge Node and Host Application support over MQTT using Eclipse Tahu
  */
 @UriEndpoint(firstVersion = "4.0.0", scheme = TahuConstants.COMPONENT_SCHEME, title = "Tahu",
-             syntax = TahuConstants.DEVICE_ENDPOINT_URL_SYNTAX, alternativeSyntax = TahuConstants.HOST_APP_ENDPOINT_URL_SYNTAX,
-             category = { Category.MESSAGING, Category.IOT, Category.MONITORING }, headersClass = TahuConstants.class)
+             syntax = TahuConstants.DEVICE_ENDPOINT_URI_SYNTAX, alternativeSyntax = TahuConstants.HOST_APP_ENDPOINT_URI_SYNTAX,
+             category = {
+                     Category.MESSAGING, Category.IOT, Category.MONITORING },
+             headersClass = TahuConstants.class)
 public class TahuEndpoint extends DefaultEndpoint implements HeaderFilterStrategyAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(TahuEndpoint.class);
+
     @UriParam
     private final TahuConfiguration configuration;
+
     @UriPath(label = "producer", description = "ID of the group")
     @Metadata(required = true)
-    private String groupId;
+    private final String groupId;
+
     @UriPath(label = "producer", description = "ID of the edge node")
     @Metadata(required = true)
-    private String edgeNode;
-    @UriPath(label = "producer (device only)",
-             description = "ID of this edge node device - must also be listed in the corresponding edge node endpoint's \"deviceIds\" list")
-    private String deviceId;
+    private final String edgeNode;
+
+    @UriPath(label = "producer (device only)", description = "ID of this edge node device")
+    private final String deviceId;
+
     @UriPath(label = "consumer", description = "ID for the host application")
     @Metadata(required = true)
-    private String hostId;
+    private final String hostId;
+
     @UriParam(label = "producer (edge node only)", description = "Host ID of the primary host application for this edge node")
     private String primaryHostId;
-    @UriParam(label = "producer (edge node only)",
-              description = "IDs of all devices attached to this edge node as a comma-separated list")
-    private String deviceIds;
+
     @UriParam(label = "producer",
-              description = "Metric names and types for this edge node or device, as \"metric.<metricName> = <metricDataType>\"",
-              prefix = "metric.", multiValue = true)
+              description = "Metric names and types for this edge node or device ID(s), as \"metric.[edgeNode,]deviceId[,deviceId...])"
+                            + TahuConstants.MAJOR_SEPARATOR
+                            + "<metricName> = <metricDataType>\"  NOTE: Uses only the FIRST '" + TahuConstants.MAJOR_SEPARATOR
+                            + "' character to separate the edge node ID or device ID(s) from the metric name, allowing the '"
+                            + TahuConstants.MAJOR_SEPARATOR
+                            + "' character to appear any number of times in the metric name. Comma characters also are only evaluated before the first '"
+                            + TahuConstants.MAJOR_SEPARATOR
+                            + "' character, meaning commas are allowed in metric names but NOT edge node or device IDs. The edge node ID and device IDs can be intermixed in the list to support configuring the same metric name and data type across both the edge node and devices.",
+              prefix = "metric.", multiValue = true,
+              enums = "Int8,Int16,Int32,Int64,UInt8,UInt16,UInt32,UInt64,Float,Double,Boolean,"
+                      +
+                      "String,DateTime,Text,UUID,DataSet,Bytes,File,Template,Int8Array," +
+                      "Int16Array,Int32Array,Int64Array,UInt8Array,UInt16Array,UInt32Array," +
+                      "UInt64Array,FloatArray,DoubleArray,BooleanArray,StringArray," +
+                      "DateTimeArray,Unknown")
     @Metadata(required = true)
-    private Map<String, MetricDataType> metricConfigs;
+    private Map<String, Object> metricDataTypes = Map.of();
+
+    @UriParam(label = "producer,advanced", description = "Flag enabling support for metric aliases", defaultValue = "false")
+    private boolean useAliases = false;
+
     @UriParam(label = "advanced",
               description = "To use a custom HeaderFilterStrategy to filter headers used as Sparkplug metrics",
-              defaultValueNote = "Defaults to sending all Camel Message headers with names starting with \""
+              defaultValueNote = "Defaults to sending all Camel Message headers with name prefixes of \""
                                  + TahuConstants.METRIC_HEADER_PREFIX + "\", including those with null values")
     private HeaderFilterStrategy headerFilterStrategy;
 
-    public TahuEndpoint(TahuConfiguration configuration) {
-        this(null, null, configuration, null);
+    private final Marker loggingMarker;
+
+    private static final ConcurrentMap<String, TahuConfiguration> endpointConfigurations = new ConcurrentHashMap<>();
+
+    private Map<String, Map<String, Object>> metricDataTypeMap = Map.of();
+
+    public static final TahuEndpoint getEdgeNodeEndpoint(String groupId, String edgeNode, TahuConfiguration configuration) {
+        String sparkplugDescriptorString = groupId + TahuConstants.MAJOR_SEPARATOR + edgeNode;
+        String uri = TahuConstants.COMPONENT_SCHEME + "://" + sparkplugDescriptorString;
+
+        TahuEndpoint endpoint = new TahuEndpoint(uri, null, configuration, sparkplugDescriptorString);
+
+        return endpoint;
     }
 
-    public TahuEndpoint(String groupId, String edgeNode, TahuConfiguration configuration) {
-        this(null, null, configuration, groupId + TahuConstants.MAJOR_SEPARATOR + edgeNode);
+    public static final TahuEndpoint getDeviceEndpoint(
+            String groupId, String edgeNode, String deviceId, TahuConfiguration configuration) {
+        String sparkplugDescriptorString = groupId + TahuConstants.MAJOR_SEPARATOR + edgeNode
+                                           + TahuConstants.MAJOR_SEPARATOR + deviceId;
+        String uri = TahuConstants.COMPONENT_SCHEME + "://" + sparkplugDescriptorString;
+
+        TahuEndpoint endpoint = new TahuEndpoint(uri, null, configuration, sparkplugDescriptorString);
+
+        return endpoint;
     }
 
-    public TahuEndpoint(String groupId, String edgeNode, String deviceId, TahuConfiguration configuration) {
-        this(null, null, configuration,
-             groupId + TahuConstants.MAJOR_SEPARATOR + edgeNode + TahuConstants.MAJOR_SEPARATOR + deviceId);
+    public static final TahuEndpoint getHostAppEndpoint(String hostId, TahuConfiguration configuration) {
+        String uri = TahuConstants.COMPONENT_SCHEME + "://" + hostId;
+
+        TahuEndpoint endpoint = new TahuEndpoint(uri, null, configuration, hostId);
+
+        return endpoint;
     }
 
-    public TahuEndpoint(String hostId, TahuConfiguration configuration) {
-        this(null, null, configuration, hostId);
-    }
-
-    TahuEndpoint(String uri, TahuComponent component, TahuConfiguration configuration, String remaining) {
+    TahuEndpoint(String uri, TahuComponent component, TahuConfiguration configuration,
+                 String sparkplugDescriptorString) {
         super(UnsafeUriCharactersEncoder.encode(uri), component);
 
-        this.configuration = configuration;
+        // Strip any leading separators
+        while (ObjectHelper.isNotEmpty(sparkplugDescriptorString)
+                && sparkplugDescriptorString.startsWith(TahuConstants.MAJOR_SEPARATOR)) {
+            sparkplugDescriptorString = sparkplugDescriptorString.substring(TahuConstants.MAJOR_SEPARATOR.length());
+        }
 
-        if (ObjectHelper.isNotEmpty(remaining)) {
-            parseRemaining(remaining);
+        loggingMarker = MarkerFactory.getMarker(sparkplugDescriptorString);
+
+        LOG.trace(loggingMarker,
+                "TahuEndpoint constructor called: uri {} component {} configuration {} sparkplugDescriptorString {}",
+                uri, component, configuration, sparkplugDescriptorString);
+
+        try {
+            String configurationKey = null;
+
+            String hostId = null;
+            String groupId = null;
+            String edgeNode = null;
+            String deviceId = null;
+
+            if (sparkplugDescriptorString.indexOf(TahuConstants.MAJOR_SEPARATOR) == -1) {
+                hostId = sparkplugDescriptorString;
+
+                configurationKey = hostId;
+
+                LOG.debug(loggingMarker, "TahuEndpoint constructor found host app uri for {}",
+                        sparkplugDescriptorString);
+            } else {
+                List<String> splitRemainingSegments = Arrays
+                        .stream(sparkplugDescriptorString.split(TahuConstants.MAJOR_SEPARATOR, 3))
+                        .map(String::trim).toList();
+
+                groupId = splitRemainingSegments.get(0);
+                edgeNode = splitRemainingSegments.get(1);
+
+                configurationKey = groupId + TahuConstants.MAJOR_SEPARATOR + edgeNode;
+
+                if (splitRemainingSegments.size() == 3) {
+                    deviceId = splitRemainingSegments.get(2);
+
+                    LOG.debug(loggingMarker, "TahuEndpoint constructor found device uri for {}",
+                            sparkplugDescriptorString);
+                } else {
+                    LOG.debug(loggingMarker, "TahuEndpoint constructor found edge node uri for {}",
+                            sparkplugDescriptorString);
+                }
+            }
+
+            if ((ObjectHelper.isNotEmpty(hostId) && ObjectHelper.isEmpty(groupId) && ObjectHelper.isEmpty(edgeNode)) ||
+                    (ObjectHelper.isEmpty(hostId) && ObjectHelper.isNotEmpty(groupId)
+                            && ObjectHelper.isNotEmpty(edgeNode))) {
+                this.hostId = hostId;
+                this.groupId = groupId;
+                this.edgeNode = edgeNode;
+                this.deviceId = deviceId;
+
+                LOG.info(loggingMarker,
+                        "TahuEndpoint constructor found valid Sparkplug configuration for {}",
+                        sparkplugDescriptorString);
+            } else {
+                throw new IllegalArgumentException(
+                        "Invalid uri segment found parsing \"" + sparkplugDescriptorString
+                                                   + "\" -- unable to continue");
+            }
+
+            TahuConfiguration existingConfiguration = endpointConfigurations.putIfAbsent(configurationKey,
+                    configuration);
+            if (existingConfiguration != null) {
+                this.configuration = existingConfiguration;
+            } else {
+                this.configuration = configuration;
+            }
+        } finally {
+            LOG.trace(loggingMarker, "TahuEndpoint constructor complete");
         }
     }
 
     public Producer createProducer() throws Exception {
-        LOG.trace("{}: Camel createProducer called", getEndpointLoggingString(LOG.isTraceEnabled()));
+        LOG.trace(loggingMarker, "Camel createProducer called");
 
-        if (ObjectHelper.isEmpty(groupId) || ObjectHelper.isEmpty(edgeNode)) {
-            throw new FailedToCreateProducerException(
-                    this, new IllegalArgumentException("No groupId and/or edgeNode configured for this Endpoint"));
+        try {
+            if (ObjectHelper.isEmpty(groupId) || ObjectHelper.isEmpty(edgeNode)) {
+                throw new FailedToCreateProducerException(
+                        this, new IllegalArgumentException("No groupId and/or edgeNode configured for this Endpoint"));
+            }
+
+            // deviceId may be null
+            TahuProducer producer = new TahuProducer(this, groupId, edgeNode, deviceId);
+            return producer;
+        } finally {
+            LOG.trace(loggingMarker, "Camel createProducer complete");
         }
-
-        return new TahuProducer(this);
     }
 
     public Consumer createConsumer(Processor processor) throws Exception {
-        LOG.trace("{}: Camel createConsumer called", getEndpointLoggingString(LOG.isTraceEnabled()));
+        LOG.trace(loggingMarker, "Camel createConsumer called");
 
-        if (ObjectHelper.isEmpty(hostId)) {
-            throw new FailedToCreateConsumerException(
-                    this, new IllegalArgumentException("No hostId configured for this Endpoint"));
+        try {
+            if (ObjectHelper.isEmpty(hostId)) {
+                throw new FailedToCreateConsumerException(
+                        this, new IllegalArgumentException("No hostId configured for this Endpoint"));
+            }
+
+            TahuConsumer consumer = new TahuConsumer(this, processor, hostId);
+            configureConsumer(consumer);
+            return consumer;
+        } finally {
+            LOG.trace(loggingMarker, "Camel createConsumer complete");
         }
-
-        Consumer consumer = new TahuConsumer(this, processor);
-        configureConsumer(consumer);
-        return consumer;
-    }
-
-    private String getEndpointLoggingString(boolean isLoggingEnabled) {
-        if (!isLoggingEnabled)
-            return null;
-
-        return String.format("groupId %1$s edgeNode %2$s deviceId %3$s hostId %4$s", groupId, edgeNode, deviceId, hostId);
     }
 
     @Override
     public void doStart() {
-        LOG.trace("{}: Camel doStart called", getEndpointLoggingString(LOG.isTraceEnabled()));
+        LOG.trace(loggingMarker, "Camel doStart called");
+
+        try {
+            Map<String, Map<String, Object>> newMetricDataTypeMap = new HashMap<>();
+
+            metricDataTypes.forEach((configName, metricDataTypeObj) -> {
+                int metricNameIdx = configName.indexOf(TahuConstants.MAJOR_SEPARATOR);
+                if (metricNameIdx <= 0) {
+                    LOG.error(loggingMarker, "Invalid metricDataType configuration found: {}", configName);
+                    return;
+                }
+
+                if (metricDataTypeObj == null) {
+                    LOG.error(loggingMarker, "Null metricDataType configuration found for {}", configName);
+                    return;
+                }
+
+                String metricName = configName.substring(metricNameIdx + TahuConstants.MAJOR_SEPARATOR.length());
+                String[] descriptorNames = configName.substring(0, metricNameIdx)
+                        .split(TahuConstants.CONFIG_LIST_SEPARATOR);
+
+                Arrays.stream(descriptorNames)
+                        .forEach(descriptorName -> {
+                            Map<String, Object> metricTypes = newMetricDataTypeMap.computeIfAbsent(descriptorName,
+                                    _x -> new HashMap<>());
+
+                            metricTypes.put(metricName, metricDataTypeObj);
+                        });
+            });
+
+            newMetricDataTypeMap.replaceAll((descriptorName, typeMap) -> Map.copyOf(typeMap));
+
+            metricDataTypeMap = Map.copyOf(newMetricDataTypeMap);
+        } finally {
+            LOG.trace(loggingMarker, "Camel doStart complete");
+        }
+
     }
 
     @Override
     public void doStop() {
-        LOG.trace("{}: Camel doStop called", getEndpointLoggingString(LOG.isTraceEnabled()));
+        LOG.trace(loggingMarker, "Camel doStop called");
+        LOG.trace(loggingMarker, "Camel doStop complete");
+    }
+
+    public TahuConfiguration getConfiguration() {
+        return configuration;
     }
 
     public String getGroupId() {
         return groupId;
     }
 
-    public void setGroupId(String groupId) {
-        this.groupId = groupId;
-    }
-
     public String getEdgeNode() {
         return edgeNode;
-    }
-
-    public void setEdgeNode(String edgeNode) {
-        this.edgeNode = edgeNode;
-    }
-
-    public EdgeNodeDescriptor getEdgeNodeDescriptor() {
-        return new EdgeNodeDescriptor(groupId, edgeNode);
     }
 
     public String getDeviceId() {
         return deviceId;
     }
 
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
-    }
-
     public String getHostId() {
         return hostId;
-    }
-
-    public void setHostId(String hostId) {
-        this.hostId = hostId;
     }
 
     public String getPrimaryHostId() {
@@ -183,69 +319,24 @@ public class TahuEndpoint extends DefaultEndpoint implements HeaderFilterStrateg
         this.primaryHostId = primaryHostId;
     }
 
-    public String getDeviceIds() {
-        return deviceIds;
+    public Map<String, Object> getMetricDataTypes() {
+        return metricDataTypes;
     }
 
-    public void setDeviceIds(String deviceIds) {
-        this.deviceIds = deviceIds;
+    public void setMetricDataTypes(Map<String, Object> metricDataTypes) {
+        this.metricDataTypes = Map.copyOf(metricDataTypes);
     }
 
-    public List<String> getDeviceIdList() {
-        List<String> deviceIdList;
-        if (ObjectHelper.isEmpty(deviceIds)) {
-            deviceIdList = List.of();
-        } else {
-            deviceIdList = List.of(deviceIds.split(","));
-        }
-        return deviceIdList;
+    public boolean isUseAliases() {
+        return useAliases;
     }
 
-    public Map<String, MetricDataType> getMetricConfigs() {
-        return metricConfigs;
+    public void setUseAliases(boolean useAliases) {
+        this.useAliases = useAliases;
     }
 
-    public void setMetricConfigs(Map<String, MetricDataType> metricConfigs) {
-        this.metricConfigs = Map.copyOf(metricConfigs);
-    }
-
-    public TahuConfiguration getConfiguration() {
-        return configuration;
-    }
-
-    protected void parseRemaining(String remaining) {
-        List<String> splitRemainingSegments
-                = Arrays.stream(remaining.split(TahuConstants.MAJOR_SEPARATOR)).map(String::trim).toList();
-
-        if (ObjectHelper.isEmpty(splitRemainingSegments) || splitRemainingSegments.stream().anyMatch(ObjectHelper::isEmpty)) {
-            throw new IllegalArgumentException(
-                    "Empty uri remaining segment found parsing \"" + remaining + "\" -- unable to continue");
-        }
-
-        if (splitRemainingSegments.size() > 3) {
-            throw new IllegalArgumentException(
-                    "Too many uri remaining segments found parsing \"" + remaining + "\" -- unable to continue");
-        }
-
-        if (splitRemainingSegments.size() == 1 && ObjectHelper.isEmpty(getHostId())) {
-
-            setHostId(remaining);
-
-        } else {
-
-            if (ObjectHelper.isEmpty(getGroupId())) {
-                setGroupId(splitRemainingSegments.get(0));
-            }
-
-            if (ObjectHelper.isEmpty(getEdgeNode())) {
-                setEdgeNode(splitRemainingSegments.get(1));
-            }
-
-            if (splitRemainingSegments.size() == 3 && ObjectHelper.isEmpty(getDeviceId())) {
-                setDeviceId(splitRemainingSegments.get(2));
-            }
-
-        }
+    public Map<String, Map<String, Object>> getMetricDataTypeMap() {
+        return metricDataTypeMap;
     }
 
     @Override
@@ -271,11 +362,4 @@ public class TahuEndpoint extends DefaultEndpoint implements HeaderFilterStrateg
         this.headerFilterStrategy = strategy;
     }
 
-    protected ExecutorService createConsumerExecutor() {
-        return getCamelContext().getExecutorServiceManager().newSingleThreadExecutor(this, "TahuConsumer");
-    }
-
-    protected ExecutorService createProducerExecutor() {
-        return getCamelContext().getExecutorServiceManager().newSingleThreadExecutor(this, "TahuProducer");
-    }
 }

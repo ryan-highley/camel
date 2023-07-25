@@ -12927,49 +12927,6 @@ public class StaticEndpointBuilders {
         return org.apache.camel.builder.endpoint.dsl.SnmpEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
-     * Camel :: Sparkplug B (camel-sparkplug-b)
-     * Sparkplug B component which does bla bla.
-     * 
-     * Category: database
-     * Since: 4.0.0-SNAPSHOT
-     * Maven coordinates: org.apache.camel:camel-sparkplug-b
-     * 
-     * Syntax: <code>sparkplug:name</code>
-     * 
-     * Path parameter: name (required)
-     * Some description of this option, and what it does
-     * 
-     * @param path name
-     * @return the dsl builder
-     */
-    public static org.apache.camel.builder.endpoint.dsl.SparkplugBEndpointBuilderFactory.SparkplugBEndpointBuilder sparkplug(
-            String path) {
-        return org.apache.camel.builder.endpoint.dsl.SparkplugBEndpointBuilderFactory.endpointBuilder("sparkplug", path);
-    }
-    /**
-     * Camel :: Sparkplug B (camel-sparkplug-b)
-     * Sparkplug B component which does bla bla.
-     * 
-     * Category: database
-     * Since: 4.0.0-SNAPSHOT
-     * Maven coordinates: org.apache.camel:camel-sparkplug-b
-     * 
-     * Syntax: <code>sparkplug:name</code>
-     * 
-     * Path parameter: name (required)
-     * Some description of this option, and what it does
-     * 
-     * @param componentName to use a custom component name for the endpoint
-     * instead of the default name
-     * @param path name
-     * @return the dsl builder
-     */
-    public static org.apache.camel.builder.endpoint.dsl.SparkplugBEndpointBuilderFactory.SparkplugBEndpointBuilder sparkplug(
-            String componentName,
-            String path) {
-        return org.apache.camel.builder.endpoint.dsl.SparkplugBEndpointBuilderFactory.endpointBuilder(componentName, path);
-    }
-    /**
      * Splunk (camel-splunk)
      * Publish or search for events in Splunk.
      * 
@@ -13861,21 +13818,29 @@ public class StaticEndpointBuilders {
     }
     /**
      * Tahu (camel-tahu)
-     * Tahu component which does bla bla.
+     * Sparkplug B Edge Node and Host Application support over MQTT using
+     * Eclipse Tahu
      * 
      * Category: messaging,iot,monitoring
-     * Since: 4.0.0-SNAPSHOT
+     * Since: 4.0
      * Maven coordinates: org.apache.camel:camel-tahu
      * 
-     * Syntax: <code>tahu:groupId:edgeNode</code>
+     * Syntax: <code>tahu:groupId/edgeNode/deviceId</code>
      * 
      * Path parameter: groupId (required)
      * ID of the group
      * 
      * Path parameter: edgeNode (required)
-     * Name of the edge node
+     * ID of the edge node
      * 
-     * @param path groupId:edgeNode
+     * Path parameter: deviceId
+     * ID of this edge node device - must also be listed in the corresponding
+     * edge node endpoint's deviceIds list
+     * 
+     * Path parameter: hostId (required)
+     * ID for the host application
+     * 
+     * @param path groupId/edgeNode/deviceId
      * @return the dsl builder
      */
     public static org.apache.camel.builder.endpoint.dsl.TahuEndpointBuilderFactory.TahuEndpointBuilder tahu(
@@ -13884,23 +13849,31 @@ public class StaticEndpointBuilders {
     }
     /**
      * Tahu (camel-tahu)
-     * Tahu component which does bla bla.
+     * Sparkplug B Edge Node and Host Application support over MQTT using
+     * Eclipse Tahu
      * 
      * Category: messaging,iot,monitoring
-     * Since: 4.0.0-SNAPSHOT
+     * Since: 4.0
      * Maven coordinates: org.apache.camel:camel-tahu
      * 
-     * Syntax: <code>tahu:groupId:edgeNode</code>
+     * Syntax: <code>tahu:groupId/edgeNode/deviceId</code>
      * 
      * Path parameter: groupId (required)
      * ID of the group
      * 
      * Path parameter: edgeNode (required)
-     * Name of the edge node
+     * ID of the edge node
+     * 
+     * Path parameter: deviceId
+     * ID of this edge node device - must also be listed in the corresponding
+     * edge node endpoint's deviceIds list
+     * 
+     * Path parameter: hostId (required)
+     * ID for the host application
      * 
      * @param componentName to use a custom component name for the endpoint
      * instead of the default name
-     * @param path groupId:edgeNode
+     * @param path groupId/edgeNode/deviceId
      * @return the dsl builder
      */
     public static org.apache.camel.builder.endpoint.dsl.TahuEndpointBuilderFactory.TahuEndpointBuilder tahu(
