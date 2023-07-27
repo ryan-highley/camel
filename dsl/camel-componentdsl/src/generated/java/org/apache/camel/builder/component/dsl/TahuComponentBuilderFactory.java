@@ -300,7 +300,6 @@ public interface TahuComponentBuilderFactory {
             case "servers": getOrCreateConfiguration((TahuComponent) component).setServers((java.lang.String) value); return true;
             case "bridgeErrorHandler": ((TahuComponent) component).setBridgeErrorHandler((boolean) value); return true;
             case "lazyStartProducer": ((TahuComponent) component).setLazyStartProducer((boolean) value); return true;
-            case "useAliases": getOrCreateConfiguration((TahuComponent) component).setUseAliases((boolean) value); return true;
             case "autowiredEnabled": ((TahuComponent) component).setAutowiredEnabled((boolean) value); return true;
             case "configuration": ((TahuComponent) component).setConfiguration((org.apache.camel.component.tahu.TahuConfiguration) value); return true;
             case "password": getOrCreateConfiguration((TahuComponent) component).setPassword((java.lang.String) value); return true;
