@@ -29,24 +29,16 @@ public class TahuEndpointConfigurer extends PropertyConfigurerSupport implements
         case "exceptionHandler": target.setExceptionHandler(property(camelContext, org.apache.camel.spi.ExceptionHandler.class, value)); return true;
         case "exchangepattern":
         case "exchangePattern": target.setExchangePattern(property(camelContext, org.apache.camel.ExchangePattern.class, value)); return true;
-        case "headerfilterstrategy":
-        case "headerFilterStrategy": target.setHeaderFilterStrategy(property(camelContext, org.apache.camel.spi.HeaderFilterStrategy.class, value)); return true;
         case "keepalivetimeout":
         case "keepAliveTimeout": target.getConfiguration().setKeepAliveTimeout(property(camelContext, int.class, value)); return true;
         case "lazystartproducer":
         case "lazyStartProducer": target.setLazyStartProducer(property(camelContext, boolean.class, value)); return true;
-        case "metricdatatypes":
-        case "metricDataTypes": target.setMetricDataTypes(property(camelContext, java.util.Map.class, value)); return true;
         case "password": target.getConfiguration().setPassword(property(camelContext, java.lang.String.class, value)); return true;
-        case "primaryhostid":
-        case "primaryHostId": target.setPrimaryHostId(property(camelContext, java.lang.String.class, value)); return true;
         case "rebirthdebouncedelay":
         case "rebirthDebounceDelay": target.getConfiguration().setRebirthDebounceDelay(property(camelContext, long.class, value)); return true;
         case "servers": target.getConfiguration().setServers(property(camelContext, java.lang.String.class, value)); return true;
         case "sslcontextparameters":
         case "sslContextParameters": target.getConfiguration().setSslContextParameters(property(camelContext, org.apache.camel.support.jsse.SSLContextParameters.class, value)); return true;
-        case "usealiases":
-        case "useAliases": target.setUseAliases(property(camelContext, boolean.class, value)); return true;
         case "username": target.getConfiguration().setUsername(property(camelContext, java.lang.String.class, value)); return true;
         default: return false;
         }
@@ -63,24 +55,16 @@ public class TahuEndpointConfigurer extends PropertyConfigurerSupport implements
         case "exceptionHandler": return org.apache.camel.spi.ExceptionHandler.class;
         case "exchangepattern":
         case "exchangePattern": return org.apache.camel.ExchangePattern.class;
-        case "headerfilterstrategy":
-        case "headerFilterStrategy": return org.apache.camel.spi.HeaderFilterStrategy.class;
         case "keepalivetimeout":
         case "keepAliveTimeout": return int.class;
         case "lazystartproducer":
         case "lazyStartProducer": return boolean.class;
-        case "metricdatatypes":
-        case "metricDataTypes": return java.util.Map.class;
         case "password": return java.lang.String.class;
-        case "primaryhostid":
-        case "primaryHostId": return java.lang.String.class;
         case "rebirthdebouncedelay":
         case "rebirthDebounceDelay": return long.class;
         case "servers": return java.lang.String.class;
         case "sslcontextparameters":
         case "sslContextParameters": return org.apache.camel.support.jsse.SSLContextParameters.class;
-        case "usealiases":
-        case "useAliases": return boolean.class;
         case "username": return java.lang.String.class;
         default: return null;
         }
@@ -98,34 +82,17 @@ public class TahuEndpointConfigurer extends PropertyConfigurerSupport implements
         case "exceptionHandler": return target.getExceptionHandler();
         case "exchangepattern":
         case "exchangePattern": return target.getExchangePattern();
-        case "headerfilterstrategy":
-        case "headerFilterStrategy": return target.getHeaderFilterStrategy();
         case "keepalivetimeout":
         case "keepAliveTimeout": return target.getConfiguration().getKeepAliveTimeout();
         case "lazystartproducer":
         case "lazyStartProducer": return target.isLazyStartProducer();
-        case "metricdatatypes":
-        case "metricDataTypes": return target.getMetricDataTypes();
         case "password": return target.getConfiguration().getPassword();
-        case "primaryhostid":
-        case "primaryHostId": return target.getPrimaryHostId();
         case "rebirthdebouncedelay":
         case "rebirthDebounceDelay": return target.getConfiguration().getRebirthDebounceDelay();
         case "servers": return target.getConfiguration().getServers();
         case "sslcontextparameters":
         case "sslContextParameters": return target.getConfiguration().getSslContextParameters();
-        case "usealiases":
-        case "useAliases": return target.isUseAliases();
         case "username": return target.getConfiguration().getUsername();
-        default: return null;
-        }
-    }
-
-    @Override
-    public Object getCollectionValueType(Object target, String name, boolean ignoreCase) {
-        switch (ignoreCase ? name.toLowerCase() : name) {
-        case "metricdatatypes":
-        case "metricDataTypes": return java.lang.Object.class;
         default: return null;
         }
     }

@@ -22,7 +22,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.camel.RuntimeCamelException;
-import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriParams;
 import org.apache.camel.support.jsse.SSLContextParameters;
@@ -40,7 +39,6 @@ public class TahuConfiguration implements Cloneable {
 
     @UriParam(label = "common",
               description = "MQTT server definition list, given with the following syntax in a comma-separated list: MqttServerName:[MqttClientId:](tcp|ssl)://hostname[:port],...")
-    @Metadata(required = true)
     private String servers;
 
     @UriParam(label = "common",

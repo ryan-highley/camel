@@ -20,17 +20,21 @@ import org.apache.camel.spi.Metadata;
 
 public final class TahuConstants {
 
-    public static final String COMPONENT_SCHEME = "tahu";
+    public static final String BASE_SCHEME = "tahu";
+    public static final String EDGE_NODE_SCHEME = BASE_SCHEME + "-node";
+    public static final String DEVICE_SCHEME = BASE_SCHEME + "-device";
+    public static final String HOST_APP_SCHEME = BASE_SCHEME + "-host";
 
     public static final String MAJOR_SEPARATOR = "/";
     public static final String MINOR_SEPARATOR = "+";
     public static final String CONFIG_LIST_SEPARATOR = ",";
 
-    public static final String EDGE_NODE_ENDPOINT_URI_SYNTAX = COMPONENT_SCHEME + ":groupId" + MAJOR_SEPARATOR + "edgeNode";
+    public static final String EDGE_NODE_ENDPOINT_URI_SYNTAX = EDGE_NODE_SCHEME + ":groupId" + MAJOR_SEPARATOR + "edgeNode";
 
-    public static final String DEVICE_ENDPOINT_URI_SYNTAX = EDGE_NODE_ENDPOINT_URI_SYNTAX + MAJOR_SEPARATOR + "deviceId";
+    public static final String DEVICE_ENDPOINT_URI_SYNTAX
+            = DEVICE_SCHEME + ":groupId" + MAJOR_SEPARATOR + "edgeNode" + MAJOR_SEPARATOR + "deviceId";
 
-    public static final String HOST_APP_ENDPOINT_URI_SYNTAX = COMPONENT_SCHEME + ":hostId";
+    public static final String HOST_APP_ENDPOINT_URI_SYNTAX = HOST_APP_SCHEME + ":hostId";
 
     @Metadata(description = "The Camel Message Header prefix denoting a Sparkplug metric", label = "producer,consumer")
     public static final String METRIC_HEADER_PREFIX = "CamelTahuMetric.";

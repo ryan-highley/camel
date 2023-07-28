@@ -39,23 +39,23 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-public class TahuConsumer extends DefaultConsumer {
+public class TahuHostAppConsumer extends DefaultConsumer {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TahuConsumer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TahuHostAppConsumer.class);
 
-    private static final ConcurrentMap<String, TahuHostApplicationHandler> hostHandlers = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, TahuHostAppHandler> hostHandlers = new ConcurrentHashMap<>();
 
     @SuppressWarnings("unused")
-    private final TahuEndpoint endpoint;
+    private final TahuHostAppEndpoint endpoint;
     private final TahuConfiguration configuration;
 
     private final String hostId;
 
-    private TahuHostApplicationHandler tahuHostApplicationHandler;
+    private TahuHostAppHandler tahuHostApplicationHandler;
 
     private final Marker loggingMarker;
 
-    public TahuConsumer(TahuEndpoint endpoint, Processor processor, String hostId) {
+    TahuHostAppConsumer(TahuHostAppEndpoint endpoint, Processor processor, String hostId) {
         super(endpoint, processor);
 
         LOG.trace("TahuConsumer constructor called endpoint {} hostId {}", endpoint, hostId);
@@ -79,7 +79,7 @@ public class TahuConsumer extends DefaultConsumer {
         tahuHostApplicationHandler = hostHandlers.computeIfAbsent(hostId, hId -> {
             List<MqttServerDefinition> serverDefinitions = configuration.getServerDefinitionList();
 
-            TahuHostApplicationHandler thah = new TahuHostApplicationHandler(
+            TahuHostAppHandler thah = new TahuHostAppHandler(
                     hId, serverDefinitions, this::onMessageConsumer, this::onMetricConsumer);
 
             return thah;
@@ -98,7 +98,7 @@ public class TahuConsumer extends DefaultConsumer {
 
         LOG.trace(loggingMarker, "Camel doStop called");
 
-        TahuHostApplicationHandler tahuHostApplicationHandler = hostHandlers.get(hostId);
+        TahuHostAppHandler tahuHostApplicationHandler = hostHandlers.get(hostId);
 
         ServiceHelper.stopAndShutdownService(tahuHostApplicationHandler);
 
