@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
-import org.apache.camel.component.tahu.TahuMetricHandler.PayloadBuilder;
+import org.apache.camel.component.tahu.TahuEdgeNodeHandler.PayloadBuilder;
 import org.apache.camel.spi.HeaderFilterStrategy;
 import org.apache.camel.support.DefaultProducer;
 import org.apache.camel.support.service.ServiceHelper;
@@ -36,23 +36,27 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-public class TahuProducer extends DefaultProducer {
+public class TahuEdgeNodeProducer extends DefaultProducer {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TahuProducer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TahuEdgeNodeProducer.class);
 
-    private static final ConcurrentMap<EdgeNodeDescriptor, TahuMetricHandler> descriptorHandlers = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<EdgeNodeDescriptor, TahuEdgeNodeHandler> descriptorHandlers = new ConcurrentHashMap<>();
 
-    private final TahuEndpoint endpoint;
+    private final TahuEdgeNodeEndpoint endpoint;
     private final TahuConfiguration configuration;
     private final HeaderFilterStrategy headerFilterStrategy;
 
     private final EdgeNodeDescriptor edgeNodeDescriptor;
 
-    private TahuMetricHandler tahuMetricHandler;
+    private TahuEdgeNodeHandler tahuMetricHandler;
 
     private final Marker loggingMarker;
 
-    TahuProducer(TahuEndpoint endpoint, String groupId, String edgeNode, String deviceId) {
+    TahuEdgeNodeProducer(TahuEdgeNodeEndpoint endpoint, String groupId, String edgeNode) {
+        this(endpoint, groupId, edgeNode, null);
+    }
+
+    TahuEdgeNodeProducer(TahuEdgeNodeEndpoint endpoint, String groupId, String edgeNode, String deviceId) {
         super(endpoint);
 
         LOG.trace("TahuProducer constructor called endpoint {} groupId {} edgeNode {} deviceId {}", endpoint, groupId,
@@ -99,7 +103,7 @@ public class TahuProducer extends DefaultProducer {
 
                     Map<String, Map<String, Object>> metricDataTypeMap = endpoint.getMetricDataTypeMap();
 
-                    TahuMetricHandler tmh = new TahuMetricHandler(
+                    TahuEdgeNodeHandler tmh = new TahuEdgeNodeHandler(
                             end, serverDefinitions, primaryHostId, useAliases,
                             rebirthDebounceDelay, metricDataTypeMap);
 
@@ -126,7 +130,7 @@ public class TahuProducer extends DefaultProducer {
             handlerDescriptor = ((DeviceDescriptor) handlerDescriptor).getEdgeNodeDescriptor();
         }
 
-        TahuMetricHandler tahuMetricHandler = descriptorHandlers.get(handlerDescriptor);
+        TahuEdgeNodeHandler tahuMetricHandler = descriptorHandlers.get(handlerDescriptor);
 
         ServiceHelper.stopAndShutdownService(tahuMetricHandler);
 

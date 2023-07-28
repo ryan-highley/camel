@@ -51,9 +51,9 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-class TahuMetricHandler extends ServiceSupport implements MetricHandler, CamelContextAware {
+public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler, CamelContextAware {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TahuMetricHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TahuEdgeNodeHandler.class);
 
     private final BdSeqManager bdSeqManager;
     private volatile long currentBirthBdSeq;
@@ -77,9 +77,9 @@ class TahuMetricHandler extends ServiceSupport implements MetricHandler, CamelCo
     private final long rebirthDebounceDelay;
     private final List<String> deviceIds;
 
-    TahuMetricHandler(EdgeNodeDescriptor edgeNodeDescriptor, List<MqttServerDefinition> serverDefinitions,
-                      String primaryHostId, boolean useAliases, long rebirthDebounceDelay,
-                      Map<String, Map<String, Object>> metricDataTypeMap) {
+    TahuEdgeNodeHandler(EdgeNodeDescriptor edgeNodeDescriptor, List<MqttServerDefinition> serverDefinitions,
+                        String primaryHostId, boolean useAliases, long rebirthDebounceDelay,
+                        Map<String, Map<String, Object>> metricDataTypeMap) {
 
         this.edgeNodeDescriptor = edgeNodeDescriptor;
 
@@ -109,7 +109,7 @@ class TahuMetricHandler extends ServiceSupport implements MetricHandler, CamelCo
             currentDeathBdSeq = bdSeqManager.getNextDeathBdSeqNum();
             currentBirthBdSeq = currentDeathBdSeq;
 
-            TahuClientCallback tahuClientCallback = new TahuClientCallback(edgeNodeDescriptor, this);
+            TahuHostAppClientCallback tahuClientCallback = new TahuHostAppClientCallback(edgeNodeDescriptor, this);
 
             this.client = edgeClient = new EdgeClient(
                     this, edgeNodeDescriptor, deviceIds, primaryHostId, useAliases,

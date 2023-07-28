@@ -1,8 +1,8 @@
 {
   "component": {
     "kind": "component",
-    "name": "tahu",
-    "title": "Tahu Edge Node",
+    "name": "tahu-host",
+    "title": "Tahu Host App",
     "description": "Sparkplug B Edge Node and Host Application support over MQTT using Eclipse Tahu",
     "deprecated": false,
     "firstVersion": "4.0.0",
@@ -12,10 +12,10 @@
     "groupId": "org.apache.camel",
     "artifactId": "camel-tahu",
     "version": "4.0.0-SNAPSHOT",
-    "scheme": "tahu",
+    "scheme": "tahu-host",
     "extendsScheme": "",
     "alternativeSchemes": "tahu,tahu-host",
-    "syntax": "tahu:groupId\/edgeNode\/deviceId,tahu:hostId",
+    "syntax": "tahu-host:groupId\/edgeNode\/deviceId,tahu:hostId",
     "async": false,
     "api": false,
     "consumerOnly": false,

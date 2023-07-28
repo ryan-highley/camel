@@ -16,18 +16,12 @@
  */
 package org.apache.camel.component.tahu;
 
-import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.EndpointInject;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.direct.DirectEndpoint;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.infra.core.CamelContextExtension;
 import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -45,19 +39,26 @@ public class TahuComponentTest extends TahuTestSupport {
     @Order(2)
     @RegisterExtension
     public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
-    private final EventBusHelper eventBusHelper = EventBusHelper.getInstance();
-    protected ProducerTemplate template;
-    protected ConsumerTemplate consumer;
+
     @EndpointInject("mock:result")
     MockEndpoint mock;
+
+    @EndpointInject("direct:node-birth")
+    DirectEndpoint nodeBirthEndpoint;
+
+    @EndpointInject("direct:device-birth")
+    DirectEndpoint deviceBirthEndpoint;
+
+    @EndpointInject("direct:node-data")
+    DirectEndpoint nodeDataEndpoint;
+
+    @EndpointInject("direct:device-data")
+    DirectEndpoint deviceDataEndpoint;
 
     @Test
     @Disabled
     public void testTahu() throws Exception {
         mock.expectedMinimumMessageCount(5);
-
-        // Trigger events to subscribers
-        simulateEventTrigger();
 
         mock.await();
     }
@@ -70,29 +71,21 @@ public class TahuComponentTest extends TahuTestSupport {
 
                 TahuComponent tahuComponent = getContext().getComponent("tahu", TahuComponent.class);
 
-                TahuEndpoint consumerEndpoint = (TahuEndpoint) tahuComponent.createEndpoint(
-                        "tahu://H1?clientId=TestConsumerId&servers=TahuComponentTestServer:" + service.serviceAddress());
+                TahuEndpoint hostAppEndpoint = (TahuEndpoint) tahuComponent.createEndpoint(
+                        "tahu-host://H1?clientId=TestConsumerId&servers=TahuComponentTestServer:" + service.serviceAddress());
 
-                TahuEndpoint producerEndpoint = (TahuEndpoint) tahuComponent
-                        .createEndpoint("tahu://G2/E2?deviceIds=D2&clientId=TestProducerId&servers=TahuComponentTestServer:"
+                TahuEndpoint edgeNodeEndpoint = (TahuEndpoint) tahuComponent
+                        .createEndpoint("tahu://G2/E2&clientId=TestProducerId&servers=TahuComponentTestServer:"
                                         + service.serviceAddress());
 
-                from(consumerEndpoint).to(producerEndpoint).to("mock:result");
+                TahuEndpoint deviceEndpoint = (TahuEndpoint) tahuComponent.createEndpoint("tahu://G2/E2/D2");
+
+                from(nodeBirthEndpoint).to(edgeNodeEndpoint).to(mock);
+                from(nodeDataEndpoint).to(edgeNodeEndpoint).to(mock);
+                from(deviceBirthEndpoint).to(deviceEndpoint).to(mock);
+                from(deviceDataEndpoint).to(deviceEndpoint).to(mock);
             }
         };
-    }
-
-    private void simulateEventTrigger() {
-        final TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                final Date now = new Date();
-                // publish events to the event bus
-                eventBusHelper.publish(now);
-            }
-        };
-
-        new Timer().scheduleAtFixedRate(task, 1000L, 1000L);
     }
 
     @Override
@@ -100,9 +93,4 @@ public class TahuComponentTest extends TahuTestSupport {
         return camelContextExtension;
     }
 
-    @BeforeEach
-    void setUpRequirements() {
-        template = getCamelContextExtension().getProducerTemplate();
-        consumer = getCamelContextExtension().getConsumerTemplate();
-    }
 }

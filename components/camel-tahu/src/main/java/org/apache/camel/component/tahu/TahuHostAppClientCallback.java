@@ -41,18 +41,18 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-class TahuClientCallback implements ClientCallback {
+class TahuHostAppClientCallback implements ClientCallback {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TahuClientCallback.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TahuHostAppClientCallback.class);
 
     private EdgeClient client;
 
     private final EdgeNodeDescriptor edgeNodeDescriptor;
-    private final TahuMetricHandler tahuMetricHandler;
+    private final TahuEdgeNodeHandler tahuMetricHandler;
 
     private final Marker loggingMarker;
 
-    TahuClientCallback(EdgeNodeDescriptor edgeNodeDescriptor, TahuMetricHandler tahuMetricHandler) {
+    TahuHostAppClientCallback(EdgeNodeDescriptor edgeNodeDescriptor, TahuEdgeNodeHandler tahuMetricHandler) {
         this.edgeNodeDescriptor = edgeNodeDescriptor;
         this.tahuMetricHandler = tahuMetricHandler;
 

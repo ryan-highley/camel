@@ -34,10 +34,9 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-public class TahuHostApplicationHandler extends ServiceSupport
-        implements HostApplicationEventHandler {
+public class TahuHostAppHandler extends ServiceSupport implements HostApplicationEventHandler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TahuHostApplicationHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TahuHostAppHandler.class);
 
     private volatile HostApplication hostApplication;
 
@@ -49,9 +48,9 @@ public class TahuHostApplicationHandler extends ServiceSupport
     private final BiConsumer<EdgeNodeDescriptor, Message> onMessageConsumer;
     private final BiConsumer<EdgeNodeDescriptor, Metric> onMetricConsumer;
 
-    TahuHostApplicationHandler(String hostId, List<MqttServerDefinition> serverDefinitions,
-                               BiConsumer<EdgeNodeDescriptor, Message> onMessageConsumer,
-                               BiConsumer<EdgeNodeDescriptor, Metric> onMetricConsumer) {
+    TahuHostAppHandler(String hostId, List<MqttServerDefinition> serverDefinitions,
+                       BiConsumer<EdgeNodeDescriptor, Message> onMessageConsumer,
+                       BiConsumer<EdgeNodeDescriptor, Metric> onMetricConsumer) {
         this.hostId = hostId;
 
         loggingMarker = MarkerFactory.getMarker(hostId);
