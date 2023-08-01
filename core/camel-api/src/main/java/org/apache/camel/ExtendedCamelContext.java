@@ -34,7 +34,6 @@ import org.apache.camel.spi.LifecycleStrategy;
 import org.apache.camel.spi.LogListener;
 import org.apache.camel.spi.ManagementMBeanAssembler;
 import org.apache.camel.spi.NormalizedEndpointUri;
-import org.apache.camel.spi.PluginManager;
 import org.apache.camel.spi.ProcessorExchangeFactory;
 import org.apache.camel.spi.ReactiveExecutor;
 import org.apache.camel.spi.Registry;
@@ -466,14 +465,6 @@ public interface ExtendedCamelContext {
      * provides the phase ordinal value.
      */
     byte getStatusPhase();
-
-    /**
-     * Gets access to the internal plugin manager
-     *
-     * @return the internal plugin manager
-     */
-    @Deprecated
-    PluginManager getPluginManager();
 
     /**
      * Gets a plugin of the given type.
