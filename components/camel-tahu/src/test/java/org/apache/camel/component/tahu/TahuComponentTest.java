@@ -16,19 +16,33 @@
  */
 package org.apache.camel.component.tahu;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.apache.camel.EndpointInject;
+import org.apache.camel.Exchange;
+import org.apache.camel.Message;
+import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.direct.DirectEndpoint;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.infra.core.CamelContextExtension;
 import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.junit.jupiter.api.Disabled;
+import org.eclipse.tahu.edge.sim.DataSimulator;
+import org.eclipse.tahu.edge.sim.RandomDataSimulator;
+import org.eclipse.tahu.message.model.DeviceDescriptor;
+import org.eclipse.tahu.message.model.EdgeNodeDescriptor;
+import org.eclipse.tahu.message.model.SparkplugBPayload;
+import org.eclipse.tahu.message.model.SparkplugBPayloadMap;
+import org.eclipse.tahu.message.model.SparkplugDescriptor;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 @SuppressWarnings("unused")
@@ -56,9 +70,11 @@ public class TahuComponentTest extends TahuTestSupport {
     DirectEndpoint deviceDataEndpoint;
 
     @Test
-    @Disabled
+    // @Disabled
     public void testTahu() throws Exception {
-        mock.expectedMinimumMessageCount(5);
+        mock.expectedMinimumMessageCount(1);
+
+        camelContextExtension.getProducerTemplate().sendBody(nodeBirthEndpoint, null);
 
         mock.await();
     }
@@ -66,25 +82,94 @@ public class TahuComponentTest extends TahuTestSupport {
     @Override
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
+            private EdgeNodeDescriptor edgeNodeDescriptor;
+            private DeviceDescriptor deviceDescriptor;
+            private DataSimulator dataSimulator;
+
             @Override
             public void configure() throws Exception {
 
-                TahuComponent tahuComponent = getContext().getComponent("tahu", TahuComponent.class);
+                // TahuHostAppEndpoint hostAppEndpoint = getCamelContext().getEndpoint(
+                //         "tahu-host:H1?clientId=TestConsumerId&servers=TahuComponentTestServer:" + service.serviceAddress(),
+                //         TahuHostAppEndpoint.class);
 
-                TahuEndpoint hostAppEndpoint = (TahuEndpoint) tahuComponent.createEndpoint(
-                        "tahu-host://H1?clientId=TestConsumerId&servers=TahuComponentTestServer:" + service.serviceAddress());
+                TahuEdgeNodeEndpoint tahuEdgeNodeEndpoint = getCamelContext().getEndpoint(
+                        "tahu-node:G2/E2&clientId=TestProducerId&servers=TahuComponentTestServer:" + service.serviceAddress(),
+                        TahuEdgeNodeEndpoint.class);
 
-                TahuEndpoint edgeNodeEndpoint = (TahuEndpoint) tahuComponent
-                        .createEndpoint("tahu://G2/E2&clientId=TestProducerId&servers=TahuComponentTestServer:"
-                                        + service.serviceAddress());
+                TahuEdgeNodeEndpoint tahuDeviceEndpoint
+                        = getCamelContext().getEndpoint("tahu-device:G2/E2/D2", TahuEdgeNodeEndpoint.class);
 
-                TahuEndpoint deviceEndpoint = (TahuEndpoint) tahuComponent.createEndpoint("tahu://G2/E2/D2");
+                edgeNodeDescriptor
+                        = new EdgeNodeDescriptor(tahuEdgeNodeEndpoint.getGroupId(), tahuEdgeNodeEndpoint.getEdgeNode());
+                deviceDescriptor = new DeviceDescriptor(edgeNodeDescriptor, tahuDeviceEndpoint.getDeviceId());
 
-                from(nodeBirthEndpoint).to(edgeNodeEndpoint).to(mock);
-                from(nodeDataEndpoint).to(edgeNodeEndpoint).to(mock);
-                from(deviceBirthEndpoint).to(deviceEndpoint).to(mock);
-                from(deviceDataEndpoint).to(deviceEndpoint).to(mock);
+                dataSimulator = new RandomDataSimulator(10, new HashMap<SparkplugDescriptor, Integer>() {
+                    {
+                        put(deviceDescriptor, 50);
+                    }
+                });
+
+                SparkplugBPayloadMap nBirthPayload = dataSimulator.getNodeBirthPayload(edgeNodeDescriptor);
+
+                Map<String, Object> nodeMetricDataTypes = nBirthPayload.getMetrics().stream()
+                        .map(m -> new Object[] {
+                                tahuEdgeNodeEndpoint.getEdgeNode() + TahuConstants.MAJOR_SEPARATOR + m.getName(),
+                                m.getDataType() })
+                        .collect(Collectors.toMap(arr -> (String) arr[0], arr -> arr[1]));
+
+                SparkplugBPayload dBirthPayload = dataSimulator.getDeviceBirthPayload(deviceDescriptor);
+
+                Map<String, Object> deviceMetricDataTypes = dBirthPayload.getMetrics().stream()
+                        .map(m -> new Object[] {
+                                tahuDeviceEndpoint.getDeviceId() + TahuConstants.MAJOR_SEPARATOR + m.getName(),
+                                m.getDataType() })
+                        .collect(Collectors.toMap(arr -> (String) arr[0], arr -> arr[1]));
+
+                Map<String, Object> metricDataTypes = new HashMap<>();
+                metricDataTypes.putAll(nodeMetricDataTypes);
+                metricDataTypes.putAll(deviceMetricDataTypes);
+                tahuEdgeNodeEndpoint.setMetricDataTypes(Map.copyOf(metricDataTypes));
+
+                from(nodeBirthEndpoint)
+                        .process((exch) -> processPayload(exch, nBirthPayload))
+                        .to(tahuEdgeNodeEndpoint)
+                        .to(mock);
+
+                from(nodeDataEndpoint)
+                        .process(getNodeDataPayload)
+                        .to(tahuEdgeNodeEndpoint)
+                        .to(mock);
+
+                from(deviceBirthEndpoint)
+                        .process((exch) -> processPayload(exch, dBirthPayload))
+                        .to(tahuDeviceEndpoint)
+                        .to(mock);
+
+                from(deviceDataEndpoint)
+                        .process(getDeviceDataPayload)
+                        .to(tahuDeviceEndpoint)
+                        .to(mock);
             }
+
+            private void processPayload(Exchange exch, SparkplugBPayload payload) {
+                Message message = exch.getMessage();
+
+                payload.getMetrics().forEach(m -> {
+                    message.setHeader(TahuConstants.METRIC_HEADER_PREFIX + m.getName(), m.getValue());
+                });
+
+                message.setBody(payload.getBody(), byte[].class);
+            }
+
+            private Processor getNodeDataPayload = (exch) -> {
+                processPayload(exch, dataSimulator.getNodeDataPayload(edgeNodeDescriptor));
+            };
+
+            private Processor getDeviceDataPayload = (exch) -> {
+                processPayload(exch, dataSimulator.getDeviceDataPayload(deviceDescriptor));
+            };
+
         };
     }
 

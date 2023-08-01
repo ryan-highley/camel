@@ -90,6 +90,7 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
         this.useAliases = useAliases;
         this.rebirthDebounceDelay = rebirthDebounceDelay;
 
+        descriptorMetricMap.put(edgeNodeDescriptor, new ConcurrentHashMap<>());
         addMetricDataTypes(metricDataTypeMap);
 
         this.deviceIds = List.copyOf(deviceDescriptorMap.keySet());
@@ -534,6 +535,10 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
                         "Attempted to publish data payload before birth payloads - cached metric values updated instead");
             }
         }
+    }
+
+    public EdgeNodeDescriptor getEdgeNodeDescriptor() {
+        return edgeNodeDescriptor;
     }
 
     private CamelContext camelContext;
