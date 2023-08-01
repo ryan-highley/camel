@@ -63,7 +63,7 @@ public class CamelBdSeqManager implements BdSeqManager {
                 return 0;
             }
         } catch (Exception e) {
-            LOG.error(loggingMarker, "Failed to get the bdSeq number from the persistent directory", e);
+            LOG.debug(loggingMarker, "Failed to get the bdSeq number from the persistent directory", e);
             storeNextDeathBdSeqNum(0);
             return 0;
         } finally {

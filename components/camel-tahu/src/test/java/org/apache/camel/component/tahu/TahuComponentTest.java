@@ -24,11 +24,11 @@ import org.apache.camel.EndpointInject;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.direct.DirectEndpoint;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
 import org.eclipse.tahu.edge.sim.DataSimulator;
 import org.eclipse.tahu.edge.sim.RandomDataSimulator;
 import org.eclipse.tahu.message.model.DeviceDescriptor;
@@ -36,23 +36,17 @@ import org.eclipse.tahu.message.model.EdgeNodeDescriptor;
 import org.eclipse.tahu.message.model.SparkplugBPayload;
 import org.eclipse.tahu.message.model.SparkplugBPayloadMap;
 import org.eclipse.tahu.message.model.SparkplugDescriptor;
-import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 @SuppressWarnings("unused")
 public class TahuComponentTest extends TahuTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(TahuComponentTest.class);
-
-    @Order(2)
-    @RegisterExtension
-    public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
 
     @EndpointInject("mock:result")
     MockEndpoint mock;
@@ -69,14 +63,47 @@ public class TahuComponentTest extends TahuTestSupport {
     @EndpointInject("direct:device-data")
     DirectEndpoint deviceDataEndpoint;
 
+    private ProducerTemplate template;
+
+    @BeforeEach
+    void setupTemplate() {
+        template = camelContextExtension.getProducerTemplate();
+    }
+
     @Test
-    // @Disabled
-    public void testTahu() throws Exception {
-        mock.expectedMinimumMessageCount(1);
+    public void testNodeBirth() throws Exception {
+        mock.expectedMessageCount(1);
 
-        camelContextExtension.getProducerTemplate().sendBody(nodeBirthEndpoint, null);
+        template.sendBody(nodeBirthEndpoint, null);
 
-        mock.await();
+        mock.assertIsSatisfied();
+    }
+
+    @Test
+    public void testNodeData() throws Exception {
+        mock.expectedMessageCount(1);
+
+        template.sendBody(nodeDataEndpoint, null);
+
+        mock.assertIsSatisfied();
+    }
+
+    @Test
+    public void testDeviceBirth() throws Exception {
+        mock.expectedMessageCount(1);
+
+        template.sendBody(deviceBirthEndpoint, null);
+
+        mock.assertIsSatisfied();
+    }
+
+    @Test
+    public void testDeviceData() throws Exception {
+        mock.expectedMessageCount(1);
+
+        template.sendBody(deviceDataEndpoint, null);
+
+        mock.assertIsSatisfied();
     }
 
     @Override
@@ -94,7 +121,7 @@ public class TahuComponentTest extends TahuTestSupport {
                 //         TahuHostAppEndpoint.class);
 
                 TahuEdgeNodeEndpoint tahuEdgeNodeEndpoint = getCamelContext().getEndpoint(
-                        "tahu-node:G2/E2&clientId=TestProducerId&servers=TahuComponentTestServer:" + service.serviceAddress(),
+                        "tahu-node:G2/E2?clientId=TestProducerId&servers=TahuComponentTestServer:" + service.serviceAddress(),
                         TahuEdgeNodeEndpoint.class);
 
                 TahuEdgeNodeEndpoint tahuDeviceEndpoint
@@ -134,21 +161,25 @@ public class TahuComponentTest extends TahuTestSupport {
                 from(nodeBirthEndpoint)
                         .process((exch) -> processPayload(exch, nBirthPayload))
                         .to(tahuEdgeNodeEndpoint)
+                        .to("log:node-birth?showAll=true&multiline=true")
                         .to(mock);
 
                 from(nodeDataEndpoint)
                         .process(getNodeDataPayload)
                         .to(tahuEdgeNodeEndpoint)
+                        .to("log:node-data?showAll=true&multiline=true")
                         .to(mock);
 
                 from(deviceBirthEndpoint)
                         .process((exch) -> processPayload(exch, dBirthPayload))
                         .to(tahuDeviceEndpoint)
+                        .to("log:device-birth?showAll=true&multiline=true")
                         .to(mock);
 
                 from(deviceDataEndpoint)
                         .process(getDeviceDataPayload)
                         .to(tahuDeviceEndpoint)
+                        .to("log:device-data?showAll=true&multiline=true")
                         .to(mock);
             }
 
