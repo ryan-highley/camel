@@ -20,6 +20,8 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.test.infra.artemis.services.ArtemisService;
 import org.apache.camel.test.infra.artemis.services.ArtemisServiceFactory;
+import org.apache.camel.test.infra.core.CamelContextExtension;
+import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
 import org.apache.camel.test.infra.core.annotations.RouteFixture;
 import org.apache.camel.test.infra.core.api.CamelTestSupportHelper;
 import org.apache.camel.test.infra.core.api.ConfigurableRoute;
@@ -31,6 +33,10 @@ public abstract class TahuTestSupport implements CamelTestSupportHelper, Configu
     @Order(1)
     @RegisterExtension
     public static ArtemisService service = ArtemisServiceFactory.createSingletonMQTTService();
+
+    @Order(2)
+    @RegisterExtension
+    public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
 
     @RouteFixture
     @Override
