@@ -18,7 +18,10 @@ package org.apache.camel.component.tahu;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.camel.Category;
 import org.apache.camel.Consumer;
@@ -34,6 +37,9 @@ import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.DefaultHeaderFilterStrategy;
 import org.apache.camel.util.ObjectHelper;
+import org.eclipse.tahu.message.model.DeviceDescriptor;
+import org.eclipse.tahu.message.model.EdgeNodeDescriptor;
+import org.eclipse.tahu.model.MqttServerDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -96,10 +102,13 @@ public class TahuEdgeNodeEndpoint extends TahuEndpoint implements HeaderFilterSt
               defaultValueNote = "Defaults to sending all Camel Message headers with name prefixes of \""
                                  + TahuConstants.METRIC_HEADER_PREFIX + "\", including those with null values")
     @Metadata(applicableFor = { TahuConstants.EDGE_NODE_SCHEME, TahuConstants.DEVICE_SCHEME })
-    private HeaderFilterStrategy headerFilterStrategy;
+    private volatile HeaderFilterStrategy headerFilterStrategy;
+
+    private static final ConcurrentMap<EdgeNodeDescriptor, TahuEdgeNodeHandler> descriptorHandlers = new ConcurrentHashMap<>();
 
     private Map<String, Map<String, Object>> metricDataTypeMap = Map.of();
 
+    private final EdgeNodeDescriptor edgeNodeDescriptor;
     private final boolean isDeviceEndpoint;
 
     private final Marker loggingMarker;
@@ -113,12 +122,16 @@ public class TahuEdgeNodeEndpoint extends TahuEndpoint implements HeaderFilterSt
         this.deviceId = deviceId;
 
         isDeviceEndpoint = ObjectHelper.isNotEmpty(deviceId);
+
+        // If this Producer is for a Device, the edgeNodeDescriptor will be a
+        // DeviceDescriptor subclass of the EdgeNodeDescriptor describing the
+        // Edge Node to which this Device is attached.
         if (isDeviceEndpoint) {
-            loggingMarker = MarkerFactory
-                    .getMarker(groupId + TahuConstants.MAJOR_SEPARATOR + edgeNode + TahuConstants.MAJOR_SEPARATOR + deviceId);
+            edgeNodeDescriptor = new DeviceDescriptor(groupId, edgeNode, deviceId);
         } else {
-            loggingMarker = MarkerFactory.getMarker(groupId + TahuConstants.MAJOR_SEPARATOR + edgeNode);
+            edgeNodeDescriptor = new EdgeNodeDescriptor(groupId, edgeNode);
         }
+        loggingMarker = MarkerFactory.getMarker(edgeNodeDescriptor.getDescriptorString());
 
     }
 
@@ -132,8 +145,28 @@ public class TahuEdgeNodeEndpoint extends TahuEndpoint implements HeaderFilterSt
                         this, new IllegalArgumentException("No groupId and/or edgeNode configured for this Endpoint"));
             }
 
-            // deviceId may be null
-            TahuEdgeNodeProducer producer = new TahuEdgeNodeProducer(this, getGroupId(), getEdgeNode(), getDeviceId());
+            // A TahuMetricHandler is created for each Edge Node, not Devices
+            EdgeNodeDescriptor handlerDescriptor = edgeNodeDescriptor;
+            if (isDeviceEndpoint) {
+                handlerDescriptor = ((DeviceDescriptor) handlerDescriptor).getEdgeNodeDescriptor();
+            }
+
+            TahuEdgeNodeHandler tahuEdgeNodeHandler = descriptorHandlers.computeIfAbsent(handlerDescriptor,
+                    end -> {
+                        List<MqttServerDefinition> serverDefinitions = configuration.getServerDefinitionList();
+                        long rebirthDebounceDelay = configuration.getRebirthDebounceDelay();
+
+                        TahuEdgeNodeHandler tenh = new TahuEdgeNodeHandler(
+                                end, serverDefinitions, primaryHostId, useAliases,
+                                rebirthDebounceDelay, metricDataTypeMap);
+
+                        tenh.setCamelContext(getCamelContext());
+                        getCamelContext().getRegistry().bind(end.getDescriptorString(), tenh);
+
+                        return tenh;
+                    });
+
+            TahuEdgeNodeProducer producer = new TahuEdgeNodeProducer(this, tahuEdgeNodeHandler);
             return producer;
         } finally {
             LOG.trace(loggingMarker, "Camel createProducer complete");
@@ -234,20 +267,21 @@ public class TahuEdgeNodeEndpoint extends TahuEndpoint implements HeaderFilterSt
 
     @Override
     public HeaderFilterStrategy getHeaderFilterStrategy() {
-        if (getHeaderFilterStrategy() == null) {
-            DefaultHeaderFilterStrategy defaultHeaderFilterStrategy = new DefaultHeaderFilterStrategy();
-            setHeaderFilterStrategy(defaultHeaderFilterStrategy);
+        HeaderFilterStrategy existingStrategy = this.headerFilterStrategy;
+        if (existingStrategy == null) {
+            DefaultHeaderFilterStrategy strategy = new DefaultHeaderFilterStrategy();
+            this.headerFilterStrategy = existingStrategy = strategy;
 
-            defaultHeaderFilterStrategy.setFilterOnMatch(false);
+            strategy.setFilterOnMatch(false);
 
-            defaultHeaderFilterStrategy.setOutFilter(null);
-            defaultHeaderFilterStrategy.setOutFilterPattern((String) null);
-            defaultHeaderFilterStrategy.setOutFilterStartsWith(TahuConstants.METRIC_HEADER_PREFIX);
+            strategy.setOutFilter(null);
+            strategy.setOutFilterPattern((String) null);
+            strategy.setOutFilterStartsWith(TahuConstants.METRIC_HEADER_PREFIX);
 
-            defaultHeaderFilterStrategy.setAllowNullValues(true);
+            strategy.setAllowNullValues(true);
         }
 
-        return getHeaderFilterStrategy();
+        return existingStrategy;
     }
 
     @Override

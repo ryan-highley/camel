@@ -101,6 +101,18 @@
         <scope>test</scope>
         <type>test-jar</type>
     </dependency>
+    <dependency>
+      <groupId>org.eclipse.tahu</groupId>
+      <artifactId>tahu-edge-compat</artifactId>
+      <version>${tahu-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.tahu</groupId>
+      <artifactId>tahu-host-compat</artifactId>
+      <version>${tahu-version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
