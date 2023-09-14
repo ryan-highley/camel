@@ -55,10 +55,14 @@ public class TahuHostAppHandler extends ServiceSupport implements HostApplicatio
 
         loggingMarker = MarkerFactory.getMarker(hostId);
 
+        LOG.trace(loggingMarker, "TahuHostAppHandler constructor called");
+
         this.serverDefinitions = List.copyOf(serverDefinitions);
 
         this.onMessageConsumer = onMessageConsumer;
         this.onMetricConsumer = onMetricConsumer;
+
+        LOG.trace(loggingMarker, "TahuHostAppHandler constructor complete");
     }
 
     @Override

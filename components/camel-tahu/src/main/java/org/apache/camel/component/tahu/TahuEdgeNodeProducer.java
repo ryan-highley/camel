@@ -16,6 +16,12 @@
  */
 package org.apache.camel.component.tahu;
 
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.component.tahu.TahuEdgeNodeHandler.PayloadBuilder;
@@ -23,8 +29,10 @@ import org.apache.camel.spi.HeaderFilterStrategy;
 import org.apache.camel.support.DefaultProducer;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.util.ObjectHelper;
+import org.eclipse.tahu.message.model.DeviceDescriptor;
 import org.eclipse.tahu.message.model.EdgeNodeDescriptor;
 import org.eclipse.tahu.message.model.Metric;
+import org.eclipse.tahu.model.MqttServerDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -34,26 +42,67 @@ public class TahuEdgeNodeProducer extends DefaultProducer {
 
     private static final Logger LOG = LoggerFactory.getLogger(TahuEdgeNodeProducer.class);
 
+    private static final ConcurrentMap<EdgeNodeDescriptor, TahuEdgeNodeHandler> descriptorHandlers = new ConcurrentHashMap<>();
+
+    private final TahuEdgeNodeEndpoint endpoint;
     private final HeaderFilterStrategy headerFilterStrategy;
 
     private final TahuEdgeNodeHandler tahuEdgeNodeHandler;
+    private ExecutorService clientExecutorService;
     private final EdgeNodeDescriptor edgeNodeDescriptor;
 
     private final Marker loggingMarker;
 
-    TahuEdgeNodeProducer(TahuEdgeNodeEndpoint endpoint, TahuEdgeNodeHandler tahuEdgeNodeHandler) {
+    TahuEdgeNodeProducer(TahuEdgeNodeEndpoint endpoint, String groupId, String edgeNode, String deviceId) {
         super(endpoint);
 
-        this.tahuEdgeNodeHandler = tahuEdgeNodeHandler;
-        edgeNodeDescriptor = tahuEdgeNodeHandler.getEdgeNodeDescriptor();
+        this.endpoint = endpoint;
+
+        // If this Producer is for a Device, the edgeNodeDescriptor will be a
+        // DeviceDescriptor (subclass of the EdgeNodeDescriptor) describing both
+        // the Edge Node to which the Device is attached and the Device itself.
+        if (ObjectHelper.isNotEmpty(deviceId)) {
+            edgeNodeDescriptor = new DeviceDescriptor(groupId, edgeNode, deviceId);
+        } else {
+            edgeNodeDescriptor = new EdgeNodeDescriptor(groupId, edgeNode);
+        }
 
         loggingMarker = MarkerFactory.getMarker(edgeNodeDescriptor.getDescriptorString());
 
-        LOG.trace(loggingMarker, "TahuProducer constructor called endpoint {}", endpoint);
+        LOG.trace(loggingMarker,
+                "TahuEdgeNodeProducer constructor called endpoint {} groupId {} edgeNode {} deviceId {}", endpoint,
+                groupId, edgeNode, deviceId);
+
+        TahuConfiguration configuration = endpoint.getConfiguration();
 
         headerFilterStrategy = endpoint.getHeaderFilterStrategy();
 
-        LOG.trace(loggingMarker, "TahuProducer constructor complete");
+        // A TahuEdgeNodeHandler is created for each Edge Node, not Devices
+        EdgeNodeDescriptor handlerDescriptor = edgeNodeDescriptor;
+        if (handlerDescriptor.isDeviceDescriptor()) {
+            handlerDescriptor = ((DeviceDescriptor) handlerDescriptor).getEdgeNodeDescriptor();
+        }
+
+        tahuEdgeNodeHandler = descriptorHandlers.computeIfAbsent(handlerDescriptor, end -> {
+            List<MqttServerDefinition> serverDefinitions = configuration.getServerDefinitionList();
+            long rebirthDebounceDelay = configuration.getRebirthDebounceDelay();
+
+            String primaryHostId = endpoint.getPrimaryHostId();
+            boolean useAliases = endpoint.isUseAliases();
+            Map<String, Map<String, Object>> metricDataTypeMap = endpoint.getMetricDataTypeMap();
+
+            clientExecutorService = endpoint.getCamelContext().getExecutorServiceManager()
+                    .newSingleThreadExecutor(this,
+                            end.getDescriptorString());
+
+            TahuEdgeNodeHandler tenh = new TahuEdgeNodeHandler(
+                    end, serverDefinitions, primaryHostId, useAliases,
+                    rebirthDebounceDelay, metricDataTypeMap, clientExecutorService);
+
+            return tenh;
+        });
+
+        LOG.trace(loggingMarker, "TahuEdgeNodeProducer constructor complete");
     }
 
     @Override
@@ -75,8 +124,12 @@ public class TahuEdgeNodeProducer extends DefaultProducer {
 
         LOG.trace(loggingMarker, "Camel doStop called");
 
-        if (ObjectHelper.isNotEmpty(tahuEdgeNodeHandler) && !edgeNodeDescriptor.isDeviceDescriptor()) {
+        if (!edgeNodeDescriptor.isDeviceDescriptor()) {
             ServiceHelper.stopAndShutdownService(tahuEdgeNodeHandler);
+
+            if (clientExecutorService != null) {
+                endpoint.getCamelContext().getExecutorServiceManager().shutdownGraceful(clientExecutorService);
+            }
         }
 
         LOG.trace(loggingMarker, "Camel doStop complete");

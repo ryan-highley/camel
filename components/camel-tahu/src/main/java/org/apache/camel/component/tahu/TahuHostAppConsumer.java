@@ -47,34 +47,24 @@ public class TahuHostAppConsumer extends DefaultConsumer {
 
     @SuppressWarnings("unused")
     private final TahuHostAppEndpoint endpoint;
-    private final TahuConfiguration configuration;
 
+    @SuppressWarnings("unused")
     private final String hostId;
 
-    private TahuHostAppHandler tahuHostApplicationHandler;
+    private final TahuHostAppHandler tahuHostApplicationHandler;
 
     private final Marker loggingMarker;
 
     TahuHostAppConsumer(TahuHostAppEndpoint endpoint, Processor processor, String hostId) {
         super(endpoint, processor);
 
-        LOG.trace("TahuConsumer constructor called endpoint {} hostId {}", endpoint, hostId);
-
         this.endpoint = endpoint;
-        configuration = endpoint.getConfiguration();
-
-        this.hostId = hostId;
 
         loggingMarker = MarkerFactory.getMarker(hostId);
 
-        LOG.trace(loggingMarker, "TahuConsumer constructor complete");
-    }
+        LOG.trace(loggingMarker, "TahuHostAppConsumer constructor called endpoint {} hostId {}", endpoint, hostId);
 
-    @Override
-    protected void doStart() throws Exception {
-        super.doStart();
-
-        LOG.trace(loggingMarker, "Camel doStart called");
+        TahuConfiguration configuration = endpoint.getConfiguration();
 
         tahuHostApplicationHandler = hostHandlers.computeIfAbsent(hostId, hId -> {
             List<MqttServerDefinition> serverDefinitions = configuration.getServerDefinitionList();
@@ -84,6 +74,17 @@ public class TahuHostAppConsumer extends DefaultConsumer {
 
             return thah;
         });
+
+        this.hostId = hostId;
+
+        LOG.trace(loggingMarker, "TahuHostAppConsumer constructor complete");
+    }
+
+    @Override
+    protected void doStart() throws Exception {
+        super.doStart();
+
+        LOG.trace(loggingMarker, "Camel doStart called");
 
         if (!tahuHostApplicationHandler.isStarted()) {
             ServiceHelper.startService(tahuHostApplicationHandler);
@@ -98,8 +99,6 @@ public class TahuHostAppConsumer extends DefaultConsumer {
 
         LOG.trace(loggingMarker, "Camel doStop called");
 
-        TahuHostAppHandler tahuHostApplicationHandler = hostHandlers.get(hostId);
-
         ServiceHelper.stopAndShutdownService(tahuHostApplicationHandler);
 
         LOG.trace(loggingMarker, "Camel doStop complete");
@@ -109,7 +108,7 @@ public class TahuHostAppConsumer extends DefaultConsumer {
             MessageType.NDEATH, MessageType.DBIRTH, MessageType.DDATA, MessageType.DDEATH);
 
     void onMessageConsumer(EdgeNodeDescriptor edgeNodeDescriptor, org.eclipse.tahu.message.model.Message tahuMessage) {
-        LOG.trace(loggingMarker, "TahuConsumer onMessageConsumer called: edgeNodeDescriptor {} tahuMessage {}",
+        LOG.trace(loggingMarker, "TahuHostAppConsumer onMessageConsumer called: edgeNodeDescriptor {} tahuMessage {}",
                 edgeNodeDescriptor, tahuMessage);
 
         Exchange exchange = null;
@@ -157,7 +156,7 @@ public class TahuHostAppConsumer extends DefaultConsumer {
 
             } else {
                 LOG.warn(loggingMarker,
-                        "TahuConsumer onMessageConsumer: Unknown Message Type {} from {} - ignoring",
+                        "TahuHostAppConsumer onMessageConsumer: Unknown Message Type {} from {} - ignoring",
                         topic.getType(), edgeNodeDescriptor);
             }
 
@@ -175,12 +174,12 @@ public class TahuHostAppConsumer extends DefaultConsumer {
                         exchange, exchange.getException());
             }
 
-            LOG.trace(loggingMarker, "TahuConsumer onMessageConsumer complete");
+            LOG.trace(loggingMarker, "TahuHostAppConsumer onMessageConsumer complete");
         }
     }
 
     void onMetricConsumer(EdgeNodeDescriptor edgeNodeDescriptor, Metric metric) {
-        LOG.trace(loggingMarker, "TahuConsumer onMetricConsumer called: edgeNodeDescriptor {} metric {}",
+        LOG.trace(loggingMarker, "TahuHostAppConsumer onMetricConsumer called: edgeNodeDescriptor {} metric {}",
                 edgeNodeDescriptor, metric);
 
         Exchange exchange = null;
@@ -208,7 +207,7 @@ public class TahuHostAppConsumer extends DefaultConsumer {
                         exchange, exchange.getException());
             }
 
-            LOG.trace(loggingMarker, "TahuConsumer onMetricConsumer complete");
+            LOG.trace(loggingMarker, "TahuHostAppConsumer onMetricConsumer complete");
         }
     }
 }
