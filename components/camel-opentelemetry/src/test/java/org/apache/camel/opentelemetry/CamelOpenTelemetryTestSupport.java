@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Tracer;
@@ -38,6 +38,7 @@ import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import org.apache.camel.CamelContext;
+import org.apache.camel.spi.InterceptStrategy;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.apache.camel.tracing.SpanDecorator;
 import org.awaitility.Awaitility;
@@ -86,6 +87,7 @@ class CamelOpenTelemetryTestSupport extends CamelTestSupport {
         ottracer.setTracer(tracer);
         ottracer.setExcludePatterns(getExcludePatterns());
         ottracer.addDecorator(new TestSEDASpanDecorator());
+        ottracer.setTracingStrategy(getTracingStrategy().apply(ottracer));
         ottracer.init(context);
         return context;
     }
@@ -117,7 +119,7 @@ class CamelOpenTelemetryTestSupport extends CamelTestSupport {
         if (async) {
             final List<SpanData> unsortedSpans = spans;
             spans = Arrays.stream(expected)
-                    .map(td -> findSpan(td, unsortedSpans)).distinct().collect(Collectors.toList());
+                    .map(td -> findSpan(td, unsortedSpans)).distinct().toList();
             assertEquals(expected.length, spans.size(), "Incorrect number of spans after sorting");
         }
 
@@ -159,7 +161,7 @@ class CamelOpenTelemetryTestSupport extends CamelTestSupport {
             spans.add(finishedSpans.get(i));
         }
 
-        LOG.info("Found traces: " + traces);
+        LOG.info("Found traces: {}", traces);
         assertEquals(numOfTraces, traces.size());
 
         for (Map.Entry<String, List<SpanData>> spans : traces.entrySet()) {
@@ -207,6 +209,10 @@ class CamelOpenTelemetryTestSupport extends CamelTestSupport {
 
     protected void verifySameTrace() {
         assertEquals(1, inMemorySpanExporter.getFinishedSpanItems().stream().map(s -> s.getTraceId()).distinct().count());
+    }
+
+    protected Function<OpenTelemetryTracer, InterceptStrategy> getTracingStrategy() {
+        return ottracer -> new NoopTracingStrategy();
     }
 
     private static class LoggingSpanProcessor implements SpanProcessor {

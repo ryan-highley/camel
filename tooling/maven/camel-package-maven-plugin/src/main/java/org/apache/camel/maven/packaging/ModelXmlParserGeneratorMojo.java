@@ -275,7 +275,7 @@ public class ModelXmlParserGeneratorMojo extends AbstractGeneratorMojo {
             // XmlAttribute
             List<Member> attributeMembers
                     = members.stream().filter(member -> ((AccessibleObject) member).getAnnotation(XmlAttribute.class) != null)
-                            .collect(Collectors.toList());
+                            .toList();
             String baseAttributeHandler = null;
             for (Class<?> parent = clazz.getSuperclass(); parent != Object.class; parent = parent.getSuperclass()) {
                 if (getMembers(parent).stream()
@@ -326,12 +326,12 @@ public class ModelXmlParserGeneratorMojo extends AbstractGeneratorMojo {
                     = members.stream().filter(member -> ((AccessibleObject) member).getAnnotation(XmlAttribute.class) == null)
                             .filter(member -> ((AccessibleObject) member).getAnnotation(XmlAnyAttribute.class) == null)
                             .filter(member -> ((AccessibleObject) member).getAnnotation(XmlValue.class) == null)
-                            .collect(Collectors.toList());
+                            .toList();
             List<Member> multiElements = members.stream()
                     .filter(member -> ((AccessibleObject) member).getAnnotation(XmlElementRef.class) != null
                             || ((AccessibleObject) member).getAnnotation(XmlElements.class) != null
                             || (clazz == outputDefinitionClass && "setOutputs".equals(member.getName())))
-                    .collect(Collectors.toList());
+                    .toList();
             Map<String, String> expressionHandlersDefs = new LinkedHashMap<>();
             Map<String, String> cases = new LinkedHashMap<>();
             // to handle elements from external namespaces
@@ -594,7 +594,9 @@ public class ModelXmlParserGeneratorMojo extends AbstractGeneratorMojo {
                         .setName("parse" + name)
                         .addThrows(IOException.class)
                         .addThrows(XML_PULL_PARSER_EXCEPTION)
-                        .setBody(String.format("String tag = getNextTag(\"%s\", \"%s\");", "beans", "camel"),
+                        .setBody(
+                                String.format("String tag = getNextTag(\"%s\", \"%s\", \"%s\");", "beans", "blueprint",
+                                        "camel"),
                                 "if (tag != null) {",
                                 String.format("    return Optional.of(doParse%s());", name),
                                 "}",

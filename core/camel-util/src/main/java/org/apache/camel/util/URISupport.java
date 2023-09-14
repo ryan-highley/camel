@@ -115,12 +115,8 @@ public final class URISupport {
         if (path.startsWith("//")) {
             path = path.substring(2);
         }
-        int idx = path.indexOf('?');
-        if (idx > -1) {
-            path = path.substring(0, idx);
-        }
 
-        return path;
+        return StringHelper.before(path, "?", path);
     }
 
     /**
@@ -148,11 +144,7 @@ public final class URISupport {
      * @return     the uri without the query parameter
      */
     public static String stripQuery(String uri) {
-        int idx = uri.indexOf('?');
-        if (idx > -1) {
-            uri = uri.substring(0, idx);
-        }
-        return uri;
+        return StringHelper.before(uri, "?", uri);
     }
 
     /**
@@ -490,6 +482,39 @@ public final class URISupport {
         return rc.toString();
     }
 
+    /**
+     * Assembles a query from the given map.
+     *
+     * @param  options            the map with the options (eg key/value pairs)
+     * @param  ampersand          to use & for Java code, and &amp; for XML
+     * @return                    a query string with <tt>key1=value&key2=value2&...</tt>, or an empty string if there
+     *                            is no options.
+     * @throws URISyntaxException is thrown if uri has invalid syntax.
+     */
+    @Deprecated
+    public static String createQueryString(Map<String, String> options, String ampersand, boolean encode) {
+        if (options.size() > 0) {
+            StringBuilder rc = new StringBuilder();
+            boolean first = true;
+            for (String key : options.keySet()) {
+                if (first) {
+                    first = false;
+                } else {
+                    rc.append(ampersand);
+                }
+
+                Object value = options.get(key);
+
+                // use the value as a String
+                String s = value != null ? value.toString() : null;
+                appendQueryStringParameter(key, s, rc, encode);
+            }
+            return rc.toString();
+        } else {
+            return "";
+        }
+    }
+
     @Deprecated
     public static String createQueryString(Collection<String> sortedKeys, Map<String, Object> options, boolean encode) {
         return createQueryString(sortedKeys.toArray(new String[0]), options, encode);
@@ -549,7 +574,7 @@ public final class URISupport {
      * @throws UnsupportedEncodingException is thrown if encoding error
      */
     public static String appendParametersToURI(String originalURI, Map<String, Object> newParameters)
-            throws URISyntaxException, UnsupportedEncodingException {
+            throws URISyntaxException {
         URI uri = new URI(normalizeUri(originalURI));
         Map<String, Object> parameters = parseParameters(uri);
         parameters.putAll(newParameters);
@@ -564,15 +589,15 @@ public final class URISupport {
      * <tt>key=RAW(value)</tt> which tells Camel to not encode the value, and use the value as is (eg key=value) and the
      * value has <b>not</b> been encoded.
      *
-     * @param  uri                          the uri
-     * @return                              the normalized uri
-     * @throws URISyntaxException           in thrown if the uri syntax is invalid
-     * @throws UnsupportedEncodingException is thrown if encoding error
-     * @see                                 #RAW_TOKEN_PREFIX
-     * @see                                 #RAW_TOKEN_START
-     * @see                                 #RAW_TOKEN_END
+     * @param  uri                the uri
+     * @return                    the normalized uri
+     * @throws URISyntaxException in thrown if the uri syntax is invalid
+     *
+     * @see                       #RAW_TOKEN_PREFIX
+     * @see                       #RAW_TOKEN_START
+     * @see                       #RAW_TOKEN_END
      */
-    public static String normalizeUri(String uri) throws URISyntaxException, UnsupportedEncodingException {
+    public static String normalizeUri(String uri) throws URISyntaxException {
         // try to parse using the simpler and faster Camel URI parser
         String[] parts = CamelURIParser.fastParseUri(uri);
         if (parts != null) {
@@ -586,6 +611,17 @@ public final class URISupport {
             // use the legacy normalizer as the uri is complex and may have unsafe URL characters
             return doComplexNormalizeUri(uri);
         }
+    }
+
+    /**
+     * Normalizes the URI so unsafe characters are encoded
+     *
+     * @param  uri                the input uri
+     * @return                    as URI instance
+     * @throws URISyntaxException is thrown if syntax error in the input uri
+     */
+    public static URI normalizeUriAsURI(String uri) throws URISyntaxException {
+        return new URI(UnsafeUriCharactersEncoder.encode(uri, true));
     }
 
     /**
@@ -857,9 +893,9 @@ public final class URISupport {
     }
 
     /**
-     * Remove whitespace noise from uri, xxxUri attributes, eg new lines, and tabs etc, which allows end users to format
-     * their Camel routes in more human-readable format, but at runtime those attributes must be trimmed. The parser
-     * removes most of the noise, but keeps spaces in the attribute values
+     * Remove white-space noise from uri, xxxUri attributes, eg new lines, and tabs etc, which allows end users to
+     * format their Camel routes in more human-readable format, but at runtime those attributes must be trimmed. The
+     * parser removes most of the noise, but keeps spaces in the attribute values
      */
     public static String removeNoiseFromUri(String uri) {
         String before = StringHelper.before(uri, "?");

@@ -194,14 +194,6 @@ public class EndpointDslMojo extends AbstractGeneratorMojo {
                 }
 
                 ComponentModel model = compModels.get(0); // master component
-                List<String> aliases = compModels.stream().map(ComponentModel::getScheme).collect(Collectors.toList());
-
-                String overrideComponentName = null;
-                if (aliases.size() > 1) {
-                    // determine component name when there are multiple ones
-                    overrideComponentName = model.getArtifactId().replace("camel-", "");
-                }
-
                 createEndpointDsl(model, compModels);
             }
         }
@@ -992,7 +984,7 @@ public class EndpointDslMojo extends AbstractGeneratorMojo {
     }
 
     private static String camelCaseAtIndex(String s, int i) {
-        return s.substring(0, i) + s.substring(i + 1, i + 2).toUpperCase() + s.substring(i + 2);
+        return s.substring(0, i) + Strings.capitalize(s.substring(i + 1));
     }
 
     private String getComponentNameFromType(String type) {

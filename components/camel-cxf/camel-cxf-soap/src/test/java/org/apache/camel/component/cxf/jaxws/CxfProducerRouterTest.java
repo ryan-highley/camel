@@ -130,7 +130,7 @@ public class CxfProducerRouterTest extends CamelTestSupport {
         // If there are some holder parameters, the holder parameter will be filled in the reset of List.
         // The result will be extract from the MessageContentsList with the String class type
         MessageContentsList result = (MessageContentsList) out.getBody();
-        LOG.info("Received output text: " + result.get(0));
+        LOG.info("Received output text: {}", result.get(0));
         Map<String, Object> responseContext = CastUtils.cast((Map<?, ?>) out.getHeader(Client.RESPONSE_CONTEXT));
         assertNotNull(responseContext);
         assertEquals("UTF-8", responseContext.get(org.apache.cxf.message.Message.ENCODING),
@@ -150,6 +150,18 @@ public class CxfProducerRouterTest extends CamelTestSupport {
         assertTrue(response.indexOf("echo " + TEST_MESSAGE) > 0, "It should has the echo message");
         assertTrue(response.indexOf("echoResponse") > 0, "It should has the echoResponse tag");
 
+    }
+
+    @Test
+    public void testIgnorePseudoHeaders() throws Exception {
+        Exchange senderExchange = new DefaultExchange(context, ExchangePattern.InOut);
+        senderExchange.getIn().setBody(REQUEST_MESSAGE);
+        Exchange exchange = template.send("direct:EndpointB", senderExchange);
+
+        org.apache.camel.Message out = exchange.getMessage();
+        final List<String> pseudoHeaders
+                = out.getHeaders().keySet().stream().filter(key -> key.startsWith(":")).toList();
+        assertTrue(pseudoHeaders.isEmpty(), "Pseudo-headers such as :status should be filtered out; found: " + pseudoHeaders);
     }
 
     @Test

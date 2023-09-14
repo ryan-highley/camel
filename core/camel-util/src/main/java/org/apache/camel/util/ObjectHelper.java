@@ -34,7 +34,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -51,8 +50,6 @@ import org.slf4j.LoggerFactory;
  * A number of useful helper methods for working with Objects
  */
 public final class ObjectHelper {
-
-    private static final Logger LOG = LoggerFactory.getLogger(ObjectHelper.class);
 
     /**
      * Utility classes should not have a public constructor.
@@ -359,7 +356,7 @@ public final class ObjectHelper {
         try {
             return System.getProperty(name, defaultValue);
         } catch (Exception e) {
-            LOG.debug("Caught security exception accessing system property: {}. Will use default value: {}",
+            logger().debug("Caught security exception accessing system property: {}. Will use default value: {}",
                     name, defaultValue, e);
 
             return defaultValue;
@@ -473,9 +470,9 @@ public final class ObjectHelper {
 
         if (clazz == null) {
             if (needToWarn) {
-                LOG.warn("Cannot find class: {}", name);
+                logger().warn("Cannot find class: {}", name);
             } else {
-                LOG.debug("Cannot find class: {}", name);
+                logger().debug("Cannot find class: {}", name);
             }
         }
 
@@ -552,11 +549,10 @@ public final class ObjectHelper {
         }
 
         try {
-            LOG.trace("Loading class: {} using classloader: {}", name, loader);
             return loader.loadClass(name);
         } catch (ClassNotFoundException e) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Cannot load class: {} using classloader: {}", name, loader, e);
+            if (logger().isTraceEnabled()) {
+                logger().trace("Cannot load class: {} using classloader: {}", name, loader, e);
             }
         }
 
@@ -1059,7 +1055,7 @@ public final class ObjectHelper {
     public static String getPropertyName(Method method) {
         String propertyName = method.getName();
         if (propertyName.startsWith("set") && method.getParameterCount() == 1) {
-            propertyName = propertyName.substring(3, 4).toLowerCase(Locale.ENGLISH) + propertyName.substring(4);
+            propertyName = StringHelper.decapitalize(propertyName.substring(3));
         }
         return propertyName;
     }
@@ -1324,6 +1320,19 @@ public final class ObjectHelper {
             }
             list.add(idx, value);
         }
+    }
+
+    /*
+     * NOTE: see CAMEL-19724. We log like this instead of using a statically declared logger in order to
+     * reduce the risk of dropping log messages due to slf4j log substitution behavior during its own
+     * initialization.
+     */
+    private static final class Holder {
+        static final Logger LOG = LoggerFactory.getLogger(Holder.class);
+    }
+
+    private static Logger logger() {
+        return Holder.LOG;
     }
 
 }

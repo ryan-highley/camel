@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-parent</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>4.1.0-SNAPSHOT</version>
         <relativePath>../parent</relativePath>
     </parent>
 
@@ -295,6 +295,7 @@
         <module>camel-telegram</module>
         <module>camel-threadpoolfactory-vertx</module>
         <module>camel-thrift</module>
+        <module>camel-thymeleaf</module>
         <module>camel-tika</module>
         <module>camel-twilio</module>
         <module>camel-twitter</module>

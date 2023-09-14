@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>components</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>4.1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-cassandraql</artifactId>
@@ -34,8 +34,7 @@
     <description>Cassandra CQL3 support</description>
 
     <properties>
-        <!-- Cassandra is not available on these platforms -->
-        <skipITs.ppc64le>true</skipITs.ppc64le>
+        <!-- Cassandra is not available on this platform -->
         <skipITs.s390x>true</skipITs.s390x>
     </properties>
 

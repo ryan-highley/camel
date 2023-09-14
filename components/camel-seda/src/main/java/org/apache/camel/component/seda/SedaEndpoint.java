@@ -215,7 +215,7 @@ public class SedaEndpoint extends DefaultEndpoint implements AsyncEndpoint, Brow
      * @return the reference, or <tt>null</tt> if no queue reference exists.
      */
     public QueueReference getQueueReference() {
-        if (ref == null) {
+        if (ref == null || ref.getCount() == 0) {
             ref = tryQueueRefInit();
         }
 
@@ -272,6 +272,15 @@ public class SedaEndpoint extends DefaultEndpoint implements AsyncEndpoint, Brow
                     .createProcessor(getCamelContext(), "MulticastProcessor",
                             new Object[] { processors, multicastExecutor, false });
         }
+    }
+
+    void setName(String name) {
+        this.name = name;
+    }
+
+    @ManagedAttribute(description = "Queue name")
+    public String getName() {
+        return name;
     }
 
     /**

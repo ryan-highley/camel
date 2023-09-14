@@ -92,14 +92,15 @@ public class BeanInfo {
 
     public BeanInfo(CamelContext camelContext, Method explicitMethod, ParameterMappingStrategy parameterMappingStrategy,
                     BeanComponent beanComponent) {
-        this(camelContext, explicitMethod.getDeclaringClass(), explicitMethod, parameterMappingStrategy, beanComponent);
+        this(camelContext, explicitMethod.getDeclaringClass(), null, explicitMethod, parameterMappingStrategy, beanComponent);
     }
 
     public BeanInfo(CamelContext camelContext, Class<?> type, ParameterMappingStrategy strategy, BeanComponent beanComponent) {
-        this(camelContext, type, null, strategy, beanComponent);
+        this(camelContext, type, null, null, strategy, beanComponent);
     }
 
-    public BeanInfo(CamelContext camelContext, Class<?> type, Method explicitMethod, ParameterMappingStrategy strategy,
+    public BeanInfo(CamelContext camelContext, Class<?> type, Object instance, Method explicitMethod,
+                    ParameterMappingStrategy strategy,
                     BeanComponent beanComponent) {
 
         this.camelContext = camelContext;
@@ -107,7 +108,7 @@ public class BeanInfo {
         this.strategy = strategy;
         this.component = beanComponent;
 
-        final BeanInfoCacheKey key = new BeanInfoCacheKey(type, explicitMethod);
+        final BeanInfoCacheKey key = new BeanInfoCacheKey(type, instance, explicitMethod);
 
         // lookup if we have a bean info cache
         BeanInfo beanInfo = component.getBeanInfoFromCache(key);

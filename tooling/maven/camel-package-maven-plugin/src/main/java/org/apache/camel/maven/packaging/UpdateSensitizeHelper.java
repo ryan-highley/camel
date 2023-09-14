@@ -21,11 +21,9 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.camel.tooling.model.ComponentModel;
@@ -57,7 +55,7 @@ public class UpdateSensitizeHelper extends AbstractGeneratorMojo {
     // extra keys that are regarded as secret which may not yet been in any component
     // they MUST be in lowercase and without a dash
     private static final String[] EXTRA_KEYS
-            = new String[] { "apipassword", "apiuser", "apiusername", "api_key", "api_secret" };
+            = new String[] { "apipassword", "apiuser", "apiusername", "api_key", "api_secret", "secret" };
 
     @Parameter(defaultValue = "${project.basedir}/src/generated/resources/org/apache/camel/catalog/")
     protected File jsonDir;
@@ -79,7 +77,7 @@ public class UpdateSensitizeHelper extends AbstractGeneratorMojo {
         }
         List<Path> jsonFiles;
         try (Stream<Path> stream = PackageHelper.findJsonFiles(jsonDir.toPath())) {
-            jsonFiles = stream.collect(Collectors.toList());
+            jsonFiles = stream.toList();
         }
         Set<String> secrets = new TreeSet<>();
 
@@ -96,10 +94,9 @@ public class UpdateSensitizeHelper extends AbstractGeneratorMojo {
                     continue;
                 }
 
-                Map<String, Object> model;
-                boolean isComponent = (model = obj.getMap("component")) != null;
-                boolean isDataFormat = !isComponent && (model = obj.getMap("dataformat")) != null;
-                boolean isLanguage = !isComponent && !isDataFormat && (model = obj.getMap("language")) != null;
+                boolean isComponent = obj.getMap("component") != null;
+                boolean isDataFormat = !isComponent && obj.getMap("dataformat") != null;
+                boolean isLanguage = !isComponent && !isDataFormat && obj.getMap("language") != null;
 
                 // only check these kind
                 if (!isComponent && !isDataFormat && !isLanguage) {
