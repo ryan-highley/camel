@@ -26,9 +26,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-import org.apache.camel.CamelContext;
-import org.apache.camel.CamelContextAware;
-import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.support.service.ServiceSupport;
 import org.eclipse.tahu.SparkplugInvalidTypeException;
 import org.eclipse.tahu.edge.EdgeClient;
@@ -51,7 +48,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler, CamelContextAware {
+public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(TahuEdgeNodeHandler.class);
 
@@ -61,7 +58,7 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
 
     private volatile EdgeClient client;
     private volatile boolean nBirthPublished;
-    private ExecutorService clientExecutorService;
+    private final ExecutorService clientExecutorService;
 
     private final EdgeNodeDescriptor edgeNodeDescriptor;
     private final ConcurrentMap<EdgeNodeDescriptor, ConcurrentMap<String, Metric>> descriptorMetricMap
@@ -79,11 +76,15 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
 
     TahuEdgeNodeHandler(EdgeNodeDescriptor edgeNodeDescriptor, List<MqttServerDefinition> serverDefinitions,
                         String primaryHostId, boolean useAliases, long rebirthDebounceDelay,
-                        Map<String, Map<String, Object>> metricDataTypeMap) {
+                        Map<String, Map<String, Object>> metricDataTypeMap, ExecutorService clientExecutorService) {
 
         this.edgeNodeDescriptor = edgeNodeDescriptor;
 
         loggingMarker = MarkerFactory.getMarker(edgeNodeDescriptor.getDescriptorString());
+
+        LOG.trace(loggingMarker, "TahuEdgeNodeHandler constructor called");
+
+        this.clientExecutorService = clientExecutorService;
 
         this.serverDefinitions = List.copyOf(serverDefinitions);
         this.primaryHostId = primaryHostId;
@@ -96,6 +97,8 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
         this.deviceIds = List.copyOf(deviceDescriptorMap.keySet());
 
         bdSeqManager = new CamelBdSeqManager(edgeNodeDescriptor);
+
+        LOG.trace(loggingMarker, "TahuEdgeNodeHandler constructor complete");
     }
 
     @Override
@@ -120,8 +123,6 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
 
             tahuClientCallback.setClient(edgeClient);
 
-            clientExecutorService = getCamelContext().getExecutorServiceManager().newSingleThreadExecutor(this,
-                    "TahuMetricHandler");
             clientExecutorService.submit(edgeClient);
         }
 
@@ -138,11 +139,6 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
             bdSeqManager.storeNextDeathBdSeqNum(currentBirthBdSeq);
             client.shutdown();
             client = null;
-        }
-
-        if (clientExecutorService != null) {
-            getCamelContext().getExecutorServiceManager().shutdownGraceful(clientExecutorService);
-            clientExecutorService = null;
         }
 
         LOG.trace(loggingMarker, "Camel doStop complete");
@@ -306,7 +302,7 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
 
         } catch (Exception e) {
             LOG.error(loggingMarker, "Exception caught publishing birth sequence", e);
-            throw new RuntimeCamelException(e);
+            throw new TahuException(edgeNodeDescriptor, e);
         } finally {
             LOG.trace(loggingMarker, "MetricHandler publishBirthSequence complete");
         }
@@ -439,7 +435,7 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
         } catch (SparkplugInvalidTypeException e) {
             LOG.error(loggingMarker, "Exception caught creating metric for name {} with type {} and value {}", metricName,
                     metricDataType, metricValue);
-            throw new RuntimeCamelException(e);
+            throw new TahuException(edgeNodeDescriptor, e);
         }
     }
 
@@ -457,7 +453,7 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
             client.publishNodeData(ndataPayload);
         } catch (Exception e) {
             LOG.error(loggingMarker, "Error publishing NDATA message", e);
-            throw new RuntimeCamelException(e);
+            throw new TahuException(edgeNodeDescriptor, e);
         } finally {
             LOG.trace(loggingMarker, "TahuMetricHandler publishNodeData complete");
         }
@@ -470,7 +466,7 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
             client.publishDeviceData(deviceId, ddataPayload);
         } catch (Exception e) {
             LOG.error(loggingMarker, "Error publishing DDATA message for {}", deviceDescriptorMap.get(deviceId), e);
-            throw new RuntimeCamelException(e);
+            throw new TahuException(deviceDescriptorMap.get(deviceId), e);
         } finally {
             LOG.trace(loggingMarker, "TahuMetricHandler publishDeviceData complete");
         }
@@ -541,15 +537,4 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
         return edgeNodeDescriptor;
     }
 
-    private CamelContext camelContext;
-
-    @Override
-    public CamelContext getCamelContext() {
-        return camelContext;
-    }
-
-    @Override
-    public void setCamelContext(CamelContext camelContext) {
-        this.camelContext = camelContext;
-    }
 }
