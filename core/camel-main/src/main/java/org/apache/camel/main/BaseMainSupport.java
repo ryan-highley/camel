@@ -549,7 +549,9 @@ public abstract class BaseMainSupport extends BaseService {
 
     protected void configureRoutesLoader(CamelContext camelContext) {
         // use main based routes loader
-        camelContext.getCamelContextExtension().addContextPlugin(RoutesLoader.class, new DefaultRoutesLoader());
+        RoutesLoader loader = new DefaultRoutesLoader();
+        loader.setIgnoreLoadingError(mainConfigurationProperties.isRoutesCollectorIgnoreLoadingError());
+        camelContext.getCamelContextExtension().addContextPlugin(RoutesLoader.class, loader);
     }
 
     protected void modelineRoutes(CamelContext camelContext) throws Exception {
@@ -569,8 +571,10 @@ public abstract class BaseMainSupport extends BaseService {
         // then configure and add the routes
         RoutesConfigurer configurer = new RoutesConfigurer();
 
+        routesCollector.setIgnoreLoadingError(mainConfigurationProperties.isRoutesCollectorIgnoreLoadingError());
         if (mainConfigurationProperties.isRoutesCollectorEnabled()) {
             configurer.setRoutesCollector(routesCollector);
+            configurer.setIgnoreLoadingError(mainConfigurationProperties.isRoutesCollectorIgnoreLoadingError());
         }
 
         configurer.setBeanPostProcessor(PluginHelper.getBeanPostProcessor(camelContext));
@@ -1169,8 +1173,7 @@ public abstract class BaseMainSupport extends BaseService {
 
     private void setRouteTemplateProperties(
             CamelContext camelContext, OrderedLocationProperties routeTemplateProperties,
-            OrderedLocationProperties autoConfiguredProperties)
-            throws Exception {
+            OrderedLocationProperties autoConfiguredProperties) {
 
         // store the route template parameters as a source and register it on the camel context
         PropertiesRouteTemplateParametersSource source = new PropertiesRouteTemplateParametersSource();
@@ -1193,8 +1196,7 @@ public abstract class BaseMainSupport extends BaseService {
 
     private void setHealthCheckProperties(
             CamelContext camelContext, OrderedLocationProperties healthCheckProperties,
-            OrderedLocationProperties autoConfiguredProperties)
-            throws Exception {
+            OrderedLocationProperties autoConfiguredProperties) {
 
         HealthConfigurationProperties health = mainConfigurationProperties.health();
 
@@ -1301,8 +1303,7 @@ public abstract class BaseMainSupport extends BaseService {
 
     private void setDevConsoleProperties(
             CamelContext camelContext, OrderedLocationProperties properties,
-            boolean failIfNotSet, OrderedLocationProperties autoConfiguredProperties)
-            throws Exception {
+            boolean failIfNotSet, OrderedLocationProperties autoConfiguredProperties) {
 
         // make defensive copy as we mutate the map
         Set<String> keys = new LinkedHashSet<>(properties.asMap().keySet());
@@ -1348,8 +1349,7 @@ public abstract class BaseMainSupport extends BaseService {
 
     private void setVaultProperties(
             CamelContext camelContext, OrderedLocationProperties properties,
-            boolean failIfNotSet, OrderedLocationProperties autoConfiguredProperties)
-            throws Exception {
+            boolean failIfNotSet, OrderedLocationProperties autoConfiguredProperties) {
 
         if (mainConfigurationProperties.hasVaultConfiguration()) {
             camelContext.setVaultConfiguration(mainConfigurationProperties.vault());
@@ -1854,7 +1854,7 @@ public abstract class BaseMainSupport extends BaseService {
         return answer;
     }
 
-    private static MainHttpServerFactory resolveMainHttpServerFactory(CamelContext camelContext) throws Exception {
+    private static MainHttpServerFactory resolveMainHttpServerFactory(CamelContext camelContext) {
         // lookup in service registry first
         MainHttpServerFactory answer = camelContext.getRegistry().findSingleByType(MainHttpServerFactory.class);
         if (answer == null) {

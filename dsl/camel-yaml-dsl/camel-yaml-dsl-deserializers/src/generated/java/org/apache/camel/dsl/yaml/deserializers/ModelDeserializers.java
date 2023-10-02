@@ -99,6 +99,8 @@ import org.apache.camel.model.WhenDefinition;
 import org.apache.camel.model.WhenSkipSendToEndpointDefinition;
 import org.apache.camel.model.WireTapDefinition;
 import org.apache.camel.model.app.ApplicationDefinition;
+import org.apache.camel.model.app.BeanConstructorDefinition;
+import org.apache.camel.model.app.BeanConstructorsDefinition;
 import org.apache.camel.model.app.BeanPropertiesDefinition;
 import org.apache.camel.model.app.BeanPropertyDefinition;
 import org.apache.camel.model.app.BeansDefinition;
@@ -1058,6 +1060,78 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "reverse": {
                     String val = asText(node);
                     target.setReverse(val);
+                    break;
+                }
+                default: {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    @YamlType(
+            types = org.apache.camel.model.app.BeanConstructorDefinition.class,
+            order = org.apache.camel.dsl.yaml.common.YamlDeserializerResolver.ORDER_LOWEST - 1,
+            properties = {
+                    @YamlProperty(name = "index", type = "number"),
+                    @YamlProperty(name = "value", type = "string", required = true)
+            }
+    )
+    public static class BeanConstructorDefinitionDeserializer extends YamlDeserializerBase<BeanConstructorDefinition> {
+        public BeanConstructorDefinitionDeserializer() {
+            super(BeanConstructorDefinition.class);
+        }
+
+        @Override
+        protected BeanConstructorDefinition newInstance() {
+            return new BeanConstructorDefinition();
+        }
+
+        @Override
+        protected boolean setProperty(BeanConstructorDefinition target, String propertyKey,
+                String propertyName, Node node) {
+            switch(propertyKey) {
+                case "index": {
+                    String val = asText(node);
+                    target.setIndex(java.lang.Integer.valueOf(val));
+                    break;
+                }
+                case "value": {
+                    String val = asText(node);
+                    target.setValue(val);
+                    break;
+                }
+                default: {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    @YamlType(
+            types = org.apache.camel.model.app.BeanConstructorsDefinition.class,
+            order = org.apache.camel.dsl.yaml.common.YamlDeserializerResolver.ORDER_LOWEST - 1,
+            properties = @YamlProperty(name = "constructor", type = "array:org.apache.camel.model.app.BeanConstructorDefinition")
+    )
+    public static class BeanConstructorsDefinitionDeserializer extends YamlDeserializerBase<BeanConstructorsDefinition> {
+        public BeanConstructorsDefinitionDeserializer() {
+            super(BeanConstructorsDefinition.class);
+        }
+
+        @Override
+        protected BeanConstructorsDefinition newInstance() {
+            return new BeanConstructorsDefinition();
+        }
+
+        @Override
+        protected boolean setProperty(BeanConstructorsDefinition target, String propertyKey,
+                String propertyName, Node node) {
+            switch(propertyKey) {
+                case "constructor": {
+                    java.util.List<org.apache.camel.model.app.BeanConstructorDefinition> val = asFlatList(node, org.apache.camel.model.app.BeanConstructorDefinition.class);
+                    target.setConstructors(val);
                     break;
                 }
                 default: {
@@ -9017,7 +9091,8 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "ref", type = "string", description = "Reference to an existing bean (bean id) to lookup in the registry", displayName = "Ref"),
                     @YamlProperty(name = "result-type", type = "string", description = "Sets the class of the result type (type from output)", displayName = "Result Type"),
                     @YamlProperty(name = "scope", type = "enum:Singleton,Request,Prototype", defaultValue = "Singleton", description = "Scope of bean. When using singleton scope (default) the bean is created or looked up only once and reused for the lifetime of the endpoint. The bean should be thread-safe in case concurrent threads is calling the bean at the same time. When using request scope the bean is created or looked up once per request (exchange). This can be used if you want to store state on a bean while processing a request and you want to call the same bean instance multiple times while processing the request. The bean does not have to be thread-safe as the instance is only called from the same request. When using prototype scope, then the bean will be looked up or created per call. However in case of lookup then this is delegated to the bean registry such as Spring or CDI (if in use), which depends on their configuration can act as either singleton or prototype scope. So when using prototype scope then this depends on the bean registry implementation.", displayName = "Scope"),
-                    @YamlProperty(name = "trim", type = "boolean", description = "Whether to trim the value to remove leading and trailing whitespaces and line breaks", displayName = "Trim")
+                    @YamlProperty(name = "trim", type = "boolean", description = "Whether to trim the value to remove leading and trailing whitespaces and line breaks", displayName = "Trim"),
+                    @YamlProperty(name = "validate", type = "boolean", description = "Whether to validate the bean has the configured method.", displayName = "Validate")
             }
     )
     public static class MethodCallExpressionDeserializer extends YamlDeserializerBase<MethodCallExpression> {
@@ -9072,6 +9147,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "trim": {
                     String val = asText(node);
                     target.setTrim(val);
+                    break;
+                }
+                case "validate": {
+                    String val = asText(node);
+                    target.setValidate(val);
                     break;
                 }
                 default: {
@@ -12274,9 +12354,14 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             types = org.apache.camel.model.app.RegistryBeanDefinition.class,
             order = org.apache.camel.dsl.yaml.common.YamlDeserializerResolver.ORDER_LOWEST - 1,
             properties = {
-                    @YamlProperty(name = "name", type = "string"),
+                    @YamlProperty(name = "constructors", type = "object"),
+                    @YamlProperty(name = "destroy-method", type = "string"),
+                    @YamlProperty(name = "factory-bean", type = "string"),
+                    @YamlProperty(name = "factory-method", type = "string"),
+                    @YamlProperty(name = "init-method", type = "string"),
+                    @YamlProperty(name = "name", type = "string", required = true),
                     @YamlProperty(name = "properties", type = "object"),
-                    @YamlProperty(name = "type", type = "string")
+                    @YamlProperty(name = "type", type = "string", required = true)
             }
     )
     public static class RegistryBeanDefinitionDeserializer extends YamlDeserializerBase<RegistryBeanDefinition> {
@@ -12293,6 +12378,31 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
         protected boolean setProperty(RegistryBeanDefinition target, String propertyKey,
                 String propertyName, Node node) {
             switch(propertyKey) {
+                case "constructors": {
+                    java.util.Map val = asMap(node);
+                    target.setConstructors(val);
+                    break;
+                }
+                case "destroy-method": {
+                    String val = asText(node);
+                    target.setDestroyMethod(val);
+                    break;
+                }
+                case "factory-bean": {
+                    String val = asText(node);
+                    target.setFactoryBean(val);
+                    break;
+                }
+                case "factory-method": {
+                    String val = asText(node);
+                    target.setFactoryMethod(val);
+                    break;
+                }
+                case "init-method": {
+                    String val = asText(node);
+                    target.setInitMethod(val);
+                    break;
+                }
                 case "name": {
                     String val = asText(node);
                     target.setName(val);
@@ -17971,15 +18081,15 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "as-map", type = "boolean", description = "Whether the unmarshalling should produce maps for the lines values instead of lists. It requires to have header (either defined or collected). The default value is false", displayName = "As Map"),
                     @YamlProperty(name = "comment", type = "string", defaultValue = "#", description = "The comment symbol. The default value is #", displayName = "Comment"),
                     @YamlProperty(name = "delimiter", type = "string", defaultValue = ",", description = "The delimiter of values", displayName = "Delimiter"),
-                    @YamlProperty(name = "empty-value", type = "string", description = "The String representation of an empty value", displayName = "Empty Value"),
-                    @YamlProperty(name = "header-extraction-enabled", type = "boolean", description = "Whether or not the header must be read in the first line of the test document The default value is false", displayName = "Header Extraction Enabled"),
+                    @YamlProperty(name = "empty-value", type = "string", description = "The String representation of an empty value.", displayName = "Empty Value"),
+                    @YamlProperty(name = "header-extraction-enabled", type = "boolean", description = "Whether or not the header must be read in the first line of the test document. The default value is false", displayName = "Header Extraction Enabled"),
                     @YamlProperty(name = "headers-disabled", type = "boolean", description = "Whether or not the headers are disabled. When defined, this option explicitly sets the headers as null which indicates that there is no header. The default value is false", displayName = "Headers Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "The id of this node", displayName = "Id"),
                     @YamlProperty(name = "ignore-leading-whitespaces", type = "boolean", description = "Whether or not the leading white spaces must be ignored. The default value is true", displayName = "Ignore Leading Whitespaces"),
                     @YamlProperty(name = "ignore-trailing-whitespaces", type = "boolean", description = "Whether or not the trailing white spaces must be ignored. The default value is true", displayName = "Ignore Trailing Whitespaces"),
-                    @YamlProperty(name = "lazy-load", type = "boolean", description = "Whether the unmarshalling should produce an iterator that reads the lines on the fly or if all the lines must be read at one. The default value is false", displayName = "Lazy Load"),
-                    @YamlProperty(name = "line-separator", type = "string", description = "The line separator of the files The default value is to use the JVM platform line separator", displayName = "Line Separator"),
-                    @YamlProperty(name = "normalized-line-separator", type = "string", defaultValue = "\\n", description = "The normalized line separator of the files The default value is a new line character.", displayName = "Normalized Line Separator"),
+                    @YamlProperty(name = "lazy-load", type = "boolean", description = "Whether the unmarshalling should produce an iterator that reads the lines on the fly or if all the lines must be read at once. The default value is false", displayName = "Lazy Load"),
+                    @YamlProperty(name = "line-separator", type = "string", description = "The line separator of the files. The default value is to use the JVM platform line separator", displayName = "Line Separator"),
+                    @YamlProperty(name = "normalized-line-separator", type = "string", description = "The normalized line separator of the files. The default value is a new line character.", displayName = "Normalized Line Separator"),
                     @YamlProperty(name = "null-value", type = "string", description = "The string representation of a null value. The default value is null", displayName = "Null Value"),
                     @YamlProperty(name = "number-of-records-to-read", type = "number", description = "The maximum number of record to read.", displayName = "Number Of Records To Read"),
                     @YamlProperty(name = "quote", type = "string", defaultValue = "\"", description = "The quote symbol.", displayName = "Quote"),
@@ -18119,15 +18229,15 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             properties = {
                     @YamlProperty(name = "as-map", type = "boolean", description = "Whether the unmarshalling should produce maps for the lines values instead of lists. It requires to have header (either defined or collected). The default value is false", displayName = "As Map"),
                     @YamlProperty(name = "comment", type = "string", defaultValue = "#", description = "The comment symbol. The default value is #", displayName = "Comment"),
-                    @YamlProperty(name = "empty-value", type = "string", description = "The String representation of an empty value", displayName = "Empty Value"),
-                    @YamlProperty(name = "header-extraction-enabled", type = "boolean", description = "Whether or not the header must be read in the first line of the test document The default value is false", displayName = "Header Extraction Enabled"),
+                    @YamlProperty(name = "empty-value", type = "string", description = "The String representation of an empty value.", displayName = "Empty Value"),
+                    @YamlProperty(name = "header-extraction-enabled", type = "boolean", description = "Whether or not the header must be read in the first line of the test document. The default value is false", displayName = "Header Extraction Enabled"),
                     @YamlProperty(name = "headers-disabled", type = "boolean", description = "Whether or not the headers are disabled. When defined, this option explicitly sets the headers as null which indicates that there is no header. The default value is false", displayName = "Headers Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "The id of this node", displayName = "Id"),
                     @YamlProperty(name = "ignore-leading-whitespaces", type = "boolean", description = "Whether or not the leading white spaces must be ignored. The default value is true", displayName = "Ignore Leading Whitespaces"),
                     @YamlProperty(name = "ignore-trailing-whitespaces", type = "boolean", description = "Whether or not the trailing white spaces must be ignored. The default value is true", displayName = "Ignore Trailing Whitespaces"),
-                    @YamlProperty(name = "lazy-load", type = "boolean", description = "Whether the unmarshalling should produce an iterator that reads the lines on the fly or if all the lines must be read at one. The default value is false", displayName = "Lazy Load"),
-                    @YamlProperty(name = "line-separator", type = "string", description = "The line separator of the files The default value is to use the JVM platform line separator", displayName = "Line Separator"),
-                    @YamlProperty(name = "normalized-line-separator", type = "string", defaultValue = "\\n", description = "The normalized line separator of the files The default value is a new line character.", displayName = "Normalized Line Separator"),
+                    @YamlProperty(name = "lazy-load", type = "boolean", description = "Whether the unmarshalling should produce an iterator that reads the lines on the fly or if all the lines must be read at once. The default value is false", displayName = "Lazy Load"),
+                    @YamlProperty(name = "line-separator", type = "string", description = "The line separator of the files. The default value is to use the JVM platform line separator", displayName = "Line Separator"),
+                    @YamlProperty(name = "normalized-line-separator", type = "string", description = "The normalized line separator of the files. The default value is a new line character.", displayName = "Normalized Line Separator"),
                     @YamlProperty(name = "null-value", type = "string", description = "The string representation of a null value. The default value is null", displayName = "Null Value"),
                     @YamlProperty(name = "number-of-records-to-read", type = "number", description = "The maximum number of record to read.", displayName = "Number Of Records To Read"),
                     @YamlProperty(name = "padding", type = "string", description = "The padding character. The default value is a space", displayName = "Padding"),
@@ -18309,16 +18419,16 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             properties = {
                     @YamlProperty(name = "as-map", type = "boolean", description = "Whether the unmarshalling should produce maps for the lines values instead of lists. It requires to have header (either defined or collected). The default value is false", displayName = "As Map"),
                     @YamlProperty(name = "comment", type = "string", defaultValue = "#", description = "The comment symbol. The default value is #", displayName = "Comment"),
-                    @YamlProperty(name = "empty-value", type = "string", description = "The String representation of an empty value", displayName = "Empty Value"),
+                    @YamlProperty(name = "empty-value", type = "string", description = "The String representation of an empty value.", displayName = "Empty Value"),
                     @YamlProperty(name = "escape-char", type = "string", defaultValue = "\\", description = "The escape character.", displayName = "Escape Char"),
-                    @YamlProperty(name = "header-extraction-enabled", type = "boolean", description = "Whether or not the header must be read in the first line of the test document The default value is false", displayName = "Header Extraction Enabled"),
+                    @YamlProperty(name = "header-extraction-enabled", type = "boolean", description = "Whether or not the header must be read in the first line of the test document. The default value is false", displayName = "Header Extraction Enabled"),
                     @YamlProperty(name = "headers-disabled", type = "boolean", description = "Whether or not the headers are disabled. When defined, this option explicitly sets the headers as null which indicates that there is no header. The default value is false", displayName = "Headers Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "The id of this node", displayName = "Id"),
                     @YamlProperty(name = "ignore-leading-whitespaces", type = "boolean", description = "Whether or not the leading white spaces must be ignored. The default value is true", displayName = "Ignore Leading Whitespaces"),
                     @YamlProperty(name = "ignore-trailing-whitespaces", type = "boolean", description = "Whether or not the trailing white spaces must be ignored. The default value is true", displayName = "Ignore Trailing Whitespaces"),
-                    @YamlProperty(name = "lazy-load", type = "boolean", description = "Whether the unmarshalling should produce an iterator that reads the lines on the fly or if all the lines must be read at one. The default value is false", displayName = "Lazy Load"),
-                    @YamlProperty(name = "line-separator", type = "string", description = "The line separator of the files The default value is to use the JVM platform line separator", displayName = "Line Separator"),
-                    @YamlProperty(name = "normalized-line-separator", type = "string", defaultValue = "\\n", description = "The normalized line separator of the files The default value is a new line character.", displayName = "Normalized Line Separator"),
+                    @YamlProperty(name = "lazy-load", type = "boolean", description = "Whether the unmarshalling should produce an iterator that reads the lines on the fly or if all the lines must be read at once. The default value is false", displayName = "Lazy Load"),
+                    @YamlProperty(name = "line-separator", type = "string", description = "The line separator of the files. The default value is to use the JVM platform line separator", displayName = "Line Separator"),
+                    @YamlProperty(name = "normalized-line-separator", type = "string", description = "The normalized line separator of the files. The default value is a new line character.", displayName = "Normalized Line Separator"),
                     @YamlProperty(name = "null-value", type = "string", description = "The string representation of a null value. The default value is null", displayName = "Null Value"),
                     @YamlProperty(name = "number-of-records-to-read", type = "number", description = "The maximum number of record to read.", displayName = "Number Of Records To Read"),
                     @YamlProperty(name = "skip-empty-lines", type = "boolean", description = "Whether or not the empty lines must be ignored. The default value is true", displayName = "Skip Empty Lines"),

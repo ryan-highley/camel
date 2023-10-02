@@ -18,6 +18,10 @@ package org.apache.camel.dsl.yaml
 
 import org.apache.camel.dsl.yaml.support.YamlTestSupport
 import org.apache.camel.dsl.yaml.support.model.MyBean
+import org.apache.camel.dsl.yaml.support.model.MyCtrBean
+import org.apache.camel.dsl.yaml.support.model.MyDestroyBean
+import org.apache.camel.dsl.yaml.support.model.MyFacBean
+import org.apache.camel.dsl.yaml.support.model.MyFacHelper
 
 class BeansTest extends YamlTestSupport {
 
@@ -87,4 +91,124 @@ class BeansTest extends YamlTestSupport {
                 it.nested.foo == 'f3'
             }
     }
+
+    def "beans with constructor"() {
+        when:
+        loadRoutes """
+                - beans:
+                  - name: myCtr
+                    type: ${MyCtrBean.class.name}
+                    constructors:
+                      0: 'f1'
+                      1: 'f2'
+                    properties:
+                      age: 42 
+            """
+
+        then:
+        with(context.registry.lookupByName('myCtr'), MyCtrBean) {
+            it.field1 == 'f1'
+            it.field2 == 'f2'
+            it.age == 42
+        }
+    }
+
+    def "beans with constructor sorted"() {
+        when:
+        loadRoutes """
+                - beans:
+                  - name: myCtr
+                    type: ${MyCtrBean.class.name}
+                    constructors:
+                      1: 'f2'
+                      0: 'f1'
+                    properties:
+                      age: 43 
+            """
+
+        then:
+        with(context.registry.lookupByName('myCtr'), MyCtrBean) {
+            it.field1 == 'f1'
+            it.field2 == 'f2'
+            it.age == 43
+        }
+    }
+
+    def "beans with factory"() {
+        when:
+        loadRoutes """
+                - beans:
+                  - name: myFac
+                    type: ${MyFacBean.class.name}
+                    factoryMethod: createBean
+                    constructors:
+                      0: 'fac1'
+                      1: 'fac2'
+                    properties:
+                      age: 43 
+            """
+
+        then:
+        with(context.registry.lookupByName('myFac'), MyFacBean) {
+            it.field1 == 'fac1'
+            it.field2 == 'fac2'
+            it.age == 43
+        }
+    }
+
+    def "beans with factory helper"() {
+        when:
+        loadRoutes """
+                - beans:
+                  - name: myFac
+                    type: ${MyFacBean.class.name}
+                    factoryBean: ${MyFacHelper.class.name}
+                    factoryMethod: createBean
+                    constructors:
+                      0: 'fac1'
+                      1: 'fac2'
+                    properties:
+                      age: 43 
+            """
+
+        then:
+        with(context.registry.lookupByName('myFac'), MyFacBean) {
+            it.field1 == 'fac1'
+            it.field2 == 'fac2'
+            it.age == 43
+        }
+    }
+
+    def "beans with init destroy"() {
+        when:
+        loadRoutes """
+                - beans:
+                  - name: myBean
+                    type: ${MyDestroyBean.class.name}
+                    initMethod: initMe
+                    destroyMethod: destroyMe
+                    constructors:
+                      0: 'fac1'
+                      1: 'fac2'
+                    properties:
+                      age: 43 
+            """
+
+        then:
+
+        MyDestroyBean.initCalled.get() == true
+        MyDestroyBean.destroyCalled.get() == false
+
+        with(context.registry.lookupByName('myBean'), MyDestroyBean) {
+            it.field1 == 'fac1'
+            it.field2 == 'fac2'
+            it.age == 43
+        }
+
+        context.stop()
+
+        MyDestroyBean.initCalled.get() == true
+        MyDestroyBean.destroyCalled.get() == true
+    }
+
 }

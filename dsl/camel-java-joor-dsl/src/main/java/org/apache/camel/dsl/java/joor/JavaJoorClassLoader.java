@@ -28,8 +28,12 @@ public class JavaJoorClassLoader extends ClassLoader {
     }
 
     @Override
-    protected Class<?> findClass(String name) {
-        return classes.get(name);
+    public Class<?> loadClass(String name) throws ClassNotFoundException {
+        Class<?> clazz = classes.get(name);
+        if (clazz != null) {
+            return clazz;
+        }
+        throw new ClassNotFoundException(name);
     }
 
     public void addClass(String name, Class<?> clazz) {

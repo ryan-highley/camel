@@ -34,6 +34,7 @@ import org.apache.camel.dsl.support.SourceLoader;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.main.download.AutoConfigureDownloadListener;
 import org.apache.camel.main.download.BasePackageScanDownloadListener;
+import org.apache.camel.main.download.CamelCustomClassLoader;
 import org.apache.camel.main.download.CircuitBreakerDownloader;
 import org.apache.camel.main.download.CommandLineDependencyDownloader;
 import org.apache.camel.main.download.DependencyDownloaderClassLoader;
@@ -61,6 +62,7 @@ import org.apache.camel.main.injection.AnnotationDependencyInjection;
 import org.apache.camel.main.util.ExtraFilesClassLoader;
 import org.apache.camel.main.xml.blueprint.BlueprintXmlBeansHandler;
 import org.apache.camel.main.xml.spring.SpringXmlBeansHandler;
+import org.apache.camel.reifier.ProcessorReifier;
 import org.apache.camel.spi.ClassResolver;
 import org.apache.camel.spi.CliConnector;
 import org.apache.camel.spi.CliConnectorFactory;
@@ -325,6 +327,8 @@ public class KameletMain extends MainCommandLineSupport {
         if (getCamelContext() != null) {
             getCamelContext().stop();
         }
+        springXmlBeansHandler.stop();
+        blueprintXmlBeansHandler.stop();
     }
 
     @Override
@@ -343,7 +347,7 @@ public class KameletMain extends MainCommandLineSupport {
         // do not build/init camel context yet
         DefaultCamelContext answer = new DefaultCamelContext(false);
         if (download) {
-            ClassLoader dynamicCL = createApplicationContextClassLoader();
+            ClassLoader dynamicCL = createApplicationContextClassLoader(answer);
             answer.setApplicationContextClassLoader(dynamicCL);
             PluginHelper.getPackageScanClassResolver(answer).addClassLoader(dynamicCL);
             PluginHelper.getPackageScanResourceResolver(answer).addClassLoader(dynamicCL);
@@ -444,11 +448,21 @@ public class KameletMain extends MainCommandLineSupport {
         if (tracing) {
             configure().withBacklogTracing(true);
         }
-
         boolean health = "true".equals(getInitialProperties().get("camel.jbang.health"));
         if (health) {
             configure().httpServer().withEnabled(true);
             configure().httpServer().withHealthCheckEnabled(true);
+        }
+        boolean ignoreLoading = "true".equals(getInitialProperties().get("camel.jbang.ignoreLoadingError"));
+        if (ignoreLoading) {
+            configure().withRoutesCollectorIgnoreLoadingError(true);
+        }
+        // if transforming DSL then disable processors as we just want to work on the model (not runtime processors)
+        boolean transform = "true".equals(getInitialProperties().get("camel.jbang.transform"));
+        if (transform) {
+            // we just want to transform, so disable all processors
+            answer.getGlobalOptions().put(ProcessorReifier.DISABLE_ALL_PROCESSORS, "true");
+            blueprintXmlBeansHandler.setTransform(true);
         }
         if (silent) {
             // silent should not include http server
@@ -541,6 +555,11 @@ public class KameletMain extends MainCommandLineSupport {
                 RouteOnDemandReloadStrategy reloader = new RouteOnDemandReloadStrategy(sourceDir, true);
                 reloader.setPattern("*");
                 answer.addService(reloader);
+
+                // add source-dir as location for loading kamelets
+                String loc = this.initialProperties.getProperty("camel.component.kamelet.location");
+                loc = "file:" + sourceDir + "," + loc;
+                addInitialProperty("camel.component.kamelet.location", loc);
             } else {
                 answer.addService(new DefaultContextReloadStrategy());
             }
@@ -566,8 +585,9 @@ public class KameletMain extends MainCommandLineSupport {
 
     @Override
     protected void autoconfigure(CamelContext camelContext) throws Exception {
+        ClassLoader cl = createApplicationContextClassLoader(camelContext);
         // create classloader that may include additional JARs
-        camelContext.setApplicationContextClassLoader(createApplicationContextClassLoader());
+        camelContext.setApplicationContextClassLoader(cl);
         // auto configure camel afterwards
         super.autoconfigure(camelContext);
     }
@@ -577,7 +597,7 @@ public class KameletMain extends MainCommandLineSupport {
         return new KameletAutowiredLifecycleStrategy(camelContext, stubPattern, silent);
     }
 
-    protected ClassLoader createApplicationContextClassLoader() {
+    protected ClassLoader createApplicationContextClassLoader(CamelContext camelContext) {
         if (classLoader == null) {
             // jars need to be added to dependency downloader classloader
             List<String> jars = new ArrayList<>();
@@ -600,6 +620,7 @@ public class KameletMain extends MainCommandLineSupport {
                     LOG.info("Additional files added to classpath: {}", String.join(", ", files));
                 }
             }
+            parentCL = new CamelCustomClassLoader(parentCL, camelContext);
             DependencyDownloaderClassLoader cl = new DependencyDownloaderClassLoader(parentCL);
             if (!jars.isEmpty()) {
                 for (String jar : jars) {
@@ -626,6 +647,7 @@ public class KameletMain extends MainCommandLineSupport {
             } else {
                 routesLoader = new DependencyDownloaderRoutesLoader(camelContext);
             }
+            routesLoader.setIgnoreLoadingError(this.mainConfigurationProperties.isRoutesCollectorIgnoreLoadingError());
 
             // use resolvers that can auto downloaded
             camelContext.getCamelContextExtension()
@@ -686,11 +708,6 @@ public class KameletMain extends MainCommandLineSupport {
     protected void postProcessCamelRegistry(CamelContext camelContext, MainConfigurationProperties config) {
         springXmlBeansHandler.createAndRegisterBeans(camelContext);
         blueprintXmlBeansHandler.createAndRegisterBeans(camelContext);
-    }
-
-    @Override
-    protected void doShutdown() throws Exception {
-        // TODO: manage BeanFactory as a field and clear the beans here
     }
 
     private static String getPid() {

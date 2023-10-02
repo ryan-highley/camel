@@ -42,10 +42,21 @@ public class RegistryBeanDefinition implements ResourceAware {
     @XmlTransient
     private Resource resource;
 
-    @XmlAttribute
+    @XmlAttribute(required = true)
     private String name;
-    @XmlAttribute
+    @XmlAttribute(required = true)
     private String type;
+    @XmlAttribute
+    private String initMethod;
+    @XmlAttribute
+    private String destroyMethod;
+    @XmlAttribute
+    private String factoryMethod;
+    @XmlAttribute
+    private String factoryBean;
+    @XmlElement(name = "constructors")
+    @XmlJavaTypeAdapter(BeanConstructorsAdapter.class)
+    private Map<Integer, Object> constructors;
     @XmlElement(name = "properties")
     @XmlJavaTypeAdapter(BeanPropertiesAdapter.class)
     private Map<String, Object> properties;
@@ -64,6 +75,46 @@ public class RegistryBeanDefinition implements ResourceAware {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getInitMethod() {
+        return initMethod;
+    }
+
+    public void setInitMethod(String initMethod) {
+        this.initMethod = initMethod;
+    }
+
+    public String getDestroyMethod() {
+        return destroyMethod;
+    }
+
+    public void setDestroyMethod(String destroyMethod) {
+        this.destroyMethod = destroyMethod;
+    }
+
+    public String getFactoryMethod() {
+        return factoryMethod;
+    }
+
+    public void setFactoryMethod(String factoryMethod) {
+        this.factoryMethod = factoryMethod;
+    }
+
+    public String getFactoryBean() {
+        return factoryBean;
+    }
+
+    public void setFactoryBean(String factoryBean) {
+        this.factoryBean = factoryBean;
+    }
+
+    public Map<Integer, Object> getConstructors() {
+        return constructors;
+    }
+
+    public void setConstructors(Map<Integer, Object> constructors) {
+        this.constructors = constructors;
     }
 
     public Map<String, Object> getProperties() {

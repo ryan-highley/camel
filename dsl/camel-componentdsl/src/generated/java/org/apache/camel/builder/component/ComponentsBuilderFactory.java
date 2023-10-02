@@ -371,6 +371,19 @@ public interface ComponentsBuilderFactory {
         return org.apache.camel.builder.component.dsl.Aws2MskComponentBuilderFactory.aws2Msk();
     }
     /**
+     * AWS RedshiftData (camel-aws2-redshift)
+     * Perform operations on AWS Redshift using Redshift Data API.
+     * 
+     * Category: cloud,serverless,database,bigdata
+     * Since: 4.1
+     * Maven coordinates: org.apache.camel:camel-aws2-redshift
+     * 
+     * @return the dsl builder
+     */
+    static org.apache.camel.builder.component.dsl.Aws2RedshiftDataComponentBuilderFactory.Aws2RedshiftDataComponentBuilder aws2RedshiftData() {
+        return org.apache.camel.builder.component.dsl.Aws2RedshiftDataComponentBuilderFactory.aws2RedshiftData();
+    }
+    /**
      * AWS S3 Storage Service (camel-aws2-s3)
      * Store and retrieve objects from AWS S3 Storage Service.
      * 
@@ -529,7 +542,7 @@ public interface ComponentsBuilderFactory {
     }
     /**
      * Azure ServiceBus (camel-azure-servicebus)
-     * Send and receive messages to/from Azure Event Bus.
+     * Send and receive messages to/from Azure Service Bus.
      * 
      * Category: cloud,messaging
      * Since: 3.12

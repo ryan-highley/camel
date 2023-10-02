@@ -2178,6 +2178,45 @@ public interface FileEndpointBuilderFactory {
             return this;
         }
         /**
+         * Whether to accept hidden directories. Directories which names starts
+         * with dot is regarded as a hidden directory, and by default not
+         * included. Set this option to true to include hidden directories in
+         * the file consumer.
+         * 
+         * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
+         * 
+         * Default: false
+         * Group: consumer (advanced)
+         * 
+         * @param includeHiddenDirs the value to set
+         * @return the dsl builder
+         */
+        default AdvancedFileEndpointConsumerBuilder includeHiddenDirs(
+                boolean includeHiddenDirs) {
+            doSetProperty("includeHiddenDirs", includeHiddenDirs);
+            return this;
+        }
+        /**
+         * Whether to accept hidden directories. Directories which names starts
+         * with dot is regarded as a hidden directory, and by default not
+         * included. Set this option to true to include hidden directories in
+         * the file consumer.
+         * 
+         * The option will be converted to a &lt;code&gt;boolean&lt;/code&gt;
+         * type.
+         * 
+         * Default: false
+         * Group: consumer (advanced)
+         * 
+         * @param includeHiddenDirs the value to set
+         * @return the dsl builder
+         */
+        default AdvancedFileEndpointConsumerBuilder includeHiddenDirs(
+                String includeHiddenDirs) {
+            doSetProperty("includeHiddenDirs", includeHiddenDirs);
+            return this;
+        }
+        /**
          * Whether to accept hidden files. Files which names starts with dot is
          * regarded as a hidden file, and by default not included. Set this
          * option to true to include hidden files in the file consumer.
@@ -2434,7 +2473,7 @@ public interface FileEndpointBuilderFactory {
          * option is default enabled, which means the starting directory is
          * normally auto created if it doesn't exist. You can disable autoCreate
          * and enable this to ensure the starting directory must exist. Will
-         * thrown an exception if the directory doesn't exist.
+         * throw an exception if the directory doesn't exist.
          * 
          * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
          * 
@@ -2454,7 +2493,7 @@ public interface FileEndpointBuilderFactory {
          * option is default enabled, which means the starting directory is
          * normally auto created if it doesn't exist. You can disable autoCreate
          * and enable this to ensure the starting directory must exist. Will
-         * thrown an exception if the directory doesn't exist.
+         * throw an exception if the directory doesn't exist.
          * 
          * The option will be converted to a &lt;code&gt;boolean&lt;/code&gt;
          * type.

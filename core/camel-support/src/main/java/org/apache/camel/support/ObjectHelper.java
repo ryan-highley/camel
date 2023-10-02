@@ -39,6 +39,7 @@ import org.apache.camel.Message;
 import org.apache.camel.Ordered;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.TypeConverter;
+import org.apache.camel.util.ReflectionHelper;
 import org.apache.camel.util.Scanner;
 import org.apache.camel.util.StringHelper;
 
@@ -387,6 +388,37 @@ public final class ObjectHelper {
     }
 
     /**
+     * A helper method to invoke a method via reflection in a safe way by allowing to invoke methods that are not
+     * accessible by default and wrap any exceptions as {@link RuntimeCamelException} instances
+     *
+     * @param  name       the method name
+     * @param  instance   the object instance (or null for static methods)
+     * @param  parameters the parameters to the method
+     * @return            the result of the method invocation
+     */
+    public static Object invokeMethodSafe(String name, Object instance, Object... parameters)
+            throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+
+        // find method first
+        Class<?>[] arr = null;
+        if (parameters != null) {
+            arr = new Class[parameters.length];
+            for (int i = 0; i < parameters.length; i++) {
+                Object p = parameters[i];
+                if (p != null) {
+                    arr[i] = p.getClass();
+                }
+            }
+        }
+        Method m = ReflectionHelper.findMethod(instance.getClass(), name, arr);
+        if (m != null) {
+            return invokeMethodSafe(m, instance, parameters);
+        } else {
+            throw new NoSuchMethodException(name);
+        }
+    }
+
+    /**
      * A helper method to create a new instance of a type using the default constructor arguments.
      */
     public static <T> T newInstance(Class<T> type) {
@@ -699,7 +731,7 @@ public final class ObjectHelper {
         } else if (value.getClass().isArray()) {
             if (org.apache.camel.util.ObjectHelper.isPrimitiveArrayType(value.getClass())) {
                 final Object array = value;
-                return (Iterable<Object>) () -> new Iterator<Object>() {
+                return (Iterable<Object>) () -> new Iterator<>() {
                     private int idx;
 
                     public boolean hasNext() {
@@ -726,7 +758,7 @@ public final class ObjectHelper {
         } else if (value instanceof NodeList) {
             // lets iterate through DOM results after performing XPaths
             final NodeList nodeList = (NodeList) value;
-            return (Iterable<Node>) () -> new Iterator<Node>() {
+            return (Iterable<Node>) () -> new Iterator<>() {
                 private int idx;
 
                 public boolean hasNext() {
@@ -780,7 +812,7 @@ public final class ObjectHelper {
             } else {
                 return (Iterable<Object>) () -> {
                     // use a plain iterator that returns the value as is as there are only a single value
-                    return new Iterator<Object>() {
+                    return new Iterator<>() {
                         private int idx;
 
                         public boolean hasNext() {

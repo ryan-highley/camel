@@ -129,12 +129,8 @@ public final class URISupport {
         if (uri == null) {
             return null;
         }
-        int pos = uri.indexOf('?');
-        if (pos != -1) {
-            return uri.substring(pos + 1);
-        } else {
-            return null;
-        }
+
+        return StringHelper.after(uri, "?");
     }
 
     /**
@@ -286,12 +282,7 @@ public final class URISupport {
         String query = uri.getQuery();
         if (query == null) {
             String schemeSpecificPart = uri.getSchemeSpecificPart();
-            int idx = schemeSpecificPart.indexOf('?');
-            if (idx < 0) {
-                return null;
-            } else {
-                query = schemeSpecificPart.substring(idx + 1);
-            }
+            query = StringHelper.after(schemeSpecificPart, "?");
         } else if (query.indexOf('?') == 0) {
             // skip leading query
             query = query.substring(1);
@@ -493,7 +484,7 @@ public final class URISupport {
      */
     @Deprecated
     public static String createQueryString(Map<String, String> options, String ampersand, boolean encode) {
-        if (options.size() > 0) {
+        if (!options.isEmpty()) {
             StringBuilder rc = new StringBuilder();
             boolean first = true;
             for (String key : options.keySet()) {
@@ -555,7 +546,7 @@ public final class URISupport {
      */
     public static URI createRemainingURI(URI originalURI, Map<String, Object> params) throws URISyntaxException {
         String s = createQueryString(params);
-        if (s.length() == 0) {
+        if (s.isEmpty()) {
             s = null;
         }
         return createURIWithQuery(originalURI, s);
@@ -882,7 +873,7 @@ public final class URISupport {
     public static String buildMultiValueQuery(String key, Iterable<Object> values) {
         StringBuilder sb = new StringBuilder();
         for (Object v : values) {
-            if (sb.length() > 0) {
+            if (!sb.isEmpty()) {
                 sb.append("&");
             }
             sb.append(key);

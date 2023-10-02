@@ -96,6 +96,19 @@ abstract class ExportBaseCommand extends CamelCommand {
     @CommandLine.Option(names = { "--gav" }, description = "The Maven group:artifact:version")
     protected String gav;
 
+    @CommandLine.Option(names = { "--exclude" },
+                        description = "Exclude files by name or pattern. Multiple names can be separated by comma.")
+    String exclude;
+
+    @CommandLine.Option(names = { "--maven-settings" },
+                        description = "Optional location of maven setting.xml file to configure servers, repositories, mirrors and proxies."
+                                      + " If set to \"false\", not even the default ~/.m2/settings.xml will be used.")
+    String mavenSettings;
+
+    @CommandLine.Option(names = { "--maven-settings-security" },
+                        description = "Optional location of maven settings-security.xml file to decrypt settings.xml")
+    String mavenSettingsSecurity;
+
     @CommandLine.Option(names = { "--main-classname" },
                         description = "The class name of the Camel Main application class",
                         defaultValue = "CamelApplication")
@@ -171,13 +184,6 @@ abstract class ExportBaseCommand extends CamelCommand {
                         description = "Additional maven properties, ex. --additional-properties=prop1=foo,prop2=bar")
     protected String additionalProperties;
 
-    @CommandLine.Option(names = { "--secrets-refresh" }, defaultValue = "false", description = "Enabling secrets refresh")
-    protected boolean secretsRefresh;
-
-    @CommandLine.Option(names = { "--secrets-refresh-providers" },
-                        description = "Comma separated list of providers in the set aws,gcp and azure, to use in combination with --secrets-refresh option")
-    protected String secretsRefreshProviders;
-
     @CommandLine.Option(names = { "--logging" }, defaultValue = "false",
                         description = "Can be used to turn on logging (logs to file in <user home>/.camel directory)")
     boolean logging;
@@ -185,6 +191,10 @@ abstract class ExportBaseCommand extends CamelCommand {
     @CommandLine.Option(names = { "--quiet" }, defaultValue = "false",
                         description = "Will be quiet, only print when error occurs")
     boolean quiet;
+
+    @CommandLine.Option(names = { "--ignore-loading-error" },
+                        description = "Whether to ignore route loading and compilation errors (use this with care!)")
+    protected boolean ignoreLoadingError;
 
     public ExportBaseCommand(CamelJBangMain main) {
         super(main);
@@ -258,15 +268,16 @@ abstract class ExportBaseCommand extends CamelCommand {
         return null;
     }
 
-    protected Integer runSilently() throws Exception {
+    protected Integer runSilently(boolean ignoreLoadingError) throws Exception {
         Run run = new Run(getMain());
         // need to declare the profile to use for run
         run.profile = profile;
         run.localKameletDir = localKameletDir;
         run.dependencies = dependencies;
         run.files = files;
+        run.exclude = exclude;
         run.openapi = openapi;
-        return run.runSilent();
+        return run.runSilent(ignoreLoadingError);
     }
 
     protected Set<String> resolveDependencies(File settings, File profile) throws Exception {
@@ -785,66 +796,6 @@ abstract class ExportBaseCommand extends CamelCommand {
                 File target = new File(libDir, n);
                 safeCopy(source, target, true);
             }
-        }
-    }
-
-    protected void exportAwsSecretsRefreshProp(Properties properties) {
-        properties.setProperty("camel.vault.aws.accessKey", "<accessKey>");
-        properties.setProperty("camel.vault.aws.secretKey", "<secretKey>");
-        properties.setProperty("camel.vault.aws.region", "<region>");
-        properties.setProperty("camel.vault.aws.useDefaultCredentialProvider", "<useDefaultCredentialProvider>");
-        properties.setProperty("camel.vault.aws.refreshEnabled", "true");
-        properties.setProperty("camel.vault.aws.refreshPeriod", "30000");
-        properties.setProperty("camel.vault.aws.secrets", "<secrets>");
-        if (runtime.equalsIgnoreCase("spring-boot")) {
-            properties.setProperty("camel.springboot.context-reload-enabled", "true");
-        } else {
-            properties.setProperty("camel.main.context-reload-enabled", "true");
-        }
-    }
-
-    protected void exportGcpSecretsRefreshProp(Properties properties) {
-        properties.setProperty("camel.vault.gcp.serviceAccountKey", "<serviceAccountKey>");
-        properties.setProperty("camel.vault.gcp.projectId", "<projectId>");
-        properties.setProperty("camel.vault.gcp.useDefaultInstance", "<useDefaultInstance>");
-        properties.setProperty("camel.vault.gcp.refreshEnabled", "true");
-        properties.setProperty("camel.vault.aws.refreshPeriod", "30000");
-        properties.setProperty("camel.vault.gcp.secrets", "<secrets>");
-        properties.setProperty("camel.vault.gcp.subscriptionName", "<subscriptionName>");
-        if (runtime.equalsIgnoreCase("spring-boot")) {
-            properties.setProperty("camel.springboot.context-reload-enabled", "true");
-        } else {
-            properties.setProperty("camel.main.context-reload-enabled", "true");
-        }
-    }
-
-    protected void exportAzureSecretsRefreshProp(Properties properties) {
-        properties.setProperty("camel.vault.azure.tenantId", "<tenantId>");
-        properties.setProperty("camel.vault.azure.clientId", "<clientId>");
-        properties.setProperty("camel.vault.azure.clientSecret", "<clientSecret>");
-        properties.setProperty("camel.vault.azure.vaultName", "<vaultName>");
-        properties.setProperty("camel.vault.azure.refreshEnabled", "true");
-        properties.setProperty("camel.vault.azure.refreshPeriod", "30000");
-        properties.setProperty("camel.vault.azure.secrets", "<secrets>");
-        properties.setProperty("camel.vault.azure.eventhubConnectionString", "<eventhubConnectionString>");
-        properties.setProperty("camel.vault.azure.blobAccountName", "<blobAccountName>");
-        properties.setProperty("camel.vault.azure.blobContainerName", "<blobContainerName>");
-        properties.setProperty("camel.vault.azure.blobAccessKey", "<blobAccessKey>");
-        if (runtime.equalsIgnoreCase("spring-boot")) {
-            properties.setProperty("camel.springboot.context-reload-enabled", "true");
-        } else {
-            properties.setProperty("camel.main.context-reload-enabled", "true");
-        }
-    }
-
-    protected List<String> getSecretProviders() {
-        if (secretsRefreshProviders != null) {
-            List<String> providers = Pattern.compile("\\,")
-                    .splitAsStream(secretsRefreshProviders)
-                    .collect(Collectors.toList());
-            return providers;
-        } else {
-            return null;
         }
     }
 

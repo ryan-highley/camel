@@ -9345,8 +9345,8 @@ that there is no header. The default value is false. Default value: false
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-Whether or not the header must be read in the first line of the test document The default value is false. Default value:
-false
+Whether or not the header must be read in the first line of the test document. The default value is false. Default
+value: false
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -9373,7 +9373,7 @@ The String representation of an empty value.
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-The line separator of the files The default value is to use the JVM platform line separator.
+The line separator of the files. The default value is to use the JVM platform line separator.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -9382,7 +9382,7 @@ The line separator of the files The default value is to use the JVM platform lin
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-The normalized line separator of the files The default value is a new line character. Default value: \n
+The normalized line separator of the files. The default value is a new line character.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -9401,7 +9401,7 @@ The comment symbol. The default value is #. Default value: #
             <xs:documentation xml:lang="en">
 <![CDATA[
 Whether the unmarshalling should produce an iterator that reads the lines on the fly or if all the lines must be read at
-one. The default value is false. Default value: false
+once. The default value is false. Default value: false
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -13598,10 +13598,25 @@ org.apache.camel.builder.RouteBuilder.
   </xs:complexType>
   <xs:complexType name="registryBeanDefinition">
     <xs:sequence>
+      <xs:element minOccurs="0" name="constructors" type="tns:beanConstructorsDefinition"/>
       <xs:element minOccurs="0" name="properties" type="tns:beanPropertiesDefinition"/>
     </xs:sequence>
-    <xs:attribute name="name" type="xs:string"/>
-    <xs:attribute name="type" type="xs:string"/>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="type" type="xs:string" use="required"/>
+    <xs:attribute name="initMethod" type="xs:string"/>
+    <xs:attribute name="destroyMethod" type="xs:string"/>
+    <xs:attribute name="factoryMethod" type="xs:string"/>
+    <xs:attribute name="factoryBean" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="beanConstructorsDefinition">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" minOccurs="0" name="constructor" type="tns:beanConstructorDefinition"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="beanConstructorDefinition">
+    <xs:sequence/>
+    <xs:attribute name="index" type="xs:int"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
   </xs:complexType>
   <xs:complexType name="restConfigurationDefinition">
     <xs:sequence>
@@ -15772,6 +15787,15 @@ request. When using prototype scope, then the bean will be looked up or created 
 this is delegated to the bean registry such as Spring or CDI (if in use), which depends on their configuration can act
 as either singleton or prototype scope. So when using prototype scope then this depends on the bean registry
 implementation. Default value: Singleton
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="validate" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Whether to validate the bean has the configured method. Default value: true
 ]]>
             </xs:documentation>
           </xs:annotation>

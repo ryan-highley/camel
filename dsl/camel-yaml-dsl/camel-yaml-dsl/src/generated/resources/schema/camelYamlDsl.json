@@ -7895,6 +7895,31 @@
           }
         }
       },
+      "org.apache.camel.model.app.BeanConstructorDefinition" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "index" : {
+            "type" : "number"
+          },
+          "value" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "value" ]
+      },
+      "org.apache.camel.model.app.BeanConstructorsDefinition" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "constructor" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/items/definitions/org.apache.camel.model.app.BeanConstructorDefinition"
+            }
+          }
+        }
+      },
       "org.apache.camel.model.app.BeanPropertiesDefinition" : {
         "type" : "object",
         "additionalProperties" : false,
@@ -7998,6 +8023,21 @@
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
+          "constructors" : {
+            "type" : "object"
+          },
+          "destroyMethod" : {
+            "type" : "string"
+          },
+          "factoryBean" : {
+            "type" : "string"
+          },
+          "factoryMethod" : {
+            "type" : "string"
+          },
+          "initMethod" : {
+            "type" : "string"
+          },
           "name" : {
             "type" : "string"
           },
@@ -8007,7 +8047,8 @@
           "type" : {
             "type" : "string"
           }
-        }
+        },
+        "required" : [ "name", "type" ]
       },
       "org.apache.camel.model.cloud.BlacklistServiceCallServiceFilterConfiguration" : {
         "title" : "Blacklist Service Filter",
@@ -11230,12 +11271,12 @@
           "emptyValue" : {
             "type" : "string",
             "title" : "Empty Value",
-            "description" : "The String representation of an empty value"
+            "description" : "The String representation of an empty value."
           },
           "headerExtractionEnabled" : {
             "type" : "boolean",
             "title" : "Header Extraction Enabled",
-            "description" : "Whether or not the header must be read in the first line of the test document The default value is false"
+            "description" : "Whether or not the header must be read in the first line of the test document. The default value is false"
           },
           "headersDisabled" : {
             "type" : "boolean",
@@ -11260,18 +11301,17 @@
           "lazyLoad" : {
             "type" : "boolean",
             "title" : "Lazy Load",
-            "description" : "Whether the unmarshalling should produce an iterator that reads the lines on the fly or if all the lines must be read at one. The default value is false"
+            "description" : "Whether the unmarshalling should produce an iterator that reads the lines on the fly or if all the lines must be read at once. The default value is false"
           },
           "lineSeparator" : {
             "type" : "string",
             "title" : "Line Separator",
-            "description" : "The line separator of the files The default value is to use the JVM platform line separator"
+            "description" : "The line separator of the files. The default value is to use the JVM platform line separator"
           },
           "normalizedLineSeparator" : {
             "type" : "string",
             "title" : "Normalized Line Separator",
-            "description" : "The normalized line separator of the files The default value is a new line character.",
-            "default" : "\\n"
+            "description" : "The normalized line separator of the files. The default value is a new line character."
           },
           "nullValue" : {
             "type" : "string",
@@ -11333,12 +11373,12 @@
           "emptyValue" : {
             "type" : "string",
             "title" : "Empty Value",
-            "description" : "The String representation of an empty value"
+            "description" : "The String representation of an empty value."
           },
           "headerExtractionEnabled" : {
             "type" : "boolean",
             "title" : "Header Extraction Enabled",
-            "description" : "Whether or not the header must be read in the first line of the test document The default value is false"
+            "description" : "Whether or not the header must be read in the first line of the test document. The default value is false"
           },
           "headersDisabled" : {
             "type" : "boolean",
@@ -11363,18 +11403,17 @@
           "lazyLoad" : {
             "type" : "boolean",
             "title" : "Lazy Load",
-            "description" : "Whether the unmarshalling should produce an iterator that reads the lines on the fly or if all the lines must be read at one. The default value is false"
+            "description" : "Whether the unmarshalling should produce an iterator that reads the lines on the fly or if all the lines must be read at once. The default value is false"
           },
           "lineSeparator" : {
             "type" : "string",
             "title" : "Line Separator",
-            "description" : "The line separator of the files The default value is to use the JVM platform line separator"
+            "description" : "The line separator of the files. The default value is to use the JVM platform line separator"
           },
           "normalizedLineSeparator" : {
             "type" : "string",
             "title" : "Normalized Line Separator",
-            "description" : "The normalized line separator of the files The default value is a new line character.",
-            "default" : "\\n"
+            "description" : "The normalized line separator of the files. The default value is a new line character."
           },
           "nullValue" : {
             "type" : "string",
@@ -11452,7 +11491,7 @@
           "emptyValue" : {
             "type" : "string",
             "title" : "Empty Value",
-            "description" : "The String representation of an empty value"
+            "description" : "The String representation of an empty value."
           },
           "escapeChar" : {
             "type" : "string",
@@ -11463,7 +11502,7 @@
           "headerExtractionEnabled" : {
             "type" : "boolean",
             "title" : "Header Extraction Enabled",
-            "description" : "Whether or not the header must be read in the first line of the test document The default value is false"
+            "description" : "Whether or not the header must be read in the first line of the test document. The default value is false"
           },
           "headersDisabled" : {
             "type" : "boolean",
@@ -11488,18 +11527,17 @@
           "lazyLoad" : {
             "type" : "boolean",
             "title" : "Lazy Load",
-            "description" : "Whether the unmarshalling should produce an iterator that reads the lines on the fly or if all the lines must be read at one. The default value is false"
+            "description" : "Whether the unmarshalling should produce an iterator that reads the lines on the fly or if all the lines must be read at once. The default value is false"
           },
           "lineSeparator" : {
             "type" : "string",
             "title" : "Line Separator",
-            "description" : "The line separator of the files The default value is to use the JVM platform line separator"
+            "description" : "The line separator of the files. The default value is to use the JVM platform line separator"
           },
           "normalizedLineSeparator" : {
             "type" : "string",
             "title" : "Normalized Line Separator",
-            "description" : "The normalized line separator of the files The default value is a new line character.",
-            "default" : "\\n"
+            "description" : "The normalized line separator of the files. The default value is a new line character."
           },
           "nullValue" : {
             "type" : "string",
@@ -12858,6 +12896,11 @@
               "type" : "boolean",
               "title" : "Trim",
               "description" : "Whether to trim the value to remove leading and trailing whitespaces and line breaks"
+            },
+            "validate" : {
+              "type" : "boolean",
+              "title" : "Validate",
+              "description" : "Whether to validate the bean has the configured method."
             }
           }
         } ]

@@ -23,7 +23,6 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Route;
 import org.apache.camel.api.management.ManagedResource;
 import org.apache.camel.api.management.mbean.ManagedRouteControllerMBean;
-import org.apache.camel.spi.ManagementStrategy;
 import org.apache.camel.spi.RouteController;
 
 @ManagedResource(description = "Managed RouteController")
@@ -38,11 +37,6 @@ public class ManagedRouteController extends ManagedService implements ManagedRou
 
     public RouteController getRouteController() {
         return controller;
-    }
-
-    @Override
-    public void init(ManagementStrategy strategy) {
-        // do nothing
     }
 
     @Override

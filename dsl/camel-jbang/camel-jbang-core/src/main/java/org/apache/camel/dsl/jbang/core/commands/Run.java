@@ -61,6 +61,7 @@ import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.main.KameletMain;
 import org.apache.camel.main.download.DownloadListener;
 import org.apache.camel.support.ResourceHelper;
+import org.apache.camel.util.AntPathMatcher;
 import org.apache.camel.util.CamelCaseOrderedProperties;
 import org.apache.camel.util.FileUtil;
 import org.apache.camel.util.IOHelper;
@@ -109,7 +110,7 @@ public class Run extends CamelCommand {
             "^\\s*public class\\s+([a-zA-Z0-9]*)[\\s+|;].*$", Pattern.MULTILINE);
 
     private boolean silentRun;
-    private boolean pipeRun;
+    private boolean scriptRun;
     private boolean transformRun;
 
     private File logFile;
@@ -171,6 +172,10 @@ public class Run extends CamelCommand {
     @Option(names = { "--name" }, defaultValue = "CamelJBang", description = "The name of the Camel application")
     String name;
 
+    @Option(names = { "--exclude" },
+            description = "Exclude files by name or pattern. Multiple names can be separated by comma.")
+    String exclude;
+
     @Option(names = { "--logging" }, defaultValue = "true", description = "Can be used to turn off logging")
     boolean logging = true;
 
@@ -202,7 +207,8 @@ public class Run extends CamelCommand {
     boolean trace;
 
     @Option(names = { "--properties" },
-            description = "Load properties file for route placeholders (ex. /path/to/file.properties")
+            description = "comma separated list of properties file" +
+                          " (ex. /path/to/file.properties,/path/to/other.properties")
     String propertiesFiles;
 
     @Option(names = { "-p", "--prop", "--property" }, description = "Additional properties (override existing)", arity = "0")
@@ -245,6 +251,10 @@ public class Run extends CamelCommand {
     @Option(names = { "--verbose" }, description = "Verbose output of startup activity (dependency resolution and downloading")
     boolean verbose;
 
+    @Option(names = { "--ignore-loading-error" },
+            description = "Whether to ignore route loading and compilation errors (use this with care!)")
+    protected boolean ignoreLoadingError;
+
     public Run(CamelJBangMain main) {
         super(main);
     }
@@ -268,20 +278,25 @@ public class Run extends CamelCommand {
     }
 
     protected Integer runSilent() throws Exception {
+        return runSilent(false);
+    }
+
+    protected Integer runSilent(boolean ignoreLoadingError) throws Exception {
         // just boot silently and exit
-        silentRun = true;
+        this.silentRun = true;
         return run();
     }
 
-    protected Integer runTransform() throws Exception {
+    protected Integer runTransform(boolean ignoreLoadingError) throws Exception {
         // just boot silently and exit
-        transformRun = true;
+        this.transformRun = true;
+        this.ignoreLoadingError = ignoreLoadingError;
         return run();
     }
 
-    protected Integer runPipe(String file) throws Exception {
+    protected Integer runScript(String file) throws Exception {
         this.files.add(file);
-        pipeRun = true;
+        scriptRun = true;
         return run();
     }
 
@@ -416,6 +431,9 @@ public class Run extends CamelCommand {
         if (modeline) {
             writeSetting(main, profileProperties, "camel.main.modeline", "true");
         }
+        if (ignoreLoadingError) {
+            writeSetting(main, profileProperties, "camel.jbang.ignoreLoadingError", "true");
+        }
 
         if (gav != null) {
             writeSetting(main, profileProperties, "camel.jbang.gav", gav);
@@ -466,8 +484,7 @@ public class Run extends CamelCommand {
             // do not run for very long in silent run
             main.addInitialProperty("camel.main.autoStartup", "false");
             main.addInitialProperty("camel.main.durationMaxSeconds", "1");
-            main.addInitialProperty("camel.main.durationMaxSeconds", "1");
-        } else if (pipeRun) {
+        } else if (scriptRun) {
             // auto terminate if being idle
             main.addInitialProperty("camel.main.durationMaxIdleSeconds", "1");
         }
@@ -758,6 +775,7 @@ public class Run extends CamelCommand {
             kameletsVersion = answer.getProperty("camel.jbang.kameletsVersion", kameletsVersion);
             gav = answer.getProperty("camel.jbang.gav", gav);
             stub = answer.getProperty("camel.jbang.stub", stub);
+            exclude = answer.getProperty("camel.jbang.exclude", exclude);
         }
 
         if (kameletsVersion == null) {
@@ -1053,11 +1071,11 @@ public class Run extends CamelCommand {
         if (silentRun) {
             // do not configure logging
         } else if (logging) {
-            RuntimeUtil.configureLog(loggingLevel, loggingColor, loggingJson, pipeRun, false);
+            RuntimeUtil.configureLog(loggingLevel, loggingColor, loggingJson, scriptRun, false);
             writeSettings("loggingLevel", loggingLevel);
             writeSettings("loggingColor", loggingColor ? "true" : "false");
             writeSettings("loggingJson", loggingJson ? "true" : "false");
-            if (!pipeRun) {
+            if (!scriptRun) {
                 // remember log file
                 File dir = new File(System.getProperty("user.home"), ".camel");
                 String name = RuntimeUtil.getPid() + ".log";
@@ -1142,9 +1160,6 @@ public class Run extends CamelCommand {
         if (OPENAPI_GENERATED_FILE.equals(name)) {
             return false;
         }
-        if (name.startsWith(".")) {
-            return true;
-        }
         if ("pom.xml".equalsIgnoreCase(name)) {
             return true;
         }
@@ -1156,6 +1171,19 @@ public class Run extends CamelCommand {
         }
         if ("docker-compose.yml".equals(name) || "docker-compose.yaml".equals(name) || "compose.yml".equals(name)
                 || "compose.yaml".equals(name)) {
+            return true;
+        }
+
+        if (name.startsWith(".")) {
+            // relative file is okay, otherwise we assume it's a hidden file
+            boolean ok = name.startsWith("..") || name.startsWith("./");
+            if (!ok) {
+                return true;
+            }
+        }
+
+        // is the file excluded?
+        if (isExcluded(name, exclude)) {
             return true;
         }
 
@@ -1171,6 +1199,18 @@ public class Run extends CamelCommand {
             return true;
         }
 
+        return false;
+    }
+
+    private static boolean isExcluded(String name, String exclude) {
+        if (exclude != null) {
+            for (String pattern : exclude.split(",")) {
+                pattern = pattern.trim();
+                if (AntPathMatcher.INSTANCE.match(pattern, name)) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 

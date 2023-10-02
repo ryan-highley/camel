@@ -1070,6 +1070,49 @@ public class StaticEndpointBuilders {
         return org.apache.camel.builder.endpoint.dsl.MSK2EndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
+     * AWS RedshiftData (camel-aws2-redshift)
+     * Perform operations on AWS Redshift using Redshift Data API.
+     * 
+     * Category: cloud,serverless,database,bigdata
+     * Since: 4.1
+     * Maven coordinates: org.apache.camel:camel-aws2-redshift
+     * 
+     * Syntax: <code>aws2-redshift-data:label</code>
+     * 
+     * Path parameter: label (required)
+     * Logical name
+     * 
+     * @param path label
+     * @return the dsl builder
+     */
+    public static org.apache.camel.builder.endpoint.dsl.RedshiftData2EndpointBuilderFactory.RedshiftData2EndpointBuilder aws2RedshiftData(
+            String path) {
+        return org.apache.camel.builder.endpoint.dsl.RedshiftData2EndpointBuilderFactory.endpointBuilder("aws2-redshift-data", path);
+    }
+    /**
+     * AWS RedshiftData (camel-aws2-redshift)
+     * Perform operations on AWS Redshift using Redshift Data API.
+     * 
+     * Category: cloud,serverless,database,bigdata
+     * Since: 4.1
+     * Maven coordinates: org.apache.camel:camel-aws2-redshift
+     * 
+     * Syntax: <code>aws2-redshift-data:label</code>
+     * 
+     * Path parameter: label (required)
+     * Logical name
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path label
+     * @return the dsl builder
+     */
+    public static org.apache.camel.builder.endpoint.dsl.RedshiftData2EndpointBuilderFactory.RedshiftData2EndpointBuilder aws2RedshiftData(
+            String componentName,
+            String path) {
+        return org.apache.camel.builder.endpoint.dsl.RedshiftData2EndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
      * AWS S3 Storage Service (camel-aws2-s3)
      * Store and retrieve objects from AWS S3 Storage Service.
      * 
@@ -1721,7 +1764,7 @@ public class StaticEndpointBuilders {
     }
     /**
      * Azure ServiceBus (camel-azure-servicebus)
-     * Send and receive messages to/from Azure Event Bus.
+     * Send and receive messages to/from Azure Service Bus.
      * 
      * Category: cloud,messaging
      * Since: 3.12
@@ -1744,7 +1787,7 @@ public class StaticEndpointBuilders {
     }
     /**
      * Azure ServiceBus (camel-azure-servicebus)
-     * Send and receive messages to/from Azure Event Bus.
+     * Send and receive messages to/from Azure Service Bus.
      * 
      * Category: cloud,messaging
      * Since: 3.12

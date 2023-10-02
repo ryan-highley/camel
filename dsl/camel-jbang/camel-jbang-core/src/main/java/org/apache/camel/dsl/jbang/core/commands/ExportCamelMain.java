@@ -63,7 +63,7 @@ class ExportCamelMain extends Export {
             if (!quiet && fresh) {
                 System.out.println("Generating fresh run data");
             }
-            int silent = runSilently();
+            int silent = runSilently(ignoreLoadingError);
             if (silent != 0) {
                 return silent;
             }
@@ -220,37 +220,6 @@ class ExportCamelMain extends Export {
             sb.append("        </dependency>\n");
         }
 
-        if (secretsRefresh) {
-            if (secretsRefreshProviders != null) {
-                List<String> providers = getSecretProviders();
-                for (String provider : providers) {
-                    switch (provider) {
-                        case "aws":
-                            sb.append("        <dependency>\n");
-                            sb.append("            <groupId>").append("org.apache.camel").append("</groupId>\n");
-                            sb.append("            <artifactId>").append("camel-aws-secrets-manager").append("</artifactId>\n");
-                            sb.append("        </dependency>\n");
-                            break;
-                        case "gcp":
-                            sb.append("        <dependency>\n");
-                            sb.append("            <groupId>").append("org.apache.camel").append("</groupId>\n");
-                            sb.append("            <artifactId>").append("camel-google-secret-manager")
-                                    .append("</artifactId>\n");
-                            sb.append("        </dependency>\n");
-                            break;
-                        case "azure":
-                            sb.append("        <dependency>\n");
-                            sb.append("            <groupId>").append("org.apache.camel").append("</groupId>\n");
-                            sb.append("            <artifactId>").append("camel-azure-key-vault").append("</artifactId>\n");
-                            sb.append("        </dependency>\n");
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-        }
-
         context = context.replaceFirst("\\{\\{ \\.CamelDependencies }}", sb.toString());
 
         // include kubernetes?
@@ -345,30 +314,5 @@ class ExportCamelMain extends Export {
         // assembly for runner jar
         is = ExportCamelMain.class.getResourceAsStream("/assembly/runner.xml");
         safeCopy(is, new File(srcResourcesDir, "assembly/runner.xml"));
-    }
-
-    @Override
-    protected void prepareApplicationProperties(Properties properties) {
-        if (secretsRefresh) {
-            if (secretsRefreshProviders != null) {
-                List<String> providers = getSecretProviders();
-
-                for (String provider : providers) {
-                    switch (provider) {
-                        case "aws":
-                            exportAwsSecretsRefreshProp(properties);
-                            break;
-                        case "gcp":
-                            exportGcpSecretsRefreshProp(properties);
-                            break;
-                        case "azure":
-                            exportAzureSecretsRefreshProp(properties);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-        }
     }
 }
