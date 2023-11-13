@@ -463,7 +463,7 @@ public interface ComponentsBuilderFactory {
     }
     /**
      * AWS Timestream (camel-aws2-timestream)
-     * A Camel Amazon Web Services TimeStream component
+     * Write records and execute queries on AWS time-series database
      * 
      * Category: cloud,database
      * Since: 4.1
@@ -1627,6 +1627,7 @@ public interface ComponentsBuilderFactory {
      * 
      * @return the dsl builder
      */
+    @Deprecated
     static org.apache.camel.builder.component.dsl.GrapeComponentBuilderFactory.GrapeComponentBuilder grape() {
         return org.apache.camel.builder.component.dsl.GrapeComponentBuilderFactory.grape();
     }
@@ -3665,6 +3666,19 @@ public interface ComponentsBuilderFactory {
      */
     static org.apache.camel.builder.component.dsl.SlackComponentBuilderFactory.SlackComponentBuilder slack() {
         return org.apache.camel.builder.component.dsl.SlackComponentBuilderFactory.slack();
+    }
+    /**
+     * SMB (camel-smb)
+     * Receive files from SMB (Server Message Block) shares.
+     * 
+     * Category: file
+     * Since: 4.2.0-SNAPSHOT
+     * Maven coordinates: org.apache.camel:camel-smb
+     * 
+     * @return the dsl builder
+     */
+    static org.apache.camel.builder.component.dsl.SmbComponentBuilderFactory.SmbComponentBuilder smb() {
+        return org.apache.camel.builder.component.dsl.SmbComponentBuilderFactory.smb();
     }
     /**
      * SMPP (camel-smpp)

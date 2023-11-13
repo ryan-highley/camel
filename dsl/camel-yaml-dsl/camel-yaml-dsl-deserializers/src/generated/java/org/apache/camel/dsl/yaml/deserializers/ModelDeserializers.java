@@ -98,12 +98,10 @@ import org.apache.camel.model.ValueDefinition;
 import org.apache.camel.model.WhenDefinition;
 import org.apache.camel.model.WhenSkipSendToEndpointDefinition;
 import org.apache.camel.model.WireTapDefinition;
-import org.apache.camel.model.app.ApplicationDefinition;
 import org.apache.camel.model.app.BeanConstructorDefinition;
 import org.apache.camel.model.app.BeanConstructorsDefinition;
 import org.apache.camel.model.app.BeanPropertiesDefinition;
 import org.apache.camel.model.app.BeanPropertyDefinition;
-import org.apache.camel.model.app.BeansDefinition;
 import org.apache.camel.model.app.ComponentScanDefinition;
 import org.apache.camel.model.app.RegistryBeanDefinition;
 import org.apache.camel.model.cloud.BlacklistServiceCallServiceFilterConfiguration;
@@ -331,7 +329,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "completion-timeout-checker-interval", type = "string", defaultValue = "1000", description = "Interval in millis that is used by the background task that checks for timeouts ( org.apache.camel.TimeoutMap ). By default the timeout checker runs every second. The timeout is an approximation and there is no guarantee that the a timeout is triggered exactly after the timeout value. It is not recommended to use very low timeout values or checker intervals.", displayName = "Completion Timeout Checker Interval"),
                     @YamlProperty(name = "completion-timeout-expression", type = "object:org.apache.camel.model.ExpressionSubElementDefinition", description = "Time in millis that an aggregated exchange should be inactive before its complete (timeout). This option can be set as either a fixed value or using an Expression which allows you to evaluate a timeout dynamically - will use Long as result. If both are set Camel will fallback to use the fixed value if the Expression result was null or 0. You cannot use this option together with completionInterval, only one of the two can be used. By default the timeout checker runs every second, you can use the completionTimeoutCheckerInterval option to configure how frequently to run the checker. The timeout is an approximation and there is no guarantee that the a timeout is triggered exactly after the timeout value. It is not recommended to use very low timeout values or checker intervals.", displayName = "Completion Timeout Expression"),
                     @YamlProperty(name = "correlation-expression", type = "object:org.apache.camel.model.ExpressionSubElementDefinition", description = "The expression used to calculate the correlation key to use for aggregation. The Exchange which has the same correlation key is aggregated together. If the correlation key could not be evaluated an Exception is thrown. You can disable this by using the ignoreBadCorrelationKeys option.", displayName = "Correlation Expression"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "discard-on-aggregation-failure", type = "boolean", description = "Discards the aggregated message when aggregation failed (an exception was thrown from AggregationStrategy . This means the partly aggregated message is dropped and not sent out of the aggregator. This option cannot be used together with completionFromBatchConsumer.", displayName = "Discard On Aggregation Failure"),
                     @YamlProperty(name = "discard-on-completion-timeout", type = "boolean", description = "Discards the aggregated message on completion timeout. This means on timeout the aggregated message is dropped and not sent out of the aggregator.", displayName = "Discard On Completion Timeout"),
@@ -590,86 +588,6 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "name": {
                     String val = asText(node);
                     target.setName(val);
-                    break;
-                }
-                default: {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
-
-    @YamlType(
-            nodes = "camel",
-            types = org.apache.camel.model.app.ApplicationDefinition.class,
-            order = org.apache.camel.dsl.yaml.common.YamlDeserializerResolver.ORDER_LOWEST - 1,
-            displayName = "Camel",
-            description = "If beans reminds Spring application too much, we can use camel.",
-            deprecated = false,
-            properties = {
-                    @YamlProperty(name = "bean", type = "array:org.apache.camel.model.app.RegistryBeanDefinition", displayName = "Bean"),
-                    @YamlProperty(name = "component-scan", type = "array:org.apache.camel.model.app.ComponentScanDefinition"),
-                    @YamlProperty(name = "rest", type = "array:org.apache.camel.model.rest.RestDefinition", displayName = "Rest"),
-                    @YamlProperty(name = "rest-configuration", type = "array:org.apache.camel.model.rest.RestConfigurationDefinition", displayName = "Rest Configuration"),
-                    @YamlProperty(name = "route", type = "array:org.apache.camel.model.RouteDefinition", displayName = "Route"),
-                    @YamlProperty(name = "route-configuration", type = "array:org.apache.camel.model.RouteConfigurationDefinition", displayName = "Route Configuration"),
-                    @YamlProperty(name = "route-template", type = "array:org.apache.camel.model.RouteTemplateDefinition", displayName = "Route Template"),
-                    @YamlProperty(name = "templated-route", type = "array:org.apache.camel.model.TemplatedRouteDefinition", displayName = "Templated Route")
-            }
-    )
-    public static class ApplicationDefinitionDeserializer extends YamlDeserializerBase<ApplicationDefinition> {
-        public ApplicationDefinitionDeserializer() {
-            super(ApplicationDefinition.class);
-        }
-
-        @Override
-        protected ApplicationDefinition newInstance() {
-            return new ApplicationDefinition();
-        }
-
-        @Override
-        protected boolean setProperty(ApplicationDefinition target, String propertyKey,
-                String propertyName, Node node) {
-            switch(propertyKey) {
-                case "bean": {
-                    java.util.List<org.apache.camel.model.app.RegistryBeanDefinition> val = asFlatList(node, org.apache.camel.model.app.RegistryBeanDefinition.class);
-                    target.setBeans(val);
-                    break;
-                }
-                case "component-scan": {
-                    java.util.List<org.apache.camel.model.app.ComponentScanDefinition> val = asFlatList(node, org.apache.camel.model.app.ComponentScanDefinition.class);
-                    target.setComponentScanning(val);
-                    break;
-                }
-                case "rest-configuration": {
-                    java.util.List<org.apache.camel.model.rest.RestConfigurationDefinition> val = asFlatList(node, org.apache.camel.model.rest.RestConfigurationDefinition.class);
-                    target.setRestConfigurations(val);
-                    break;
-                }
-                case "rest": {
-                    java.util.List<org.apache.camel.model.rest.RestDefinition> val = asFlatList(node, org.apache.camel.model.rest.RestDefinition.class);
-                    target.setRests(val);
-                    break;
-                }
-                case "route-configuration": {
-                    java.util.List<org.apache.camel.model.RouteConfigurationDefinition> val = asFlatList(node, org.apache.camel.model.RouteConfigurationDefinition.class);
-                    target.setRouteConfigurations(val);
-                    break;
-                }
-                case "route-template": {
-                    java.util.List<org.apache.camel.model.RouteTemplateDefinition> val = asFlatList(node, org.apache.camel.model.RouteTemplateDefinition.class);
-                    target.setRouteTemplates(val);
-                    break;
-                }
-                case "route": {
-                    java.util.List<org.apache.camel.model.RouteDefinition> val = asFlatList(node, org.apache.camel.model.RouteDefinition.class);
-                    target.setRoutes(val);
-                    break;
-                }
-                case "templated-route": {
-                    java.util.List<org.apache.camel.model.TemplatedRouteDefinition> val = asFlatList(node, org.apache.camel.model.TemplatedRouteDefinition.class);
-                    target.setTemplatedRoutes(val);
                     break;
                 }
                 default: {
@@ -1152,7 +1070,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             deprecated = false,
             properties = {
                     @YamlProperty(name = "bean-type", type = "string", description = "Sets the class name (fully qualified) of the bean to use", displayName = "Bean Type"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -1296,86 +1214,6 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "value": {
                     String val = asText(node);
                     target.setValue(val);
-                    break;
-                }
-                default: {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
-
-    @YamlType(
-            nodes = "beans",
-            types = org.apache.camel.model.app.BeansDefinition.class,
-            order = org.apache.camel.dsl.yaml.common.YamlDeserializerResolver.ORDER_LOWEST - 1,
-            displayName = "Beans",
-            description = "A grouping POJO (and related XML root element) that's historically associated with entire application (or its distinguished fragment). This class is not meant to be used with Camel Java DSL, but it's needed to generate XML Schema and MX parser methods.",
-            deprecated = false,
-            properties = {
-                    @YamlProperty(name = "bean", type = "array:org.apache.camel.model.app.RegistryBeanDefinition", displayName = "Bean"),
-                    @YamlProperty(name = "component-scan", type = "array:org.apache.camel.model.app.ComponentScanDefinition"),
-                    @YamlProperty(name = "rest", type = "array:org.apache.camel.model.rest.RestDefinition", displayName = "Rest"),
-                    @YamlProperty(name = "rest-configuration", type = "array:org.apache.camel.model.rest.RestConfigurationDefinition", displayName = "Rest Configuration"),
-                    @YamlProperty(name = "route", type = "array:org.apache.camel.model.RouteDefinition", displayName = "Route"),
-                    @YamlProperty(name = "route-configuration", type = "array:org.apache.camel.model.RouteConfigurationDefinition", displayName = "Route Configuration"),
-                    @YamlProperty(name = "route-template", type = "array:org.apache.camel.model.RouteTemplateDefinition", displayName = "Route Template"),
-                    @YamlProperty(name = "templated-route", type = "array:org.apache.camel.model.TemplatedRouteDefinition", displayName = "Templated Route")
-            }
-    )
-    public static class BeansDefinitionDeserializer extends YamlDeserializerBase<BeansDefinition> {
-        public BeansDefinitionDeserializer() {
-            super(BeansDefinition.class);
-        }
-
-        @Override
-        protected BeansDefinition newInstance() {
-            return new BeansDefinition();
-        }
-
-        @Override
-        protected boolean setProperty(BeansDefinition target, String propertyKey,
-                String propertyName, Node node) {
-            switch(propertyKey) {
-                case "bean": {
-                    java.util.List<org.apache.camel.model.app.RegistryBeanDefinition> val = asFlatList(node, org.apache.camel.model.app.RegistryBeanDefinition.class);
-                    target.setBeans(val);
-                    break;
-                }
-                case "component-scan": {
-                    java.util.List<org.apache.camel.model.app.ComponentScanDefinition> val = asFlatList(node, org.apache.camel.model.app.ComponentScanDefinition.class);
-                    target.setComponentScanning(val);
-                    break;
-                }
-                case "rest-configuration": {
-                    java.util.List<org.apache.camel.model.rest.RestConfigurationDefinition> val = asFlatList(node, org.apache.camel.model.rest.RestConfigurationDefinition.class);
-                    target.setRestConfigurations(val);
-                    break;
-                }
-                case "rest": {
-                    java.util.List<org.apache.camel.model.rest.RestDefinition> val = asFlatList(node, org.apache.camel.model.rest.RestDefinition.class);
-                    target.setRests(val);
-                    break;
-                }
-                case "route-configuration": {
-                    java.util.List<org.apache.camel.model.RouteConfigurationDefinition> val = asFlatList(node, org.apache.camel.model.RouteConfigurationDefinition.class);
-                    target.setRouteConfigurations(val);
-                    break;
-                }
-                case "route-template": {
-                    java.util.List<org.apache.camel.model.RouteTemplateDefinition> val = asFlatList(node, org.apache.camel.model.RouteTemplateDefinition.class);
-                    target.setRouteTemplates(val);
-                    break;
-                }
-                case "route": {
-                    java.util.List<org.apache.camel.model.RouteDefinition> val = asFlatList(node, org.apache.camel.model.RouteDefinition.class);
-                    target.setRoutes(val);
-                    break;
-                }
-                case "templated-route": {
-                    java.util.List<org.apache.camel.model.TemplatedRouteDefinition> val = asFlatList(node, org.apache.camel.model.TemplatedRouteDefinition.class);
-                    target.setTemplatedRoutes(val);
                     break;
                 }
                 default: {
@@ -1832,7 +1670,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Catches exceptions as part of a try, catch, finally block",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "exception", type = "array:string", description = "The exception(s) to catch.", displayName = "Exception"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -1905,13 +1743,12 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Route messages based on a series of predicates",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
                     @YamlProperty(name = "otherwise", type = "object:org.apache.camel.model.OtherwiseDefinition", description = "Sets the otherwise node", displayName = "Otherwise"),
                     @YamlProperty(name = "precondition", type = "boolean", description = "Indicates whether this Choice EIP is in precondition mode or not. If so its branches (when/otherwise) are evaluated during startup to keep at runtime only the branch that matched.", displayName = "Precondition"),
-                    @YamlProperty(name = "steps", type = "array:org.apache.camel.model.ProcessorDefinition"),
                     @YamlProperty(name = "when", type = "array:org.apache.camel.model.WhenDefinition", description = "Sets the when nodes", displayName = "When")
             }
     )
@@ -1964,10 +1801,6 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     target.setDescription(val);
                     break;
                 }
-                case "steps": {
-                    setSteps(target, node);
-                    break;
-                }
                 default: {
                     return false;
                 }
@@ -1988,7 +1821,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             deprecated = false,
             properties = {
                     @YamlProperty(name = "configuration", type = "string", description = "Refers to a circuit breaker configuration (such as resillience4j, or microprofile-fault-tolerance) to use for configuring the circuit breaker EIP.", displayName = "Configuration"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "fault-tolerance-configuration", type = "object:org.apache.camel.model.FaultToleranceConfigurationDefinition", description = "Configures the circuit breaker to use MicroProfile Fault Tolerance with the given configuration.", displayName = "Fault Tolerance Configuration"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -2077,7 +1910,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             properties = {
                     @YamlProperty(name = "aggregation-strategy", type = "string", description = "To use a custom AggregationStrategy instead of the default implementation. Notice you cannot use both custom aggregation strategy and configure data at the same time.", displayName = "Aggregation Strategy"),
                     @YamlProperty(name = "aggregation-strategy-method-name", type = "string", description = "This option can be used to explicit declare the method name to use, when using POJOs as the AggregationStrategy.", displayName = "Aggregation Strategy Method Name"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "filter", type = "string", description = "Specify a filter to control what data gets merged data back from the claim check repository. The following syntax is supported: body - to aggregate the message body attachments - to aggregate all the message attachments headers - to aggregate all the message headers header:pattern - to aggregate all the message headers that matches the pattern. The following pattern rules are applied in this order: exact match, returns true wildcard match (pattern ends with a and the name starts with the pattern), returns true regular expression match, returns true otherwise returns false You can specify multiple rules separated by comma. For example, the following includes the message body and all headers starting with foo: body,header:foo. The syntax supports the following prefixes which can be used to specify include,exclude, or remove - to include (which is the default mode) - - to exclude (exclude takes precedence over include) -- - to remove (remove takes precedence) For example to exclude a header name foo, and remove all headers starting with bar, -header:foo,--headers:bar Note you cannot have both include and exclude header:pattern at the same time.", displayName = "Filter"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -2623,7 +2456,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             deprecated = false,
             properties = {
                     @YamlProperty(name = "charset", type = "string", description = "To use a specific charset when converting", displayName = "Charset"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -4455,7 +4288,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "__extends", type = "object:org.apache.camel.model.language.ExpressionDefinition", oneOf = "expression"),
                     @YamlProperty(name = "async-delayed", type = "boolean", description = "Enables asynchronous delay which means the thread will not block while delaying.", displayName = "Async Delayed"),
                     @YamlProperty(name = "caller-runs-when-rejected", type = "boolean", description = "Whether or not the caller should run the task when it was rejected by the thread pool. Is by default true", displayName = "Caller Runs When Rejected"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "executor-service", type = "string", description = "To use a custom Thread Pool if asyncDelay has been enabled.", displayName = "Executor Service"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression to define how long time to wait (in millis)", displayName = "Expression", oneOf = "expression"),
@@ -4547,9 +4380,10 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "client-request-validation", type = "boolean", description = "Whether to enable validation of the client request to check: 1) Content-Type header matches what the Rest DSL consumes; returns HTTP Status 415 if validation error. 2) Accept header matches what the Rest DSL produces; returns HTTP Status 406 if validation error. 3) Missing required data (query parameters, HTTP headers, body); returns HTTP Status 400 if validation error. 4) Parsing error of the message body (JSon, XML or Auto binding mode must be enabled); returns HTTP Status 400 if validation error.", displayName = "Client Request Validation"),
                     @YamlProperty(name = "consumes", type = "string", description = "To define the content type what the REST service consumes (accept as input), such as application/xml or application/json. This option will override what may be configured on a parent level", displayName = "Consumes"),
                     @YamlProperty(name = "deprecated", type = "boolean", description = "Marks this rest operation as deprecated in OpenApi documentation.", displayName = "Deprecated"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this REST service from the route during build time. Once an REST service has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "enable-cors", type = "boolean"),
+                    @YamlProperty(name = "enable-no-content-response", type = "boolean", description = "Whether to return HTTP 204 with an empty body when a response contains an empty JSON object or XML root object. The default value is false.", displayName = "Enable No Content Response"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "out-type", type = "string", description = "Sets the class name to use for binding from POJO to output for the outgoing data This option will override what may be configured on a parent level The name of the class of the input data. Append a to the end of the name if you want the input to be an array type.", displayName = "Out Type"),
                     @YamlProperty(name = "param", type = "array:org.apache.camel.model.rest.ParamDefinition"),
@@ -4610,6 +4444,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "enable-cors": {
                     String val = asText(node);
                     target.setEnableCORS(val);
+                    break;
+                }
+                case "enable-no-content-response": {
+                    String val = asText(node);
+                    target.setEnableNoContentResponse(val);
                     break;
                 }
                 case "out-type": {
@@ -4751,7 +4590,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             properties = {
                     @YamlProperty(name = "__extends", type = "object:org.apache.camel.model.language.ExpressionDefinition", oneOf = "expression"),
                     @YamlProperty(name = "cache-size", type = "number", description = "Sets the maximum size used by the org.apache.camel.spi.ProducerCache which is used to cache and reuse producers when using this dynamic router, when uris are reused. Beware that when using dynamic endpoints then it affects how well the cache can be utilized. If each dynamic endpoint is unique then its best to turn off caching by setting this to -1, which allows Camel to not cache both the producers and endpoints; they are regarded as prototype scoped and will be stopped and discarded after use. This reduces memory usage as otherwise producers/endpoints are stored in memory in the caches. However if there are a high degree of dynamic endpoints that have been used before, then it can benefit to use the cache to reuse both producers and endpoints and therefore the cache size can be set accordingly or rely on the default size (1000). If there is a mix of unique and used before dynamic endpoints, then setting a reasonable cache size can help reduce memory usage to avoid storing too many non frequent used producers.", displayName = "Cache Size"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression to call that returns the endpoint(s) to route to in the dynamic routing. Important: The expression will be called in a while loop fashion, until the expression returns null which means the dynamic router is finished.", displayName = "Expression", oneOf = "expression"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -4956,7 +4795,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "aggregation-strategy-method-name", type = "string", description = "This option can be used to explicit declare the method name to use, when using POJOs as the AggregationStrategy.", displayName = "Aggregation Strategy Method Name"),
                     @YamlProperty(name = "allow-optimised-components", type = "boolean", description = "Whether to allow components to optimise enricher if they are org.apache.camel.spi.SendDynamicAware .", displayName = "Allow Optimised Components"),
                     @YamlProperty(name = "cache-size", type = "number", description = "Sets the maximum size used by the org.apache.camel.spi.ProducerCache which is used to cache and reuse producer when uris are reused. Beware that when using dynamic endpoints then it affects how well the cache can be utilized. If each dynamic endpoint is unique then its best to turn off caching by setting this to -1, which allows Camel to not cache both the producers and endpoints; they are regarded as prototype scoped and will be stopped and discarded after use. This reduces memory usage as otherwise producers/endpoints are stored in memory in the caches. However if there are a high degree of dynamic endpoints that have been used before, then it can benefit to use the cache to reuse both producers and endpoints and therefore the cache size can be set accordingly or rely on the default size (1000). If there is a mix of unique and used before dynamic endpoints, then setting a reasonable cache size can help reduce memory usage to avoid storing too many non frequent used producers.", displayName = "Cache Size"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression that computes the endpoint uri to use as the resource endpoint to enrich from", displayName = "Expression", oneOf = "expression"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -5693,7 +5532,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             deprecated = false,
             properties = {
                     @YamlProperty(name = "__extends", type = "object:org.apache.camel.model.language.ExpressionDefinition", oneOf = "expression"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression to determine if the message should be filtered or not. If the expression returns an empty value or false then the message is filtered (dropped), otherwise the message is continued being routed.", displayName = "Expression", oneOf = "expression"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -5778,7 +5617,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Path traversed when a try, catch, finally block exits",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -5930,9 +5769,10 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "client-request-validation", type = "boolean", description = "Whether to enable validation of the client request to check: 1) Content-Type header matches what the Rest DSL consumes; returns HTTP Status 415 if validation error. 2) Accept header matches what the Rest DSL produces; returns HTTP Status 406 if validation error. 3) Missing required data (query parameters, HTTP headers, body); returns HTTP Status 400 if validation error. 4) Parsing error of the message body (JSon, XML or Auto binding mode must be enabled); returns HTTP Status 400 if validation error.", displayName = "Client Request Validation"),
                     @YamlProperty(name = "consumes", type = "string", description = "To define the content type what the REST service consumes (accept as input), such as application/xml or application/json. This option will override what may be configured on a parent level", displayName = "Consumes"),
                     @YamlProperty(name = "deprecated", type = "boolean", description = "Marks this rest operation as deprecated in OpenApi documentation.", displayName = "Deprecated"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this REST service from the route during build time. Once an REST service has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "enable-cors", type = "boolean"),
+                    @YamlProperty(name = "enable-no-content-response", type = "boolean", description = "Whether to return HTTP 204 with an empty body when a response contains an empty JSON object or XML root object. The default value is false.", displayName = "Enable No Content Response"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "out-type", type = "string", description = "Sets the class name to use for binding from POJO to output for the outgoing data This option will override what may be configured on a parent level The name of the class of the input data. Append a to the end of the name if you want the input to be an array type.", displayName = "Out Type"),
                     @YamlProperty(name = "param", type = "array:org.apache.camel.model.rest.ParamDefinition"),
@@ -5993,6 +5833,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "enable-cors": {
                     String val = asText(node);
                     target.setEnableCORS(val);
+                    break;
+                }
+                case "enable-no-content-response": {
+                    String val = asText(node);
+                    target.setEnableNoContentResponse(val);
                     break;
                 }
                 case "out-type": {
@@ -6378,9 +6223,10 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "client-request-validation", type = "boolean", description = "Whether to enable validation of the client request to check: 1) Content-Type header matches what the Rest DSL consumes; returns HTTP Status 415 if validation error. 2) Accept header matches what the Rest DSL produces; returns HTTP Status 406 if validation error. 3) Missing required data (query parameters, HTTP headers, body); returns HTTP Status 400 if validation error. 4) Parsing error of the message body (JSon, XML or Auto binding mode must be enabled); returns HTTP Status 400 if validation error.", displayName = "Client Request Validation"),
                     @YamlProperty(name = "consumes", type = "string", description = "To define the content type what the REST service consumes (accept as input), such as application/xml or application/json. This option will override what may be configured on a parent level", displayName = "Consumes"),
                     @YamlProperty(name = "deprecated", type = "boolean", description = "Marks this rest operation as deprecated in OpenApi documentation.", displayName = "Deprecated"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this REST service from the route during build time. Once an REST service has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "enable-cors", type = "boolean"),
+                    @YamlProperty(name = "enable-no-content-response", type = "boolean", description = "Whether to return HTTP 204 with an empty body when a response contains an empty JSON object or XML root object. The default value is false.", displayName = "Enable No Content Response"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "out-type", type = "string", description = "Sets the class name to use for binding from POJO to output for the outgoing data This option will override what may be configured on a parent level The name of the class of the input data. Append a to the end of the name if you want the input to be an array type.", displayName = "Out Type"),
                     @YamlProperty(name = "param", type = "array:org.apache.camel.model.rest.ParamDefinition"),
@@ -6441,6 +6287,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "enable-cors": {
                     String val = asText(node);
                     target.setEnableCORS(val);
+                    break;
+                }
+                case "enable-no-content-response": {
+                    String val = asText(node);
+                    target.setEnableNoContentResponse(val);
                     break;
                 }
                 case "out-type": {
@@ -6762,7 +6613,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             properties = {
                     @YamlProperty(name = "__extends", type = "object:org.apache.camel.model.language.ExpressionDefinition", oneOf = "expression"),
                     @YamlProperty(name = "completion-eager", type = "boolean", description = "Sets whether to complete the idempotent consumer eager or when the exchange is done. If this option is true to complete eager, then the idempotent consumer will trigger its completion when the exchange reached the end of the block of the idempotent consumer pattern. So if the exchange is continued routed after the block ends, then whatever happens there does not affect the state. If this option is false (default) to not complete eager, then the idempotent consumer will complete when the exchange is done being routed. So if the exchange is continued routed after the block ends, then whatever happens there also affect the state. For example if the exchange failed due to an exception, then the state of the idempotent consumer will be a rollback.", displayName = "Completion Eager"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "eager", type = "boolean", description = "Sets whether to eagerly add the key to the idempotent repository or wait until the exchange is complete. Eager is default enabled.", displayName = "Eager"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression used to calculate the correlation key to use for duplicate check. The Exchange which has the same correlation key is regarded as a duplicate and will be rejected.", displayName = "Expression", oneOf = "expression"),
@@ -6870,7 +6721,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Set the expected data type of the input message. If the actual message type is different at runtime, camel look for a required Transformer and apply if exists. If validate attribute is true then camel applies Validator as well. Type name consists of two parts, 'scheme' and 'name' connected with ':'. For Java type 'name' is a fully qualified class name. For example {code java:java.lang.String} , {code json:ABCOrder} . It's also possible to specify only scheme part, so that it works like a wildcard. If only 'xml' is specified, all the XML message matches. It's handy to add only one transformer/validator for all the transformation from/to XML.",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "urn", type = "string", required = true, description = "The input type URN.", displayName = "Urn"),
                     @YamlProperty(name = "validate", type = "boolean", description = "Whether if validation is required for this input type.", displayName = "Validate")
@@ -6927,7 +6778,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Intercepts a message at each step in the route",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -6993,7 +6844,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Intercepts incoming messages",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -7071,7 +6922,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             deprecated = false,
             properties = {
                     @YamlProperty(name = "after-uri", type = "string", description = "After sending to the endpoint then send the message to this uri which allows to process its result.", displayName = "After Uri"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -8425,7 +8276,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             deprecated = false,
             properties = {
                     @YamlProperty(name = "custom-load-balancer", type = "object:org.apache.camel.model.loadbalancer.CustomLoadBalancerDefinition", oneOf = "loadBalancerType"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "failover", type = "object:org.apache.camel.model.loadbalancer.FailoverLoadBalancerDefinition", oneOf = "loadBalancerType"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -8597,7 +8448,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Logs the defined message to the logger",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -8691,7 +8542,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "__extends", type = "object:org.apache.camel.model.language.ExpressionDefinition", oneOf = "expression"),
                     @YamlProperty(name = "break-on-shutdown", type = "boolean", description = "If the breakOnShutdown attribute is true, then the loop will not iterate until it reaches the end when Camel is shut down.", displayName = "Break On Shutdown"),
                     @YamlProperty(name = "copy", type = "boolean", description = "If the copy attribute is true, a copy of the input Exchange is used for each iteration. That means each iteration will start from a copy of the same message. By default loop will loop the same exchange all over, so each iteration may have different message content.", displayName = "Copy"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "do-while", type = "boolean", description = "Enables the while loop that loops until the predicate evaluates to false or null.", displayName = "Do While"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression to define how many times we should loop. Notice the expression is only evaluated once, and should return a number as how many times to loop. A value of zero or negative means no looping. The loop is like a for-loop fashion, if you want a while loop, then the dynamic router may be a better choice.", displayName = "Expression", oneOf = "expression"),
@@ -8792,7 +8643,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "crypto", type = "object:org.apache.camel.model.dataformat.CryptoDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "csv", type = "object:org.apache.camel.model.dataformat.CsvDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "custom", type = "object:org.apache.camel.model.dataformat.CustomDataFormat", oneOf = "dataFormatType"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "fhir-json", type = "object:org.apache.camel.model.dataformat.FhirJsonDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "fhir-xml", type = "object:org.apache.camel.model.dataformat.FhirXmlDataFormat", oneOf = "dataFormatType"),
@@ -9253,7 +9104,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "aggregation-strategy", type = "string", description = "Refers to an AggregationStrategy to be used to assemble the replies from the multicasts, into a single outgoing message from the Multicast. By default Camel will use the last reply as the outgoing message. You can also use a POJO as the AggregationStrategy", displayName = "Aggregation Strategy"),
                     @YamlProperty(name = "aggregation-strategy-method-allow-null", type = "boolean", description = "If this option is false then the aggregate method is not used if there was no data to enrich. If this option is true then null values is used as the oldExchange (when no data to enrich), when using POJOs as the AggregationStrategy", displayName = "Aggregation Strategy Method Allow Null"),
                     @YamlProperty(name = "aggregation-strategy-method-name", type = "string", description = "This option can be used to explicit declare the method name to use, when using POJOs as the AggregationStrategy.", displayName = "Aggregation Strategy Method Name"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "executor-service", type = "string", description = "Refers to a custom Thread Pool to be used for parallel processing. Notice if you set this option, then parallel processing is automatic implied, and you do not have to enable that option as well.", displayName = "Executor Service"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -9689,7 +9540,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Route to be executed when normal route processing completes",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "executor-service", type = "string", description = "To use a custom Thread Pool to be used for parallel processing. Notice if you set this option, then parallel processing is automatic implied, and you do not have to enable that option as well.", displayName = "Executor Service"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -9797,7 +9648,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             deprecated = false,
             properties = {
                     @YamlProperty(name = "continued", type = "object:org.apache.camel.model.ExpressionSubElementDefinition", description = "Sets whether the exchange should handle and continue routing from the point of failure. If this option is enabled then its considered handled as well.", displayName = "Continued"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "exception", type = "array:string", description = "A set of exceptions to react upon.", displayName = "Exception"),
                     @YamlProperty(name = "handled", type = "object:org.apache.camel.model.ExpressionSubElementDefinition", description = "Sets whether the exchange should be marked as handled or not.", displayName = "Handled"),
@@ -9926,7 +9777,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Route to be executed when Circuit Breaker EIP executes fallback",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "fallback-via-network", type = "boolean", description = "Whether the fallback goes over the network. If the fallback will go over the network it is another possible point of failure. It is important to execute the fallback command on a separate thread-pool, otherwise if the main command were to become latent and fill the thread-pool this would prevent the fallback from running if the two commands share the same pool.", displayName = "Fallback Via Network"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -10111,7 +9962,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Route to be executed when all other choices evaluate to false",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -10232,7 +10083,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Set the expected data type of the output message. If the actual message type is different at runtime, camel look for a required Transformer and apply if exists. If validate attribute is true then camel applies Validator as well. Type name consists of two parts, 'scheme' and 'name' connected with ':'. For Java type 'name' is a fully qualified class name. For example {code java:java.lang.String} , {code json:ABCOrder} . It's also possible to specify only scheme part, so that it works like a wildcard. If only 'xml' is specified, all the XML message matches. It's handy to add only one transformer/validator for all the XML-Java transformation.",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "urn", type = "string", required = true, description = "Set output type URN.", displayName = "Urn"),
                     @YamlProperty(name = "validate", type = "boolean", description = "Whether if validation is required for this output type.", displayName = "Validate")
@@ -10669,9 +10520,10 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "client-request-validation", type = "boolean", description = "Whether to enable validation of the client request to check: 1) Content-Type header matches what the Rest DSL consumes; returns HTTP Status 415 if validation error. 2) Accept header matches what the Rest DSL produces; returns HTTP Status 406 if validation error. 3) Missing required data (query parameters, HTTP headers, body); returns HTTP Status 400 if validation error. 4) Parsing error of the message body (JSon, XML or Auto binding mode must be enabled); returns HTTP Status 400 if validation error.", displayName = "Client Request Validation"),
                     @YamlProperty(name = "consumes", type = "string", description = "To define the content type what the REST service consumes (accept as input), such as application/xml or application/json. This option will override what may be configured on a parent level", displayName = "Consumes"),
                     @YamlProperty(name = "deprecated", type = "boolean", description = "Marks this rest operation as deprecated in OpenApi documentation.", displayName = "Deprecated"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this REST service from the route during build time. Once an REST service has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "enable-cors", type = "boolean"),
+                    @YamlProperty(name = "enable-no-content-response", type = "boolean", description = "Whether to return HTTP 204 with an empty body when a response contains an empty JSON object or XML root object. The default value is false.", displayName = "Enable No Content Response"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "out-type", type = "string", description = "Sets the class name to use for binding from POJO to output for the outgoing data This option will override what may be configured on a parent level The name of the class of the input data. Append a to the end of the name if you want the input to be an array type.", displayName = "Out Type"),
                     @YamlProperty(name = "param", type = "array:org.apache.camel.model.rest.ParamDefinition"),
@@ -10732,6 +10584,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "enable-cors": {
                     String val = asText(node);
                     target.setEnableCORS(val);
+                    break;
+                }
+                case "enable-no-content-response": {
+                    String val = asText(node);
+                    target.setEnableNoContentResponse(val);
                     break;
                 }
                 case "out-type": {
@@ -10811,7 +10668,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             deprecated = false,
             properties = {
                     @YamlProperty(name = "consumer-listener", type = "string", required = true, description = "Sets the consumer listener to use", displayName = "Consumer Listener"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -10878,7 +10735,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Routes the message to a sequence of processors.",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -10939,7 +10796,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Defines a policy the route will use",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -11015,7 +10872,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "aggregation-strategy-method-allow-null", type = "string", description = "If this option is false then the aggregate method is not used if there was no data to enrich. If this option is true then null values is used as the oldExchange (when no data to enrich), when using POJOs as the AggregationStrategy.", displayName = "Aggregation Strategy Method Allow Null"),
                     @YamlProperty(name = "aggregation-strategy-method-name", type = "string", description = "This option can be used to explicit declare the method name to use, when using POJOs as the AggregationStrategy.", displayName = "Aggregation Strategy Method Name"),
                     @YamlProperty(name = "cache-size", type = "number", description = "Sets the maximum size used by the org.apache.camel.spi.ConsumerCache which is used to cache and reuse consumers when uris are reused. Beware that when using dynamic endpoints then it affects how well the cache can be utilized. If each dynamic endpoint is unique then its best to turn off caching by setting this to -1, which allows Camel to not cache both the producers and endpoints; they are regarded as prototype scoped and will be stopped and discarded after use. This reduces memory usage as otherwise producers/endpoints are stored in memory in the caches. However if there are a high degree of dynamic endpoints that have been used before, then it can benefit to use the cache to reuse both producers and endpoints and therefore the cache size can be set accordingly or rely on the default size (1000). If there is a mix of unique and used before dynamic endpoints, then setting a reasonable cache size can help reduce memory usage to avoid storing too many non frequent used producers.", displayName = "Cache Size"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression that computes the endpoint uri to use as the resource endpoint to enrich from", displayName = "Expression", oneOf = "expression"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -11128,9 +10985,10 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "client-request-validation", type = "boolean", description = "Whether to enable validation of the client request to check: 1) Content-Type header matches what the Rest DSL consumes; returns HTTP Status 415 if validation error. 2) Accept header matches what the Rest DSL produces; returns HTTP Status 406 if validation error. 3) Missing required data (query parameters, HTTP headers, body); returns HTTP Status 400 if validation error. 4) Parsing error of the message body (JSon, XML or Auto binding mode must be enabled); returns HTTP Status 400 if validation error.", displayName = "Client Request Validation"),
                     @YamlProperty(name = "consumes", type = "string", description = "To define the content type what the REST service consumes (accept as input), such as application/xml or application/json. This option will override what may be configured on a parent level", displayName = "Consumes"),
                     @YamlProperty(name = "deprecated", type = "boolean", description = "Marks this rest operation as deprecated in OpenApi documentation.", displayName = "Deprecated"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this REST service from the route during build time. Once an REST service has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "enable-cors", type = "boolean"),
+                    @YamlProperty(name = "enable-no-content-response", type = "boolean", description = "Whether to return HTTP 204 with an empty body when a response contains an empty JSON object or XML root object. The default value is false.", displayName = "Enable No Content Response"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "out-type", type = "string", description = "Sets the class name to use for binding from POJO to output for the outgoing data This option will override what may be configured on a parent level The name of the class of the input data. Append a to the end of the name if you want the input to be an array type.", displayName = "Out Type"),
                     @YamlProperty(name = "param", type = "array:org.apache.camel.model.rest.ParamDefinition"),
@@ -11191,6 +11049,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "enable-cors": {
                     String val = asText(node);
                     target.setEnableCORS(val);
+                    break;
+                }
+                case "enable-no-content-response": {
+                    String val = asText(node);
+                    target.setEnableNoContentResponse(val);
                     break;
                 }
                 case "out-type": {
@@ -11309,7 +11172,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Calls a Camel processor",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -11371,8 +11234,8 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "A key value pair where the value is a literal value",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "key", type = "string", required = true, description = "Property key", displayName = "Key"),
-                    @YamlProperty(name = "value", type = "string", required = true, description = "Property value", displayName = "Value")
+                    @YamlProperty(name = "key", type = "string", required = true, description = "The name of the property", displayName = "Key"),
+                    @YamlProperty(name = "value", type = "string", required = true, description = "The property value.", displayName = "Value")
             }
     )
     public static class PropertyDefinitionDeserializer extends YamlDeserializerBase<PropertyDefinition> {
@@ -11636,9 +11499,10 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "client-request-validation", type = "boolean", description = "Whether to enable validation of the client request to check: 1) Content-Type header matches what the Rest DSL consumes; returns HTTP Status 415 if validation error. 2) Accept header matches what the Rest DSL produces; returns HTTP Status 406 if validation error. 3) Missing required data (query parameters, HTTP headers, body); returns HTTP Status 400 if validation error. 4) Parsing error of the message body (JSon, XML or Auto binding mode must be enabled); returns HTTP Status 400 if validation error.", displayName = "Client Request Validation"),
                     @YamlProperty(name = "consumes", type = "string", description = "To define the content type what the REST service consumes (accept as input), such as application/xml or application/json. This option will override what may be configured on a parent level", displayName = "Consumes"),
                     @YamlProperty(name = "deprecated", type = "boolean", description = "Marks this rest operation as deprecated in OpenApi documentation.", displayName = "Deprecated"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this REST service from the route during build time. Once an REST service has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "enable-cors", type = "boolean"),
+                    @YamlProperty(name = "enable-no-content-response", type = "boolean", description = "Whether to return HTTP 204 with an empty body when a response contains an empty JSON object or XML root object. The default value is false.", displayName = "Enable No Content Response"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "out-type", type = "string", description = "Sets the class name to use for binding from POJO to output for the outgoing data This option will override what may be configured on a parent level The name of the class of the input data. Append a to the end of the name if you want the input to be an array type.", displayName = "Out Type"),
                     @YamlProperty(name = "param", type = "array:org.apache.camel.model.rest.ParamDefinition"),
@@ -11699,6 +11563,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "enable-cors": {
                     String val = asText(node);
                     target.setEnableCORS(val);
+                    break;
+                }
+                case "enable-no-content-response": {
+                    String val = asText(node);
+                    target.setEnableNoContentResponse(val);
                     break;
                 }
                 case "out-type": {
@@ -11893,7 +11762,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "aggregation-strategy-method-name", type = "string", description = "This option can be used to explicit declare the method name to use, when using POJOs as the AggregationStrategy.", displayName = "Aggregation Strategy Method Name"),
                     @YamlProperty(name = "cache-size", type = "number", description = "Sets the maximum size used by the org.apache.camel.spi.ProducerCache which is used to cache and reuse producers when using this recipient list, when uris are reused. Beware that when using dynamic endpoints then it affects how well the cache can be utilized. If each dynamic endpoint is unique then its best to turn off caching by setting this to -1, which allows Camel to not cache both the producers and endpoints; they are regarded as prototype scoped and will be stopped and discarded after use. This reduces memory usage as otherwise producers/endpoints are stored in memory in the caches. However if there are a high degree of dynamic endpoints that have been used before, then it can benefit to use the cache to reuse both producers and endpoints and therefore the cache size can be set accordingly or rely on the default size (1000). If there is a mix of unique and used before dynamic endpoints, then setting a reasonable cache size can help reduce memory usage to avoid storing too many non frequent used producers.", displayName = "Cache Size"),
                     @YamlProperty(name = "delimiter", type = "string", defaultValue = ",", description = "Delimiter used if the Expression returned multiple endpoints. Can be turned off using the value false. The default value is ,", displayName = "Delimiter"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "executor-service", type = "string", description = "To use a custom Thread Pool to be used for parallel processing. Notice if you set this option, then parallel processing is automatic implied, and you do not have to enable that option as well.", displayName = "Executor Service"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression that returns which endpoints (url) to send the message to (the recipients). If the expression return an empty value then the message is not sent to any recipients.", displayName = "Expression", oneOf = "expression"),
@@ -12361,6 +12230,8 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "init-method", type = "string"),
                     @YamlProperty(name = "name", type = "string", required = true),
                     @YamlProperty(name = "properties", type = "object"),
+                    @YamlProperty(name = "script", type = "string"),
+                    @YamlProperty(name = "script-language", type = "string"),
                     @YamlProperty(name = "type", type = "string", required = true)
             }
     )
@@ -12413,6 +12284,16 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     target.setProperties(val);
                     break;
                 }
+                case "script": {
+                    String val = asText(node);
+                    target.setScript(val);
+                    break;
+                }
+                case "script-language": {
+                    String val = asText(node);
+                    target.setScriptLanguage(val);
+                    break;
+                }
                 case "type": {
                     String val = asText(node);
                     target.setType(val);
@@ -12438,7 +12319,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Removes a named header from the message",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -12509,7 +12390,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Removes message headers whose name matches a specified pattern",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "exclude-pattern", type = "string", description = "Name or patter of headers to not remove. The pattern is matched in the following order: 1 = exact match 2 = wildcard (pattern ends with a and the name starts with the pattern) 3 = regular expression (all of above is case in-sensitive).", displayName = "Exclude Pattern"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -12586,7 +12467,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Removes message exchange properties whose name matches a specified pattern",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "exclude-pattern", type = "string", description = "Name or pattern of properties to not remove. The pattern is matched in the following order: 1 = exact match 2 = wildcard (pattern ends with a and the name starts with the pattern) 3 = regular expression (all of above is case in-sensitive).", displayName = "Exclude Pattern"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -12663,7 +12544,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Removes a named property from the message exchange",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -12732,7 +12613,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             properties = {
                     @YamlProperty(name = "__extends", type = "object:org.apache.camel.model.language.ExpressionDefinition", oneOf = "expression"),
                     @YamlProperty(name = "batch-config", type = "object:org.apache.camel.model.config.BatchResequencerConfig", oneOf = "resequencerConfig"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression to use for re-ordering the messages, such as a header with a sequence number", displayName = "Expression", oneOf = "expression"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -13139,8 +13020,9 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "client-request-validation", type = "boolean", description = "Whether to enable validation of the client request to check: 1) Content-Type header matches what the Rest DSL consumes; returns HTTP Status 415 if validation error. 2) Accept header matches what the Rest DSL produces; returns HTTP Status 406 if validation error. 3) Missing required data (query parameters, HTTP headers, body); returns HTTP Status 400 if validation error. 4) Parsing error of the message body (JSon, XML or Auto binding mode must be enabled); returns HTTP Status 400 if validation error.", displayName = "Client Request Validation"),
                     @YamlProperty(name = "component", type = "string", description = "Sets the component name that this definition will apply to", displayName = "Component"),
                     @YamlProperty(name = "consumes", type = "string", description = "To define the content type what the REST service consumes (accept as input), such as application/xml or application/json", displayName = "Consumes"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "enable-cors", type = "boolean"),
+                    @YamlProperty(name = "enable-no-content-response", type = "boolean", description = "Whether to return HTTP 204 with an empty body when a response contains an empty JSON object or XML root object. The default value is false.", displayName = "Enable No Content Response"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "out-type", type = "string", description = "Sets the class name to use for binding from POJO to output for the outgoing data The name of the class of the input data. Append a to the end of the name if you want the input to be an array type.", displayName = "Out Type"),
                     @YamlProperty(name = "produces", type = "string", description = "To define the content type what the REST service produces (uses for output), such as application/xml or application/json", displayName = "Produces"),
@@ -13185,6 +13067,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "enable-cors": {
                     String val = asText(node);
                     target.setEnableCORS(val);
+                    break;
+                }
+                case "enable-no-content-response": {
+                    String val = asText(node);
+                    target.setEnableNoContentResponse(val);
                     break;
                 }
                 case "out-type": {
@@ -13252,6 +13139,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "cors-headers", type = "array:org.apache.camel.model.rest.RestPropertyDefinition", description = "Allows to configure custom CORS headers.", displayName = "Cors Headers"),
                     @YamlProperty(name = "data-format-property", type = "array:org.apache.camel.model.rest.RestPropertyDefinition", description = "Allows to configure as many additional properties for the data formats in use. For example set property prettyPrint to true to have json outputted in pretty mode. The properties can be prefixed to denote the option is only for either JSON or XML and for either the IN or the OUT. The prefixes are: json.in. json.out. xml.in. xml.out. For example a key with value xml.out.mustBeJAXBElement is only for the XML data format for the outgoing. A key without a prefix is a common key for all situations.", displayName = "Data Format Property"),
                     @YamlProperty(name = "enable-cors", type = "boolean"),
+                    @YamlProperty(name = "enable-no-content-response", type = "boolean", description = "Whether to return HTTP 204 with an empty body when a response contains an empty JSON object or XML root object. The default value is false.", displayName = "Enable No Content Response"),
                     @YamlProperty(name = "endpoint-property", type = "array:org.apache.camel.model.rest.RestPropertyDefinition", description = "Allows to configure as many additional properties for the rest endpoint in use.", displayName = "Endpoint Property"),
                     @YamlProperty(name = "host", type = "string", description = "The hostname to use for exposing the REST service.", displayName = "Host"),
                     @YamlProperty(name = "host-name-resolver", type = "enum:allLocalIp,localHostName,localIp", defaultValue = "allLocalIp", description = "If no hostname has been explicit configured, then this resolver is used to compute the hostname the REST service will be using.", displayName = "Host Name Resolver"),
@@ -13352,6 +13240,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "enable-cors": {
                     String val = asText(node);
                     target.setEnableCORS(val);
+                    break;
+                }
+                case "enable-no-content-response": {
+                    String val = asText(node);
+                    target.setEnableNoContentResponse(val);
                     break;
                 }
                 case "endpoint-property": {
@@ -13480,9 +13373,10 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "client-request-validation", type = "boolean", description = "Whether to enable validation of the client request to check: 1) Content-Type header matches what the Rest DSL consumes; returns HTTP Status 415 if validation error. 2) Accept header matches what the Rest DSL produces; returns HTTP Status 406 if validation error. 3) Missing required data (query parameters, HTTP headers, body); returns HTTP Status 400 if validation error. 4) Parsing error of the message body (JSon, XML or Auto binding mode must be enabled); returns HTTP Status 400 if validation error.", displayName = "Client Request Validation"),
                     @YamlProperty(name = "consumes", type = "string", description = "To define the content type what the REST service consumes (accept as input), such as application/xml or application/json. This option will override what may be configured on a parent level", displayName = "Consumes"),
                     @YamlProperty(name = "delete", type = "array:org.apache.camel.model.rest.DeleteDefinition"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this REST service from the route during build time. Once an REST service has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "enable-cors", type = "boolean"),
+                    @YamlProperty(name = "enable-no-content-response", type = "boolean", description = "Whether to return HTTP 204 with an empty body when a response contains an empty JSON object or XML root object. The default value is false.", displayName = "Enable No Content Response"),
                     @YamlProperty(name = "get", type = "array:org.apache.camel.model.rest.GetDefinition"),
                     @YamlProperty(name = "head", type = "array:org.apache.camel.model.rest.HeadDefinition"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -13539,6 +13433,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "enable-cors": {
                     String val = asText(node);
                     target.setEnableCORS(val);
+                    break;
+                }
+                case "enable-no-content-response": {
+                    String val = asText(node);
+                    target.setEnableNoContentResponse(val);
                     break;
                 }
                 case "path": {
@@ -13810,7 +13709,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "A series of rest services defined using the rest-dsl",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "rest", type = "array:org.apache.camel.model.rest.RestDefinition")
             }
@@ -13860,7 +13759,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Resume EIP to support resuming processing from last known offset.",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -13935,7 +13834,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Forces a rollback by stopping routing the message",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -14197,7 +14096,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "A Camel route",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -14328,7 +14227,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             properties = {
                     @YamlProperty(name = "__extends", type = "object:org.apache.camel.model.language.ExpressionDefinition", oneOf = "expression"),
                     @YamlProperty(name = "cache-size", type = "number", description = "Sets the maximum size used by the org.apache.camel.spi.ProducerCache which is used to cache and reuse producers when using this routing slip, when uris are reused. Beware that when using dynamic endpoints then it affects how well the cache can be utilized. If each dynamic endpoint is unique then its best to turn off caching by setting this to -1, which allows Camel to not cache both the producers and endpoints; they are regarded as prototype scoped and will be stopped and discarded after use. This reduces memory usage as otherwise producers/endpoints are stored in memory in the caches. However if there are a high degree of dynamic endpoints that have been used before, then it can benefit to use the cache to reuse both producers and endpoints and therefore the cache size can be set accordingly or rely on the default size (1000). If there is a mix of unique and used before dynamic endpoints, then setting a reasonable cache size can help reduce memory usage to avoid storing too many non frequent used producers.", displayName = "Cache Size"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression to define the routing slip, which defines which endpoints to route the message in a pipeline style. Notice the expression is evaluated once, if you want a more dynamic style, then the dynamic router eip is a better choice.", displayName = "Expression", oneOf = "expression"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -14531,7 +14430,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "compensation", type = "object:org.apache.camel.model.SagaActionUriDefinition", description = "The compensation endpoint URI that must be called to compensate all changes done in the route. The route corresponding to the compensation URI must perform compensation and complete without error. If errors occur during compensation, the saga service may call again the compensation URI to retry.", displayName = "Compensation"),
                     @YamlProperty(name = "completion", type = "object:org.apache.camel.model.SagaActionUriDefinition", description = "The completion endpoint URI that will be called when the Saga is completed successfully. The route corresponding to the completion URI must perform completion tasks and terminate without error. If errors occur during completion, the saga service may call again the completion URI to retry.", displayName = "Completion"),
                     @YamlProperty(name = "completion-mode", type = "enum:AUTO,MANUAL", defaultValue = "AUTO", description = "Determine how the saga should be considered complete. When set to AUTO, the saga is completed when the exchange that initiates the saga is processed successfully, or compensated when it completes exceptionally. When set to MANUAL, the user must complete or compensate the saga using the saga:complete or saga:compensate endpoints.", displayName = "Completion Mode"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -14632,7 +14531,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Extract a sample of the messages passing through a route",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -14706,7 +14605,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             deprecated = false,
             properties = {
                     @YamlProperty(name = "__extends", type = "object:org.apache.camel.model.language.ExpressionDefinition", oneOf = "expression"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression to return the transformed message body (the new message body to use)", displayName = "Expression", oneOf = "expression"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -15017,7 +14916,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "consul-service-discovery", type = "object:org.apache.camel.model.cloud.ConsulServiceCallServiceDiscoveryConfiguration", oneOf = "serviceDiscoveryConfiguration"),
                     @YamlProperty(name = "custom-service-filter", type = "object:org.apache.camel.model.cloud.CustomServiceCallServiceFilterConfiguration", oneOf = "serviceFilterConfiguration"),
                     @YamlProperty(name = "default-load-balancer", type = "object:org.apache.camel.model.cloud.DefaultServiceCallServiceLoadBalancerConfiguration", oneOf = "loadBalancerConfiguration"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "dns-service-discovery", type = "object:org.apache.camel.model.cloud.DnsServiceCallServiceDiscoveryConfiguration", oneOf = "serviceDiscoveryConfiguration"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.cloud.ServiceCallExpressionConfiguration", description = "Configures the Expression using the given configuration.", displayName = "Expression", oneOf = "expression"),
@@ -15475,7 +15374,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             deprecated = false,
             properties = {
                     @YamlProperty(name = "__extends", type = "object:org.apache.camel.model.language.ExpressionDefinition", oneOf = "expression"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression that returns the new body to use", displayName = "Expression", oneOf = "expression"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -15550,7 +15449,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Sets the exchange pattern on the message exchange",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -15621,7 +15520,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             deprecated = false,
             properties = {
                     @YamlProperty(name = "__extends", type = "object:org.apache.camel.model.language.ExpressionDefinition", oneOf = "expression"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression to return the value of the header", displayName = "Expression", oneOf = "expression"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -15702,7 +15601,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             deprecated = false,
             properties = {
                     @YamlProperty(name = "__extends", type = "object:org.apache.camel.model.language.ExpressionDefinition", oneOf = "expression"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression to return the value of the message exchange property", displayName = "Expression", oneOf = "expression"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -15932,7 +15831,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             properties = {
                     @YamlProperty(name = "__extends", type = "object:org.apache.camel.model.language.ExpressionDefinition", oneOf = "expression"),
                     @YamlProperty(name = "comparator", type = "string", description = "Sets the comparator to use for sorting", displayName = "Comparator"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Optional expression to sort by something else than the message body", displayName = "Expression", oneOf = "expression"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -16084,7 +15983,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "aggregation-strategy-method-allow-null", type = "boolean", description = "If this option is false then the aggregate method is not used if there was no data to enrich. If this option is true then null values is used as the oldExchange (when no data to enrich), when using POJOs as the AggregationStrategy", displayName = "Aggregation Strategy Method Allow Null"),
                     @YamlProperty(name = "aggregation-strategy-method-name", type = "string", description = "This option can be used to explicit declare the method name to use, when using POJOs as the AggregationStrategy.", displayName = "Aggregation Strategy Method Name"),
                     @YamlProperty(name = "delimiter", type = "string", defaultValue = ",", description = "Delimiter used in splitting messages. Can be turned off using the value false. The default value is ,", displayName = "Delimiter"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "executor-service", type = "string", description = "To use a custom Thread Pool to be used for parallel processing. Notice if you set this option, then parallel processing is automatically implied, and you do not have to enable that option as well.", displayName = "Executor Service"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression of how to split the message body, such as as-is, using a tokenizer, or using a xpath.", displayName = "Expression", oneOf = "expression"),
@@ -16411,7 +16310,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Routes the message to a sequence of processors which is grouped together as one logical name",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -16516,7 +16415,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Stops the processing of the current message",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean")
@@ -16911,7 +16810,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             properties = {
                     @YamlProperty(name = "allow-core-thread-time-out", type = "boolean", description = "Whether idle core threads is allowed to timeout and therefore can shrink the pool size below the core pool size Is by default true", displayName = "Allow Core Thread Time Out"),
                     @YamlProperty(name = "default-profile", type = "boolean", description = "Whether this profile is the default thread pool profile", displayName = "Default Profile"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "keep-alive-time", type = "number", description = "Sets the keep alive time for idle threads in the pool", displayName = "Keep Alive Time"),
                     @YamlProperty(name = "max-pool-size", type = "number", description = "Sets the maximum pool size", displayName = "Max Pool Size"),
@@ -17003,7 +16902,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             properties = {
                     @YamlProperty(name = "allow-core-thread-time-out", type = "boolean", description = "Whether idle core threads are allowed to timeout and therefore can shrink the pool size below the core pool size Is by default false", displayName = "Allow Core Thread Time Out"),
                     @YamlProperty(name = "caller-runs-when-rejected", type = "string", defaultValue = "true", description = "Whether or not to use as caller runs as fallback when a task is rejected being added to the thread pool (when its full). This is only used as fallback if no rejectedPolicy has been configured, or the thread pool has no configured rejection handler. Is by default true", displayName = "Caller Runs When Rejected"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "executor-service", type = "string", description = "To use a custom thread pool", displayName = "Executor Service"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -17183,7 +17082,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "async-delayed", type = "boolean", description = "Enables asynchronous delay which means the thread will not block while delaying.", displayName = "Async Delayed"),
                     @YamlProperty(name = "caller-runs-when-rejected", type = "boolean", description = "Whether or not the caller should run the task when it was rejected by the thread pool. Is by default true", displayName = "Caller Runs When Rejected"),
                     @YamlProperty(name = "correlation-expression", type = "object:org.apache.camel.model.ExpressionSubElementDefinition", description = "The expression used to calculate the correlation key to use for throttle grouping. The Exchange which has the same correlation key is throttled together.", displayName = "Correlation Expression"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "executor-service", type = "string", description = "To use a custom thread pool (ScheduledExecutorService) by the throttler.", displayName = "Executor Service"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression to configure the maximum number of messages to throttle per request", displayName = "Expression", oneOf = "expression"),
@@ -17290,7 +17189,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Throws an exception",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "exception-type", type = "string", description = "The class of the exception to create using the message.", displayName = "Exception Type"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -17418,7 +17317,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Sends the message to a static endpoint",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -17505,7 +17404,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "allow-optimised-components", type = "boolean", description = "Whether to allow components to optimise toD if they are org.apache.camel.spi.SendDynamicAware .", displayName = "Allow Optimised Components"),
                     @YamlProperty(name = "auto-start-components", type = "boolean", description = "Whether to auto startup components when toD is starting up.", displayName = "Auto Start Components"),
                     @YamlProperty(name = "cache-size", type = "number", description = "Sets the maximum size used by the org.apache.camel.spi.ProducerCache which is used to cache and reuse producers when using this recipient list, when uris are reused. Beware that when using dynamic endpoints then it affects how well the cache can be utilized. If each dynamic endpoint is unique then its best to turn off caching by setting this to -1, which allows Camel to not cache both the producers and endpoints; they are regarded as prototype scoped and will be stopped and discarded after use. This reduces memory usage as otherwise producers/endpoints are stored in memory in the caches. However if there are a high degree of dynamic endpoints that have been used before, then it can benefit to use the cache to reuse both producers and endpoints and therefore the cache size can be set accordingly or rely on the default size (1000). If there is a mix of unique and used before dynamic endpoints, then setting a reasonable cache size can help reduce memory usage to avoid storing too many non frequent used producers.", displayName = "Cache Size"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "ignore-invalid-endpoint", type = "boolean", description = "Whether to ignore invalid endpoint URIs and skip sending the message.", displayName = "Ignore Invalid Endpoint"),
@@ -17767,7 +17666,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Enables transaction on the route",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "inherit-error-handler", type = "boolean"),
@@ -17835,7 +17734,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             deprecated = false,
             properties = {
                     @YamlProperty(name = "__extends", type = "object:org.apache.camel.model.language.ExpressionDefinition", oneOf = "expression"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression to return the transformed message body (the new message body to use)", displayName = "Expression", oneOf = "expression"),
                     @YamlProperty(name = "from-type", type = "string", description = "From type used in data type transformation.", displayName = "From Type"),
@@ -18002,7 +17901,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Marks the beginning of a try, catch, finally block",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "do-catch", type = "array:org.apache.camel.model.CatchDefinition"),
                     @YamlProperty(name = "do-finally", type = "object:org.apache.camel.model.FinallyDefinition"),
@@ -18555,7 +18454,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "crypto", type = "object:org.apache.camel.model.dataformat.CryptoDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "csv", type = "object:org.apache.camel.model.dataformat.CsvDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "custom", type = "object:org.apache.camel.model.dataformat.CustomDataFormat", oneOf = "dataFormatType"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "fhir-json", type = "object:org.apache.camel.model.dataformat.FhirJsonDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "fhir-xml", type = "object:org.apache.camel.model.dataformat.FhirXmlDataFormat", oneOf = "dataFormatType"),
@@ -18853,7 +18752,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             deprecated = false,
             properties = {
                     @YamlProperty(name = "__extends", type = "object:org.apache.camel.model.language.ExpressionDefinition", oneOf = "expression"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression to use for validation as a predicate. The expression should return either true or false. If returning false the message is invalid and an exception is thrown.", displayName = "Expression", oneOf = "expression"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -19099,7 +18998,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             deprecated = false,
             properties = {
                     @YamlProperty(name = "__extends", type = "object:org.apache.camel.model.language.ExpressionDefinition", oneOf = "expression"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression used as the predicate to evaluate whether this when should trigger and route the message or not.", displayName = "Expression", oneOf = "expression"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -19179,7 +19078,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             deprecated = false,
             properties = {
                     @YamlProperty(name = "__extends", type = "object:org.apache.camel.model.language.ExpressionDefinition", oneOf = "expression"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Expression used as the predicate to evaluate whether the message should be sent or not to the endpoint", displayName = "Expression", oneOf = "expression"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
@@ -19262,7 +19161,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "auto-start-components", type = "boolean", description = "Whether to auto startup components when toD is starting up.", displayName = "Auto Start Components"),
                     @YamlProperty(name = "cache-size", type = "number", description = "Sets the maximum size used by the org.apache.camel.spi.ProducerCache which is used to cache and reuse producers when using this recipient list, when uris are reused. Beware that when using dynamic endpoints then it affects how well the cache can be utilized. If each dynamic endpoint is unique then its best to turn off caching by setting this to -1, which allows Camel to not cache both the producers and endpoints; they are regarded as prototype scoped and will be stopped and discarded after use. This reduces memory usage as otherwise producers/endpoints are stored in memory in the caches. However if there are a high degree of dynamic endpoints that have been used before, then it can benefit to use the cache to reuse both producers and endpoints and therefore the cache size can be set accordingly or rely on the default size (1000). If there is a mix of unique and used before dynamic endpoints, then setting a reasonable cache size can help reduce memory usage to avoid storing too many non frequent used producers.", displayName = "Cache Size"),
                     @YamlProperty(name = "copy", type = "boolean", description = "Uses a copy of the original exchange", displayName = "Copy"),
-                    @YamlProperty(name = "description", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
                     @YamlProperty(name = "dynamic-uri", type = "boolean", description = "Whether the uri is dynamic or static. If the uri is dynamic then the simple language is used to evaluate a dynamic uri to use as the wire-tap destination, for each incoming message. This works similar to how the toD EIP pattern works. If static then the uri is used as-is as the wire-tap destination.", displayName = "Dynamic Uri"),
                     @YamlProperty(name = "executor-service", type = "string", description = "Uses a custom thread pool", displayName = "Executor Service"),

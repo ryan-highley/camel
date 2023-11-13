@@ -59,6 +59,8 @@ import org.apache.camel.main.download.MavenDependencyDownloader;
 import org.apache.camel.main.download.PackageNameSourceLoader;
 import org.apache.camel.main.download.TypeConverterLoaderDownloadListener;
 import org.apache.camel.main.injection.AnnotationDependencyInjection;
+import org.apache.camel.main.util.ClipboardReloadStrategy;
+import org.apache.camel.main.util.ExtraClassesClassLoader;
 import org.apache.camel.main.util.ExtraFilesClassLoader;
 import org.apache.camel.main.xml.blueprint.BlueprintXmlBeansHandler;
 import org.apache.camel.main.xml.spring.SpringXmlBeansHandler;
@@ -72,6 +74,7 @@ import org.apache.camel.spi.FactoryFinder;
 import org.apache.camel.spi.FactoryFinderResolver;
 import org.apache.camel.spi.LanguageResolver;
 import org.apache.camel.spi.LifecycleStrategy;
+import org.apache.camel.spi.PeriodTaskScheduler;
 import org.apache.camel.spi.Registry;
 import org.apache.camel.spi.ResourceLoader;
 import org.apache.camel.spi.RoutesLoader;
@@ -81,6 +84,7 @@ import org.apache.camel.support.DefaultContextReloadStrategy;
 import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.RouteOnDemandReloadStrategy;
 import org.apache.camel.support.service.ServiceHelper;
+import org.apache.camel.support.startup.BacklogStartupStepRecorder;
 import org.apache.camel.tooling.maven.MavenGav;
 
 /**
@@ -95,6 +99,7 @@ public class KameletMain extends MainCommandLineSupport {
     private String repos;
     private boolean fresh;
     private boolean verbose;
+    private boolean debug;
     private String mavenSettings;
     private String mavenSettingsSecurity;
     private String stubPattern;
@@ -343,9 +348,12 @@ public class KameletMain extends MainCommandLineSupport {
     @Override
     protected CamelContext createCamelContext() {
         this.verbose = "true".equals(getInitialProperties().get("camel.jbang.verbose"));
+        this.debug = "true".equals(getInitialProperties().get("camel.jbang.debug"));
 
         // do not build/init camel context yet
         DefaultCamelContext answer = new DefaultCamelContext(false);
+        // setup backlog recorder from very start
+        answer.getCamelContextExtension().setStartupStepRecorder(new BacklogStartupStepRecorder());
         if (download) {
             ClassLoader dynamicCL = createApplicationContextClassLoader(answer);
             answer.setApplicationContextClassLoader(dynamicCL);
@@ -443,6 +451,7 @@ public class KameletMain extends MainCommandLineSupport {
         configure().withJmxManagementStatisticsLevel(ManagementStatisticsLevel.Extended);
         configure().withShutdownLogInflightExchangesOnTimeout(false);
         configure().withShutdownTimeout(10);
+        configure().withStartupRecorder("backlog");
 
         boolean tracing = "true".equals(getInitialProperties().get("camel.jbang.backlogTracing"));
         if (tracing) {
@@ -556,14 +565,27 @@ public class KameletMain extends MainCommandLineSupport {
                 reloader.setPattern("*");
                 answer.addService(reloader);
 
-                // add source-dir as location for loading kamelets
+                // add source-dir as location for loading kamelets (if not already included)
                 String loc = this.initialProperties.getProperty("camel.component.kamelet.location");
-                loc = "file:" + sourceDir + "," + loc;
-                addInitialProperty("camel.component.kamelet.location", loc);
+                String target = "file:" + sourceDir + ",";
+                if (!loc.contains(target)) {
+                    loc = target + loc;
+                    addInitialProperty("camel.component.kamelet.location", loc);
+                }
             } else {
                 answer.addService(new DefaultContextReloadStrategy());
             }
 
+            // special for reloading enabled on clipboard
+            String reloadDir = getInitialProperties().getProperty("camel.main.routesIncludePattern");
+            if (reloadDir != null && reloadDir.startsWith("file:.camel-jbang/generated-clipboard")) {
+                String name = reloadDir.substring(5);
+                File file = new File(name);
+                ClipboardReloadStrategy reloader = new ClipboardReloadStrategy(file);
+                answer.addService(reloader);
+                PeriodTaskScheduler scheduler = PluginHelper.getPeriodTaskScheduler(answer);
+                scheduler.schedulePeriodTask(reloader, 2000);
+            }
         } catch (Exception e) {
             throw RuntimeCamelException.wrapRuntimeException(e);
         }
@@ -601,6 +623,7 @@ public class KameletMain extends MainCommandLineSupport {
         if (classLoader == null) {
             // jars need to be added to dependency downloader classloader
             List<String> jars = new ArrayList<>();
+            List<String> classes = new ArrayList<>();
             // create class loader (that are download capable) only once
             // any additional files to add to classpath
             ClassLoader parentCL = KameletMain.class.getClassLoader();
@@ -611,9 +634,15 @@ public class KameletMain extends MainCommandLineSupport {
                 for (String s : arr) {
                     if (s.endsWith(".jar")) {
                         jars.add(s);
+                    } else if (s.endsWith(".class")) {
+                        classes.add(s);
                     } else {
                         files.add(s);
                     }
+                }
+                if (!classes.isEmpty()) {
+                    parentCL = new ExtraClassesClassLoader(parentCL, classes);
+                    LOG.info("Additional classes added to classpath: {}", String.join(", ", classes));
                 }
                 if (!files.isEmpty()) {
                     parentCL = new ExtraFilesClassLoader(parentCL, files);

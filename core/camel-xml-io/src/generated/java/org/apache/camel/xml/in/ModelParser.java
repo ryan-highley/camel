@@ -1047,6 +1047,7 @@ public class ModelParser extends BaseParser {
                 case "consumes": def.setConsumes(val); break;
                 case "disabled": def.setDisabled(val); break;
                 case "enableCORS": def.setEnableCORS(val); break;
+                case "enableNoContentResponse": def.setEnableNoContentResponse(val); break;
                 case "path": def.setPath(val); break;
                 case "produces": def.setProduces(val); break;
                 case "skipBindingOnErrorCode": def.setSkipBindingOnErrorCode(val); break;
@@ -1077,6 +1078,7 @@ public class ModelParser extends BaseParser {
                 case "component": def.setComponent(val); break;
                 case "consumes": def.setConsumes(val); break;
                 case "enableCORS": def.setEnableCORS(val); break;
+                case "enableNoContentResponse": def.setEnableNoContentResponse(val); break;
                 case "outType": def.setOutType(val); break;
                 case "produces": def.setProduces(val); break;
                 case "skipBindingOnErrorCode": def.setSkipBindingOnErrorCode(val); break;
@@ -1093,8 +1095,8 @@ public class ModelParser extends BaseParser {
     protected <T extends BeanFactoryDefinition> AttributeHandler<T> beanFactoryDefinitionAttributeHandler() {
         return (def, key, val) -> {
             switch (key) {
-                case "beanType": def.setBeanType(val); break;
                 case "name": def.setName(val); break;
+                case "scriptLanguage": def.setScriptLanguage(val); break;
                 case "type": def.setType(val); break;
                 default: return false;
             }
@@ -1639,6 +1641,7 @@ public class ModelParser extends BaseParser {
                 case "factoryMethod": def.setFactoryMethod(val); break;
                 case "initMethod": def.setInitMethod(val); break;
                 case "name": def.setName(val); break;
+                case "scriptLanguage": def.setScriptLanguage(val); break;
                 case "type": def.setType(val); break;
                 default: return false;
             }
@@ -1647,6 +1650,7 @@ public class ModelParser extends BaseParser {
             switch (key) {
                 case "constructors": def.setConstructors(new BeanConstructorsAdapter().unmarshal(doParseBeanConstructorsDefinition())); break;
                 case "properties": def.setProperties(new BeanPropertiesAdapter().unmarshal(doParseBeanPropertiesDefinition())); break;
+                case "script": def.setScript(doParseText()); break;
                 default: return false;
             }
             return true;
@@ -1665,6 +1669,7 @@ public class ModelParser extends BaseParser {
                 case "component": def.setComponent(val); break;
                 case "contextPath": def.setContextPath(val); break;
                 case "enableCORS": def.setEnableCORS(val); break;
+                case "enableNoContentResponse": def.setEnableNoContentResponse(val); break;
                 case "host": def.setHost(val); break;
                 case "hostNameResolver": def.setHostNameResolver(RestHostNameResolver.valueOf(val)); break;
                 case "inlineRoutes": def.setInlineRoutes(val); break;
@@ -3064,6 +3069,7 @@ public class ModelParser extends BaseParser {
                 case "deprecated": def.setDeprecated(val); break;
                 case "disabled": def.setDisabled(val); break;
                 case "enableCORS": def.setEnableCORS(val); break;
+                case "enableNoContentResponse": def.setEnableNoContentResponse(val); break;
                 case "outType": def.setOutType(val); break;
                 case "path": def.setPath(val); break;
                 case "produces": def.setProduces(val); break;

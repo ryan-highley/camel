@@ -89,6 +89,7 @@ import org.apache.camel.support.RouteWatcherReloadStrategy;
 import org.apache.camel.support.ShortUuidGenerator;
 import org.apache.camel.support.SimpleUuidGenerator;
 import org.apache.camel.support.jsse.GlobalSSLContextParametersSupplier;
+import org.apache.camel.support.startup.BacklogStartupStepRecorder;
 import org.apache.camel.support.startup.LoggingStartupStepRecorder;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.TimeUtils;
@@ -126,6 +127,10 @@ public final class DefaultConfigurationConfigurer {
             } else if ("logging".equals(config.getStartupRecorder())) {
                 if (!(ecc.getStartupStepRecorder() instanceof LoggingStartupStepRecorder)) {
                     ecc.setStartupStepRecorder(new LoggingStartupStepRecorder());
+                }
+            } else if ("backlog".equals(config.getStartupRecorder())) {
+                if (!(ecc.getStartupStepRecorder() instanceof BacklogStartupStepRecorder)) {
+                    ecc.setStartupStepRecorder(new BacklogStartupStepRecorder());
                 }
             } else if ("java-flight-recorder".equals(config.getStartupRecorder())) {
                 if (!ecc.getStartupStepRecorder().getClass().getName().startsWith("org.apache.camel.startup.jfr")) {
@@ -304,11 +309,6 @@ public final class DefaultConfigurationConfigurer {
         camelContext.getGlobalEndpointConfiguration().setBridgeErrorHandler(config.isEndpointBridgeErrorHandler());
         camelContext.getGlobalEndpointConfiguration().setLazyStartProducer(config.isEndpointLazyStartProducer());
 
-        // debug may be enabled via camel-debug JAR on classpath so if config is false (default)
-        // then do not change setting on camel-context
-        if (config.isDebugging()) {
-            camelContext.setDebugging(true);
-        }
         if (config.isMessageHistory()) {
             camelContext.setMessageHistory(true);
         }
@@ -548,7 +548,6 @@ public final class DefaultConfigurationConfigurer {
         if (sslContextParametersSupplier != null) {
             camelContext.setSSLContextParameters(sslContextParametersSupplier.get());
         }
-
         // health check
         HealthCheckRegistry healthCheckRegistry = getSingleBeanOfType(registry, HealthCheckRegistry.class);
         if (healthCheckRegistry != null) {

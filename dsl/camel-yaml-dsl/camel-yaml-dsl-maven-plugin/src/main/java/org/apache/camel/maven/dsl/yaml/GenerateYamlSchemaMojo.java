@@ -67,8 +67,8 @@ import org.jboss.jandex.DotName;
 public class GenerateYamlSchemaMojo extends GenerateYamlSupportMojo {
     @Parameter(required = true)
     private File outputFile;
-    @Parameter(defaultValue = "true")
-    private boolean kebabCase = true;
+    @Parameter(defaultValue = "false")
+    private boolean kebabCase;
     @Parameter(defaultValue = "true")
     private boolean additionalProperties = true;
 
@@ -469,6 +469,17 @@ public class GenerateYamlSchemaMojo extends GenerateYamlSupportMojo {
                     if (propertyType.startsWith("object:")) {
                         final DotName dn = DotName.createSimple(propertyType.substring(7));
                         if (isBanned(view.getClassByName(dn))) {
+                            return;
+                        }
+                    }
+
+                    if (!kebabCase) {
+                        final String camelCased = StringHelper.dashToCamelCase(propertyName);
+                        if (annotations.stream().anyMatch(existing -> {
+                            String existingName = annotationValue(existing, "name").map(AnnotationValue::asString).orElse("");
+                            String existingCamelCased = StringHelper.dashToCamelCase(existingName);
+                            return existingCamelCased.equals(camelCased);
+                        })) {
                             return;
                         }
                     }

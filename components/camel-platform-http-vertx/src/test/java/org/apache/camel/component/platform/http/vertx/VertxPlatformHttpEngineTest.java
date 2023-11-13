@@ -846,11 +846,41 @@ public class VertxPlatformHttpEngineTest {
         }
     }
 
+    @Test
+    public void testVertxRequestResponseObjects() throws Exception {
+        final CamelContext context = createCamelContext();
+
+        try {
+            context.addRoutes(new RouteBuilder() {
+                @Override
+                public void configure() {
+                    from("platform-http:/vertx/objects")
+                            .process(exchange -> {
+                                HttpMessage message = exchange.getMessage(HttpMessage.class);
+                                String p = message.getRequest().path();
+                                message.getResponse().putHeader("beer", "Heineken");
+                                message.setBody("request path: " + p);
+                            });
+                }
+            });
+
+            context.start();
+
+            get("/vertx/objects")
+                    .then()
+                    .statusCode(200)
+                    .header("beer", "Heineken")
+                    .body(is("request path: /vertx/objects"));
+        } finally {
+            context.stop();
+        }
+    }
+
     static CamelContext createCamelContext() throws Exception {
         return createCamelContext(null);
     }
 
-    private static CamelContext createCamelContext(ServerConfigurationCustomizer customizer) throws Exception {
+    static CamelContext createCamelContext(ServerConfigurationCustomizer customizer) throws Exception {
         int port = AvailablePortFinder.getNextAvailable();
         VertxPlatformHttpServerConfiguration conf = new VertxPlatformHttpServerConfiguration();
         conf.setBindPort(port);

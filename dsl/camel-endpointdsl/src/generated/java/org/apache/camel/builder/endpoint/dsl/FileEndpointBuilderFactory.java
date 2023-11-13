@@ -2012,12 +2012,17 @@ public interface FileEndpointBuilderFactory {
         }
         /**
          * Allows for bridging the consumer to the Camel routing Error Handler,
-         * which mean any exceptions occurred while the consumer is trying to
-         * pickup incoming messages, or the likes, will now be processed as a
-         * message and handled by the routing Error Handler. By default the
-         * consumer will use the org.apache.camel.spi.ExceptionHandler to deal
-         * with exceptions, that will be logged at WARN or ERROR level and
-         * ignored.
+         * which mean any exceptions (if possible) occurred while the Camel
+         * consumer is trying to pickup incoming messages, or the likes, will
+         * now be processed as a message and handled by the routing Error
+         * Handler. Important: This is only possible if the 3rd party component
+         * allows Camel to be alerted if an exception was thrown. Some
+         * components handle this internally only, and therefore
+         * bridgeErrorHandler is not possible. In other situations we may
+         * improve the Camel component to hook into the 3rd party component and
+         * make this possible for future releases. By default the consumer will
+         * use the org.apache.camel.spi.ExceptionHandler to deal with
+         * exceptions, that will be logged at WARN or ERROR level and ignored.
          * 
          * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
          * 
@@ -2034,12 +2039,17 @@ public interface FileEndpointBuilderFactory {
         }
         /**
          * Allows for bridging the consumer to the Camel routing Error Handler,
-         * which mean any exceptions occurred while the consumer is trying to
-         * pickup incoming messages, or the likes, will now be processed as a
-         * message and handled by the routing Error Handler. By default the
-         * consumer will use the org.apache.camel.spi.ExceptionHandler to deal
-         * with exceptions, that will be logged at WARN or ERROR level and
-         * ignored.
+         * which mean any exceptions (if possible) occurred while the Camel
+         * consumer is trying to pickup incoming messages, or the likes, will
+         * now be processed as a message and handled by the routing Error
+         * Handler. Important: This is only possible if the 3rd party component
+         * allows Camel to be alerted if an exception was thrown. Some
+         * components handle this internally only, and therefore
+         * bridgeErrorHandler is not possible. In other situations we may
+         * improve the Camel component to hook into the 3rd party component and
+         * make this possible for future releases. By default the consumer will
+         * use the org.apache.camel.spi.ExceptionHandler to deal with
+         * exceptions, that will be logged at WARN or ERROR level and ignored.
          * 
          * The option will be converted to a &lt;code&gt;boolean&lt;/code&gt;
          * type.
@@ -3894,7 +3904,7 @@ public interface FileEndpointBuilderFactory {
          * @return the name of the header {@code FileLength}.
          */
         public String fileLength() {
-            return "FileLength";
+            return "CamelFileLength";
         }
 
         /**
@@ -3907,7 +3917,7 @@ public interface FileEndpointBuilderFactory {
          * @return the name of the header {@code FileLastModified}.
          */
         public String fileLastModified() {
-            return "FileLastModified";
+            return "CamelFileLastModified";
         }
 
         /**
@@ -3920,7 +3930,7 @@ public interface FileEndpointBuilderFactory {
          * @return the name of the header {@code FileLocalWorkPath}.
          */
         public String fileLocalWorkPath() {
-            return "FileLocalWorkPath";
+            return "CamelFileLocalWorkPath";
         }
 
         /**
@@ -3933,7 +3943,7 @@ public interface FileEndpointBuilderFactory {
          * @return the name of the header {@code FileNameOnly}.
          */
         public String fileNameOnly() {
-            return "FileNameOnly";
+            return "CamelFileNameOnly";
         }
 
         /**
@@ -3953,7 +3963,7 @@ public interface FileEndpointBuilderFactory {
          * @return the name of the header {@code FileName}.
          */
         public String fileName() {
-            return "FileName";
+            return "CamelFileName";
         }
 
         /**
@@ -3966,7 +3976,7 @@ public interface FileEndpointBuilderFactory {
          * @return the name of the header {@code FileNameConsumed}.
          */
         public String fileNameConsumed() {
-            return "FileNameConsumed";
+            return "CamelFileNameConsumed";
         }
 
         /**
@@ -3983,7 +3993,7 @@ public interface FileEndpointBuilderFactory {
          * @return the name of the header {@code FileAbsolute}.
          */
         public String fileAbsolute() {
-            return "FileAbsolute";
+            return "CamelFileAbsolute";
         }
 
         /**
@@ -3997,7 +4007,7 @@ public interface FileEndpointBuilderFactory {
          * @return the name of the header {@code FileAbsolutePath}.
          */
         public String fileAbsolutePath() {
-            return "FileAbsolutePath";
+            return "CamelFileAbsolutePath";
         }
 
         /**
@@ -4010,7 +4020,7 @@ public interface FileEndpointBuilderFactory {
          * @return the name of the header {@code FileExtendedAttributes}.
          */
         public String fileExtendedAttributes() {
-            return "FileExtendedAttributes";
+            return "CamelFileExtendedAttributes";
         }
 
         /**
@@ -4023,7 +4033,7 @@ public interface FileEndpointBuilderFactory {
          * @return the name of the header {@code FileContentType}.
          */
         public String fileContentType() {
-            return "FileContentType";
+            return "CamelFileContentType";
         }
 
         /**
@@ -4037,7 +4047,7 @@ public interface FileEndpointBuilderFactory {
          * @return the name of the header {@code FilePath}.
          */
         public String filePath() {
-            return "FilePath";
+            return "CamelFilePath";
         }
 
         /**
@@ -4050,7 +4060,7 @@ public interface FileEndpointBuilderFactory {
          * @return the name of the header {@code FileRelativePath}.
          */
         public String fileRelativePath() {
-            return "FileRelativePath";
+            return "CamelFileRelativePath";
         }
 
         /**
@@ -4063,7 +4073,7 @@ public interface FileEndpointBuilderFactory {
          * @return the name of the header {@code FileParent}.
          */
         public String fileParent() {
-            return "FileParent";
+            return "CamelFileParent";
         }
 
         /**
@@ -4078,7 +4088,7 @@ public interface FileEndpointBuilderFactory {
          * @return the name of the header {@code FileNameProduced}.
          */
         public String fileNameProduced() {
-            return "FileNameProduced";
+            return "CamelFileNameProduced";
         }
 
         /**
@@ -4095,7 +4105,7 @@ public interface FileEndpointBuilderFactory {
          * @return the name of the header {@code OverruleFileName}.
          */
         public String overruleFileName() {
-            return "OverruleFileName";
+            return "CamelOverruleFileName";
         }
 
         /**
@@ -4108,7 +4118,7 @@ public interface FileEndpointBuilderFactory {
          * @return the name of the header {@code FileInitialOffset}.
          */
         public String fileInitialOffset() {
-            return "FileInitialOffset";
+            return "CamelFileInitialOffset";
         }
     }
     static FileEndpointBuilder endpointBuilder(String componentName, String path) {

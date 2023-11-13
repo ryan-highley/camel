@@ -1073,6 +1073,49 @@ public interface KafkaEndpointBuilderFactory {
             return this;
         }
         /**
+         * Whether to eager validate that broker host:port is valid and can be
+         * DNS resolved to known host during starting this consumer. If the
+         * validation fails then an exception is thrown which makes Camel fail
+         * fast. Disabling this will postpone the validation after the consumer
+         * is started, and Camel will keep re-connecting in case of validation
+         * or DNS resolution error.
+         * 
+         * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
+         * 
+         * Default: true
+         * Group: consumer
+         * 
+         * @param preValidateHostAndPort the value to set
+         * @return the dsl builder
+         */
+        default KafkaEndpointConsumerBuilder preValidateHostAndPort(
+                boolean preValidateHostAndPort) {
+            doSetProperty("preValidateHostAndPort", preValidateHostAndPort);
+            return this;
+        }
+        /**
+         * Whether to eager validate that broker host:port is valid and can be
+         * DNS resolved to known host during starting this consumer. If the
+         * validation fails then an exception is thrown which makes Camel fail
+         * fast. Disabling this will postpone the validation after the consumer
+         * is started, and Camel will keep re-connecting in case of validation
+         * or DNS resolution error.
+         * 
+         * The option will be converted to a &lt;code&gt;boolean&lt;/code&gt;
+         * type.
+         * 
+         * Default: true
+         * Group: consumer
+         * 
+         * @param preValidateHostAndPort the value to set
+         * @return the dsl builder
+         */
+        default KafkaEndpointConsumerBuilder preValidateHostAndPort(
+                String preValidateHostAndPort) {
+            doSetProperty("preValidateHostAndPort", preValidateHostAndPort);
+            return this;
+        }
+        /**
          * Set if KafkaConsumer will read from the beginning or the end on
          * startup: SeekPolicy.BEGINNING: read from the beginning.
          * SeekPolicy.END: read from the end.
@@ -1799,12 +1842,17 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * Allows for bridging the consumer to the Camel routing Error Handler,
-         * which mean any exceptions occurred while the consumer is trying to
-         * pickup incoming messages, or the likes, will now be processed as a
-         * message and handled by the routing Error Handler. By default the
-         * consumer will use the org.apache.camel.spi.ExceptionHandler to deal
-         * with exceptions, that will be logged at WARN or ERROR level and
-         * ignored.
+         * which mean any exceptions (if possible) occurred while the Camel
+         * consumer is trying to pickup incoming messages, or the likes, will
+         * now be processed as a message and handled by the routing Error
+         * Handler. Important: This is only possible if the 3rd party component
+         * allows Camel to be alerted if an exception was thrown. Some
+         * components handle this internally only, and therefore
+         * bridgeErrorHandler is not possible. In other situations we may
+         * improve the Camel component to hook into the 3rd party component and
+         * make this possible for future releases. By default the consumer will
+         * use the org.apache.camel.spi.ExceptionHandler to deal with
+         * exceptions, that will be logged at WARN or ERROR level and ignored.
          * 
          * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
          * 
@@ -1821,12 +1869,17 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * Allows for bridging the consumer to the Camel routing Error Handler,
-         * which mean any exceptions occurred while the consumer is trying to
-         * pickup incoming messages, or the likes, will now be processed as a
-         * message and handled by the routing Error Handler. By default the
-         * consumer will use the org.apache.camel.spi.ExceptionHandler to deal
-         * with exceptions, that will be logged at WARN or ERROR level and
-         * ignored.
+         * which mean any exceptions (if possible) occurred while the Camel
+         * consumer is trying to pickup incoming messages, or the likes, will
+         * now be processed as a message and handled by the routing Error
+         * Handler. Important: This is only possible if the 3rd party component
+         * allows Camel to be alerted if an exception was thrown. Some
+         * components handle this internally only, and therefore
+         * bridgeErrorHandler is not possible. In other situations we may
+         * improve the Camel component to hook into the 3rd party component and
+         * make this possible for future releases. By default the consumer will
+         * use the org.apache.camel.spi.ExceptionHandler to deal with
+         * exceptions, that will be logged at WARN or ERROR level and ignored.
          * 
          * The option will be converted to a &lt;code&gt;boolean&lt;/code&gt;
          * type.
@@ -2581,7 +2634,7 @@ public interface KafkaEndpointBuilderFactory {
          * time waiting for more records to show up. This setting defaults to 0
          * (i.e. no delay). Setting linger.ms=5, for example, would have the
          * effect of reducing the number of requests sent but would add up to
-         * 5ms of latency to records sent in the absense of load.
+         * 5ms of latency to records sent in the absence of load.
          * 
          * The option is a: &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
          * 
@@ -2613,7 +2666,7 @@ public interface KafkaEndpointBuilderFactory {
          * time waiting for more records to show up. This setting defaults to 0
          * (i.e. no delay). Setting linger.ms=5, for example, would have the
          * effect of reducing the number of requests sent but would add up to
-         * 5ms of latency to records sent in the absense of load.
+         * 5ms of latency to records sent in the absence of load.
          * 
          * The option will be converted to a
          * &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
@@ -5263,7 +5316,7 @@ public interface KafkaEndpointBuilderFactory {
          * @return the name of the header {@code KafkaManualCommit}.
          */
         public String kafkaManualCommit() {
-            return "KafkaManualCommit";
+            return "CamelKafkaManualCommit";
         }
     }
     static KafkaEndpointBuilder endpointBuilder(

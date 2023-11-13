@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.camel</groupId>
     <artifactId>camel</artifactId>
-    <version>4.1.0-SNAPSHOT</version>
+    <version>4.2.0-SNAPSHOT</version>
     <relativePath>../../</relativePath>
   </parent>
   <artifactId>camel-bom</artifactId>
@@ -268,6 +268,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.camel</groupId>
+        <artifactId>camel-azure-schema-registry</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
         <artifactId>camel-azure-servicebus</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -374,11 +379,6 @@
       <dependency>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-catalog-maven</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.camel</groupId>
-        <artifactId>camel-catalog-maven-grape</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -1725,6 +1725,11 @@
       <dependency>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-slack</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-smb</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

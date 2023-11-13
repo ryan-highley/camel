@@ -46,21 +46,23 @@ import org.apache.camel.util.StringHelper;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.mojo.exec.AbstractExecMojo;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.JavaType;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
 
-import static org.apache.camel.maven.ReportPluginCommon.asRelativeFile;
-import static org.apache.camel.maven.ReportPluginCommon.findJavaFiles;
-import static org.apache.camel.maven.ReportPluginCommon.findJavaRouteBuilderClasses;
-import static org.apache.camel.maven.ReportPluginCommon.findXmlRouters;
-import static org.apache.camel.maven.ReportPluginCommon.matchRouteFile;
-import static org.apache.camel.maven.ReportPluginCommon.stripRootPath;
+import static org.apache.camel.catalog.common.CatalogHelper.asRelativeFile;
+import static org.apache.camel.catalog.common.CatalogHelper.findJavaRouteBuilderClasses;
+import static org.apache.camel.catalog.common.CatalogHelper.findXmlRouters;
+import static org.apache.camel.catalog.common.CatalogHelper.matchRouteFile;
+import static org.apache.camel.catalog.common.CatalogHelper.stripRootPath;
+import static org.apache.camel.catalog.common.FileUtil.findJavaFiles;
 
 /**
  * Parses the source code and validates the Camel routes has valid endpoint uris and simple expressions, and validates
@@ -178,15 +180,22 @@ public class ValidateMojo extends AbstractExecMojo {
     @Parameter(property = "camel.configurationFiles")
     private String configurationFiles = "application.properties";
 
+    @Component
+    private RepositorySystem repositorySystem;
+
+    @Parameter(defaultValue = "${repositorySystemSession}", readonly = true)
+    private RepositorySystemSession repositorySystemSession;
+
     @Override
-    public void execute() throws MojoExecutionException, MojoFailureException {
+    public void execute() throws MojoExecutionException {
         CamelCatalog catalog = new DefaultCamelCatalog();
         // add activemq as known component
         catalog.addComponent("activemq", "org.apache.activemq.camel.component.ActiveMQComponent");
         // enable did you mean
         catalog.setSuggestionStrategy(new LuceneSuggestionStrategy());
         // enable loading other catalog versions dynamically
-        catalog.setVersionManager(new MavenVersionManager());
+        catalog.setVersionManager(
+                new MavenVersionManager(repositorySystem, repositorySystemSession, getSession().getSettings()));
         // use custom class loading
         catalog.getJSonSchemaResolver().setClassLoader(ValidateMojo.class.getClassLoader());
         // enable caching

@@ -130,6 +130,9 @@ class ExportCamelMain extends Export {
         Set<String> deps = resolveDependencies(settings, profile);
         // copy local lib JARs
         copyLocalLibDependencies(deps);
+        // copy agent JARs and remove as dependency
+        copyAgentDependencies(deps);
+        deps.removeIf(d -> d.startsWith("agent:"));
         if ("maven".equals(buildTool)) {
             createMavenPom(settings, profile, new File(BUILD_DIR, "pom.xml"), deps, srcPackageName);
             if (mavenWrapper) {
@@ -255,7 +258,9 @@ class ExportCamelMain extends Export {
             if (port == -1) {
                 port = 8080;
             }
-            sb2.append(context2.replaceFirst("\\{\\{ \\.Port }}", String.valueOf(port)));
+            context2 = context2.replaceFirst("\\{\\{ \\.Port }}", String.valueOf(port));
+            context2 = context2.replaceFirst("\\{\\{ \\.JibMavenPluginVersion }}", jibMavenPluginVersion(settings));
+            sb2.append(context2);
         }
 
         context = context.replace("{{ .CamelKubernetesProperties }}", sb1.toString());

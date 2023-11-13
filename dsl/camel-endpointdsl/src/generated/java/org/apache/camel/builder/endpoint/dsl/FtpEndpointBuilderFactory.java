@@ -2266,12 +2266,17 @@ public interface FtpEndpointBuilderFactory {
         }
         /**
          * Allows for bridging the consumer to the Camel routing Error Handler,
-         * which mean any exceptions occurred while the consumer is trying to
-         * pickup incoming messages, or the likes, will now be processed as a
-         * message and handled by the routing Error Handler. By default the
-         * consumer will use the org.apache.camel.spi.ExceptionHandler to deal
-         * with exceptions, that will be logged at WARN or ERROR level and
-         * ignored.
+         * which mean any exceptions (if possible) occurred while the Camel
+         * consumer is trying to pickup incoming messages, or the likes, will
+         * now be processed as a message and handled by the routing Error
+         * Handler. Important: This is only possible if the 3rd party component
+         * allows Camel to be alerted if an exception was thrown. Some
+         * components handle this internally only, and therefore
+         * bridgeErrorHandler is not possible. In other situations we may
+         * improve the Camel component to hook into the 3rd party component and
+         * make this possible for future releases. By default the consumer will
+         * use the org.apache.camel.spi.ExceptionHandler to deal with
+         * exceptions, that will be logged at WARN or ERROR level and ignored.
          * 
          * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
          * 
@@ -2288,12 +2293,17 @@ public interface FtpEndpointBuilderFactory {
         }
         /**
          * Allows for bridging the consumer to the Camel routing Error Handler,
-         * which mean any exceptions occurred while the consumer is trying to
-         * pickup incoming messages, or the likes, will now be processed as a
-         * message and handled by the routing Error Handler. By default the
-         * consumer will use the org.apache.camel.spi.ExceptionHandler to deal
-         * with exceptions, that will be logged at WARN or ERROR level and
-         * ignored.
+         * which mean any exceptions (if possible) occurred while the Camel
+         * consumer is trying to pickup incoming messages, or the likes, will
+         * now be processed as a message and handled by the routing Error
+         * Handler. Important: This is only possible if the 3rd party component
+         * allows Camel to be alerted if an exception was thrown. Some
+         * components handle this internally only, and therefore
+         * bridgeErrorHandler is not possible. In other situations we may
+         * improve the Camel component to hook into the 3rd party component and
+         * make this possible for future releases. By default the consumer will
+         * use the org.apache.camel.spi.ExceptionHandler to deal with
+         * exceptions, that will be logged at WARN or ERROR level and ignored.
          * 
          * The option will be converted to a &lt;code&gt;boolean&lt;/code&gt;
          * type.
@@ -5695,7 +5705,7 @@ public interface FtpEndpointBuilderFactory {
          * @return the name of the header {@code FileLength}.
          */
         public String fileLength() {
-            return "FileLength";
+            return "CamelFileLength";
         }
 
         /**
@@ -5708,7 +5718,7 @@ public interface FtpEndpointBuilderFactory {
          * @return the name of the header {@code FileLastModified}.
          */
         public String fileLastModified() {
-            return "FileLastModified";
+            return "CamelFileLastModified";
         }
 
         /**
@@ -5724,7 +5734,7 @@ public interface FtpEndpointBuilderFactory {
          * @return the name of the header {@code FileName}.
          */
         public String fileName() {
-            return "FileName";
+            return "CamelFileName";
         }
 
         /**
@@ -5737,7 +5747,7 @@ public interface FtpEndpointBuilderFactory {
          * @return the name of the header {@code FileNameOnly}.
          */
         public String fileNameOnly() {
-            return "FileNameOnly";
+            return "CamelFileNameOnly";
         }
 
         /**
@@ -5750,7 +5760,7 @@ public interface FtpEndpointBuilderFactory {
          * @return the name of the header {@code FileParent}.
          */
         public String fileParent() {
-            return "FileParent";
+            return "CamelFileParent";
         }
 
         /**
@@ -5763,7 +5773,7 @@ public interface FtpEndpointBuilderFactory {
          * @return the name of the header {@code RemoteFileInputStream}.
          */
         public String remoteFileInputStream() {
-            return "RemoteFileInputStream";
+            return "CamelRemoteFileInputStream";
         }
 
         /**
@@ -5776,7 +5786,7 @@ public interface FtpEndpointBuilderFactory {
          * @return the name of the header {@code FileLocalWorkPath}.
          */
         public String fileLocalWorkPath() {
-            return "FileLocalWorkPath";
+            return "CamelFileLocalWorkPath";
         }
 
         /**
@@ -5789,7 +5799,7 @@ public interface FtpEndpointBuilderFactory {
          * @return the name of the header {@code FtpReplyCode}.
          */
         public String ftpReplyCode() {
-            return "FtpReplyCode";
+            return "CamelFtpReplyCode";
         }
 
         /**
@@ -5802,7 +5812,7 @@ public interface FtpEndpointBuilderFactory {
          * @return the name of the header {@code FtpReplyString}.
          */
         public String ftpReplyString() {
-            return "FtpReplyString";
+            return "CamelFtpReplyString";
         }
 
         /**
@@ -5815,7 +5825,7 @@ public interface FtpEndpointBuilderFactory {
          * @return the name of the header {@code FileHost}.
          */
         public String fileHost() {
-            return "FileHost";
+            return "CamelFileHost";
         }
     }
     static FtpEndpointBuilder endpointBuilder(String componentName, String path) {

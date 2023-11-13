@@ -545,12 +545,12 @@ public class GenerateYamlDeserializersMojo extends GenerateYamlSupportMojo {
 
             properties.add(
                     YamlProperties.annotation("description", "string")
-                            .withDescription(descriptor.description("id"))
-                            .withDisplayName(descriptor.displayName("id"))
+                            .withDescription(descriptor.description("description"))
+                            .withDisplayName(descriptor.displayName("description"))
                             .build());
         }
 
-        if (implementType(info, OUTPUT_NODE_CLASS)) {
+        if (shouldHaveSteps(info)) {
             caseAdded = true;
 
             setProperty.beginControlFlow("case \"steps\":");
@@ -1253,4 +1253,13 @@ public class GenerateYamlDeserializersMojo extends GenerateYamlSupportMojo {
 
         return true;
     }
+
+    private boolean shouldHaveSteps(ClassInfo info) {
+        // choice should not have steps
+        if ("ChoiceDefinition".equals(info.simpleName())) {
+            return false;
+        }
+        return implementType(info, OUTPUT_NODE_CLASS);
+    }
+
 }

@@ -31,8 +31,7 @@ import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.ResourceAware;
 
 /**
- * A Pojo representing simplified "bean" element to declare registry beans using any DSL. This is not the same as "bean
- * processor".
+ * Define custom beans that can be used in your Camel routes and in general.
  */
 @Metadata(label = "configuration")
 @XmlType
@@ -54,17 +53,26 @@ public class RegistryBeanDefinition implements ResourceAware {
     private String factoryMethod;
     @XmlAttribute
     private String factoryBean;
+    @XmlAttribute
+    @Metadata(label = "advanced")
+    private String scriptLanguage;
     @XmlElement(name = "constructors")
     @XmlJavaTypeAdapter(BeanConstructorsAdapter.class)
     private Map<Integer, Object> constructors;
     @XmlElement(name = "properties")
     @XmlJavaTypeAdapter(BeanPropertiesAdapter.class)
     private Map<String, Object> properties;
+    @XmlElement(name = "script")
+    @Metadata(label = "advanced")
+    private String script;
 
     public String getName() {
         return name;
     }
 
+    /**
+     * The name of the bean (bean id)
+     */
     public void setName(String name) {
         this.name = name;
     }
@@ -73,6 +81,9 @@ public class RegistryBeanDefinition implements ResourceAware {
         return type;
     }
 
+    /**
+     * The class name (fully qualified) of the bean
+     */
     public void setType(String type) {
         this.type = type;
     }
@@ -81,6 +92,10 @@ public class RegistryBeanDefinition implements ResourceAware {
         return initMethod;
     }
 
+    /**
+     * The name of the custom initialization method to invoke after setting bean properties. The method must have no
+     * arguments, but may throw any exception.
+     */
     public void setInitMethod(String initMethod) {
         this.initMethod = initMethod;
     }
@@ -89,6 +104,10 @@ public class RegistryBeanDefinition implements ResourceAware {
         return destroyMethod;
     }
 
+    /**
+     * The name of the custom destroy method to invoke on bean shutdown, such as when Camel is shutting down. The method
+     * must have no arguments, but may throw any exception.
+     */
     public void setDestroyMethod(String destroyMethod) {
         this.destroyMethod = destroyMethod;
     }
@@ -97,6 +116,9 @@ public class RegistryBeanDefinition implements ResourceAware {
         return factoryMethod;
     }
 
+    /**
+     * Name of method to invoke when creating the bean via a factory bean.
+     */
     public void setFactoryMethod(String factoryMethod) {
         this.factoryMethod = factoryMethod;
     }
@@ -105,6 +127,9 @@ public class RegistryBeanDefinition implements ResourceAware {
         return factoryBean;
     }
 
+    /**
+     * Name of factory bean (bean id) to use for creating the bean.
+     */
     public void setFactoryBean(String factoryBean) {
         this.factoryBean = factoryBean;
     }
@@ -113,6 +138,10 @@ public class RegistryBeanDefinition implements ResourceAware {
         return constructors;
     }
 
+    /**
+     * Optional constructor arguments for creating the bean. Arguments correspond to specific index of the constructor
+     * argument list, starting from zero.
+     */
     public void setConstructors(Map<Integer, Object> constructors) {
         this.constructors = constructors;
     }
@@ -121,8 +150,36 @@ public class RegistryBeanDefinition implements ResourceAware {
         return properties;
     }
 
+    /**
+     * Optional properties to set on the created bean.
+     */
     public void setProperties(Map<String, Object> properties) {
         this.properties = properties;
+    }
+
+    public String getScriptLanguage() {
+        return scriptLanguage;
+    }
+
+    /**
+     * The script language to use when using inlined script for creating the bean, such as groovy, java, javascript etc.
+     */
+    public void setScriptLanguage(String scriptLanguage) {
+        this.scriptLanguage = scriptLanguage;
+    }
+
+    /**
+     * The script to execute that creates the bean when using scripting languages.
+     *
+     * If the script use the prefix <tt>resource:</tt> such as <tt>resource:classpath:com/foo/myscript.groovy</tt>,
+     * <tt>resource:file:/var/myscript.groovy</tt>, then its loaded from the external resource.
+     */
+    public void setScript(String script) {
+        this.script = script;
+    }
+
+    public String getScript() {
+        return script;
     }
 
     @Override

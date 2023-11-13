@@ -68,6 +68,8 @@ public class KafkaConfiguration implements Cloneable, HeaderFilterStrategyAware 
               description = "To use a custom HeaderFilterStrategy to filter header to and from Camel message.")
     private HeaderFilterStrategy headerFilterStrategy = new KafkaHeaderFilterStrategy();
 
+    @UriParam(label = "consumer", defaultValue = "true")
+    private boolean preValidateHostAndPort = true;
     @UriParam(label = "consumer")
     private boolean topicIsPattern;
     @UriParam(label = "consumer")
@@ -613,6 +615,21 @@ public class KafkaConfiguration implements Cloneable, HeaderFilterStrategyAware 
         if (values != null && !values.isEmpty()) {
             props.put(key, values.stream().collect(Collectors.joining(",")));
         }
+    }
+
+    public boolean isPreValidateHostAndPort() {
+        return preValidateHostAndPort;
+    }
+
+    /**
+     * Whether to eager validate that broker host:port is valid and can be DNS resolved to known host during starting
+     * this consumer. If the validation fails then an exception is thrown which makes Camel fail fast.
+     *
+     * Disabling this will postpone the validation after the consumer is started, and Camel will keep re-connecting in
+     * case of validation or DNS resolution error.
+     */
+    public void setPreValidateHostAndPort(boolean preValidateHostAndPort) {
+        this.preValidateHostAndPort = preValidateHostAndPort;
     }
 
     public boolean isTopicIsPattern() {
@@ -1421,7 +1438,7 @@ public class KafkaConfiguration implements Cloneable, HeaderFilterStrategyAware 
      * immediately regardless of this setting, however if we have fewer than this many bytes accumulated for this
      * partition we will 'linger' for the specified time waiting for more records to show up. This setting defaults to 0
      * (i.e. no delay). Setting linger.ms=5, for example, would have the effect of reducing the number of requests sent
-     * but would add up to 5ms of latency to records sent in the absense of load.
+     * but would add up to 5ms of latency to records sent in the absence of load.
      */
     public void setLingerMs(Integer lingerMs) {
         this.lingerMs = lingerMs;

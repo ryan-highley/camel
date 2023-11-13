@@ -157,12 +157,17 @@ public interface AzureServicebusComponentBuilderFactory {
         }
         /**
          * Allows for bridging the consumer to the Camel routing Error Handler,
-         * which mean any exceptions occurred while the consumer is trying to
-         * pickup incoming messages, or the likes, will now be processed as a
-         * message and handled by the routing Error Handler. By default the
-         * consumer will use the org.apache.camel.spi.ExceptionHandler to deal
-         * with exceptions, that will be logged at WARN or ERROR level and
-         * ignored.
+         * which mean any exceptions (if possible) occurred while the Camel
+         * consumer is trying to pickup incoming messages, or the likes, will
+         * now be processed as a message and handled by the routing Error
+         * Handler. Important: This is only possible if the 3rd party component
+         * allows Camel to be alerted if an exception was thrown. Some
+         * components handle this internally only, and therefore
+         * bridgeErrorHandler is not possible. In other situations we may
+         * improve the Camel component to hook into the 3rd party component and
+         * make this possible for future releases. By default the consumer will
+         * use the org.apache.camel.spi.ExceptionHandler to deal with
+         * exceptions, that will be logged at WARN or ERROR level and ignored.
          * 
          * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
          * 
@@ -332,6 +337,22 @@ public interface AzureServicebusComponentBuilderFactory {
         default AzureServicebusComponentBuilder subscriptionName(
                 java.lang.String subscriptionName) {
             doSetProperty("subscriptionName", subscriptionName);
+            return this;
+        }
+        /**
+         * Set binary mode. If true, message body will be sent as byte. By
+         * default, it is false.
+         * 
+         * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
+         * 
+         * Default: false
+         * Group: producer
+         * 
+         * @param binary the value to set
+         * @return the dsl builder
+         */
+        default AzureServicebusComponentBuilder binary(boolean binary) {
+            doSetProperty("binary", binary);
             return this;
         }
         /**
@@ -534,6 +555,7 @@ public interface AzureServicebusComponentBuilderFactory {
             case "serviceBusReceiveMode": getOrCreateConfiguration((ServiceBusComponent) component).setServiceBusReceiveMode((com.azure.messaging.servicebus.models.ServiceBusReceiveMode) value); return true;
             case "subQueue": getOrCreateConfiguration((ServiceBusComponent) component).setSubQueue((com.azure.messaging.servicebus.models.SubQueue) value); return true;
             case "subscriptionName": getOrCreateConfiguration((ServiceBusComponent) component).setSubscriptionName((java.lang.String) value); return true;
+            case "binary": getOrCreateConfiguration((ServiceBusComponent) component).setBinary((boolean) value); return true;
             case "lazyStartProducer": ((ServiceBusComponent) component).setLazyStartProducer((boolean) value); return true;
             case "producerOperation": getOrCreateConfiguration((ServiceBusComponent) component).setProducerOperation((org.apache.camel.component.azure.servicebus.ServiceBusProducerOperationDefinition) value); return true;
             case "scheduledEnqueueTime": getOrCreateConfiguration((ServiceBusComponent) component).setScheduledEnqueueTime((java.time.OffsetDateTime) value); return true;

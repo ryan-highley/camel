@@ -71,7 +71,6 @@ public abstract class DefaultConfigurationProperties<T> {
     private int streamCachingBufferSize;
     private boolean streamCachingRemoveSpoolDirectoryWhenStopping = true;
     private boolean streamCachingStatisticsEnabled;
-    private boolean debugging;
     private boolean backlogTracing;
     private boolean backlogTracingStandby;
     private boolean backlogTracingTemplates;
@@ -152,7 +151,7 @@ public abstract class DefaultConfigurationProperties<T> {
     private double routeControllerBackOffMultiplier;
     private boolean routeControllerUnhealthyOnExhausted;
     // startup recorder
-    @Metadata(enums = "false,off,java-flight-recorder,jfr,logging")
+    @Metadata(enums = "false,off,java-flight-recorder,jfr,logging,backlog")
     private String startupRecorder;
     private int startupRecorderMaxDepth = -1;
     private boolean startupRecorderRecording;
@@ -695,19 +694,6 @@ public abstract class DefaultConfigurationProperties<T> {
      */
     public void setTracingLoggingFormat(String format) {
         tracingLoggingFormat = format;
-    }
-
-    public boolean isDebugging() {
-        return debugging;
-    }
-
-    /**
-     * Sets whether debugging is enabled or not.
-     *
-     * Default is false.
-     */
-    public void setDebugging(boolean debugging) {
-        this.debugging = debugging;
     }
 
     public boolean isBacklogTracing() {
@@ -1661,7 +1647,7 @@ public abstract class DefaultConfigurationProperties<T> {
 
     /**
      * To use startup recorder for capturing execution time during starting Camel. The recorder can be one of: false (or
-     * off), logging, java-flight-recorder (or jfr).
+     * off), logging, backlog, java-flight-recorder (or jfr).
      */
     public void setStartupRecorder(String startupRecorder) {
         this.startupRecorder = startupRecorder;
@@ -2458,16 +2444,6 @@ public abstract class DefaultConfigurationProperties<T> {
     }
 
     /**
-     * Sets whether debugging is enabled or not.
-     *
-     * Default is false.
-     */
-    public T withDebugging(boolean debugging) {
-        this.debugging = debugging;
-        return (T) this;
-    }
-
-    /**
      * Sets the pattern used for determine which custom MDC keys to propagate during message routing when the routing
      * engine continues routing asynchronously for the given message. Setting this pattern to * will propagate all
      * custom keys. Or setting the pattern to foo*,bar* will propagate any keys starting with either foo or bar. Notice
@@ -2883,7 +2859,7 @@ public abstract class DefaultConfigurationProperties<T> {
 
     /**
      * To use startup recorder for capturing execution time during starting Camel. The recorder can be one of: false (or
-     * off), logging, java-flight-recorder (or jfr).
+     * off), logging, backlog, java-flight-recorder (or jfr).
      *
      * The default is false.
      */
