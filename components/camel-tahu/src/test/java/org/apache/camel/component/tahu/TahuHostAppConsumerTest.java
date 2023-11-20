@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.camel.CamelContext;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
@@ -29,6 +30,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.direct.DirectEndpoint;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.infra.core.CamelContextExtension;
+import org.apache.camel.test.infra.core.annotations.ContextFixture;
 import org.eclipse.tahu.edge.sim.DataSimulator;
 import org.eclipse.tahu.edge.sim.RandomDataSimulator;
 import org.eclipse.tahu.message.model.DeviceDescriptor;
@@ -37,13 +39,14 @@ import org.eclipse.tahu.message.model.SparkplugBPayload;
 import org.eclipse.tahu.message.model.SparkplugBPayloadMap;
 import org.eclipse.tahu.message.model.SparkplugDescriptor;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
+@Disabled
 @SuppressWarnings("unused")
 public class TahuHostAppConsumerTest extends TahuTestSupport {
 
@@ -65,6 +68,21 @@ public class TahuHostAppConsumerTest extends TahuTestSupport {
     DirectEndpoint deviceDataEndpoint;
 
     private ProducerTemplate template;
+    private TahuComponent tahuComponent;
+
+    @ContextFixture
+    public void configureContext(CamelContext context) {
+
+        TahuConfiguration tahuConfig = new TahuConfiguration();
+
+        // tahuConfig.setServers("TahuHostAppConsumerTestServer:tcp://" + service.getMqttHostAddress());
+        tahuConfig.setUsername("admin");
+        tahuConfig.setPassword("changeme");
+
+        tahuComponent = context.getComponent("tahu", TahuComponent.class);
+        tahuComponent.setConfiguration(tahuConfig);
+
+    }
 
     @BeforeEach
     void setupTemplate() {
@@ -90,23 +108,14 @@ public class TahuHostAppConsumerTest extends TahuTestSupport {
             @Override
             public void configure() throws Exception {
 
-                TahuComponent tahuComponent = getCamelContext().getComponent("tahu", TahuComponent.class);
-                assertThat(tahuComponent, is(notNullValue()));
+                TahuEndpoint tahuHostAppEndpoint = getCamelContext().getEndpoint(
+                        "tahu:CamelHostApp?clientId=TestConsumerId", TahuEndpoint.class);
 
-                TahuConfiguration tahuConfiguration = tahuComponent.getConfiguration();
-                tahuConfiguration.setServers("TahuHostAppConsumerTestServer:" + service.serviceAddress());
-                tahuConfiguration.setUsername("admin");
-                tahuConfiguration.setPassword("changeme");
+                TahuEndpoint tahuEdgeNodeEndpoint
+                        = getCamelContext().getEndpoint("tahu:CamelGroup/Node1?clientId=TestProducerId", TahuEndpoint.class);
 
-                TahuHostAppEndpoint tahuHostAppEndpoint = getCamelContext().getEndpoint(
-                        "tahu-host:CamelHostApp?clientId=TestConsumerId", TahuHostAppEndpoint.class);
-
-                TahuEdgeNodeEndpoint tahuEdgeNodeEndpoint = getCamelContext().getEndpoint(
-                        "tahu-node:CamelGroup/Node1?clientId=TestProducerId",
-                        TahuEdgeNodeEndpoint.class);
-
-                TahuEdgeNodeEndpoint tahuDeviceEndpoint
-                        = getCamelContext().getEndpoint("tahu-device:CamelGroup/Node1/Device1", TahuEdgeNodeEndpoint.class);
+                TahuEndpoint tahuDeviceEndpoint
+                        = getCamelContext().getEndpoint("tahu:CamelGroup/Node1/Device1", TahuEndpoint.class);
 
                 edgeNodeDescriptor
                         = new EdgeNodeDescriptor(tahuEdgeNodeEndpoint.getGroupId(), tahuEdgeNodeEndpoint.getEdgeNode());

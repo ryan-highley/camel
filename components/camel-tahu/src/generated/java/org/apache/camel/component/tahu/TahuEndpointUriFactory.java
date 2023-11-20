@@ -16,7 +16,6 @@ import org.apache.camel.spi.EndpointUriFactory;
 public class TahuEndpointUriFactory extends org.apache.camel.support.component.EndpointUriFactorySupport implements EndpointUriFactory {
 
     private static final String BASE = ":groupId/edgeNode/deviceId";
-    private static final String[] SCHEMES = new String[]{"tahu-node", "tahu-device"};
 
     private static final Set<String> PROPERTY_NAMES;
     private static final Set<String> SECRET_PROPERTY_NAMES;
@@ -31,6 +30,7 @@ public class TahuEndpointUriFactory extends org.apache.camel.support.component.E
         props.add("exchangePattern");
         props.add("groupId");
         props.add("headerFilterStrategy");
+        props.add("hostId");
         props.add("keepAliveTimeout");
         props.add("lazyStartProducer");
         props.add("metricDataTypes");
@@ -39,7 +39,6 @@ public class TahuEndpointUriFactory extends org.apache.camel.support.component.E
         props.add("rebirthDebounceDelay");
         props.add("servers");
         props.add("sslContextParameters");
-        props.add("unused");
         props.add("useAliases");
         props.add("username");
         PROPERTY_NAMES = Collections.unmodifiableSet(props);
@@ -54,12 +53,7 @@ public class TahuEndpointUriFactory extends org.apache.camel.support.component.E
 
     @Override
     public boolean isEnabled(String scheme) {
-        for (String s : SCHEMES) {
-            if (s.equals(scheme)) {
-                return true;
-            }
-        }
-        return false;
+        return "tahu".equals(scheme);
     }
 
     @Override
@@ -72,7 +66,7 @@ public class TahuEndpointUriFactory extends org.apache.camel.support.component.E
         uri = buildPathParameter(syntax, uri, "groupId", null, true, copy);
         uri = buildPathParameter(syntax, uri, "edgeNode", null, true, copy);
         uri = buildPathParameter(syntax, uri, "deviceId", null, true, copy);
-        uri = buildPathParameter(syntax, uri, "unused", null, false, copy);
+        uri = buildPathParameter(syntax, uri, "hostId", null, true, copy);
         uri = buildQueryParameters(uri, copy, encode);
         return uri;
     }

@@ -75,9 +75,8 @@ public class TahuHostAppHandler extends ServiceSupport implements HostApplicatio
         if (app == null) {
 
             this.hostApplication = app = new HostApplication(
-                    this, hostId, serverDefinitions, null,
+                    this, hostId, null, serverDefinitions, null,
                     new SparkplugBPayloadDecoder());
-
             app.start();
         }
 
@@ -202,6 +201,18 @@ public class TahuHostAppHandler extends ServiceSupport implements HostApplicatio
         } else {
             onMetricConsumer.accept((EdgeNodeDescriptor) sparkplugDescriptor, metric);
         }
+    }
+
+    @Override
+    public void onConnect() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'onConnect'");
+    }
+
+    @Override
+    public void onDisconnect() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'onDisconnect'");
     }
 
 }

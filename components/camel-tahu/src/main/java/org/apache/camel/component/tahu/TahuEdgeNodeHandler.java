@@ -16,6 +16,7 @@
  */
 package org.apache.camel.component.tahu;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -482,7 +483,7 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
         PayloadBuilder(EdgeNodeDescriptor payloadDescriptor) {
             sparkplugBuilder = new SparkplugBPayload.SparkplugBPayloadBuilder();
 
-            setTimestamp(System.currentTimeMillis());
+            setTimestamp(Instant.now().toEpochMilli());
             this.payloadDescriptor = payloadDescriptor;
         }
 

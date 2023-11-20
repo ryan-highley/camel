@@ -43,7 +43,7 @@ public class TahuConfiguration implements Cloneable {
 
     @UriParam(label = "common",
               description = "MQTT client ID to use for all server definitions, rather than specifying the same one for each",
-              defaultValueNote = "If neither the clientId parameter nor an MqttClientId defined for an MQTT Server, a random MQTT Client ID will generated, prefaced with \"Camel\"")
+              defaultValueNote = "If neither the clientId parameter nor an MqttClientId defined for an MQTT Server, a random MQTT Client ID will be generated, prefaced with \"Camel\"")
     private String clientId;
 
     @UriParam(label = "security", description = "Username for MQTT server authentication", secret = true)

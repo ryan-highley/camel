@@ -33,8 +33,7 @@ import org.apache.camel.util.PropertiesHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(TahuConstants.BASE_SCHEME + "," + TahuConstants.EDGE_NODE_SCHEME + "," + TahuConstants.DEVICE_SCHEME + ","
-           + TahuConstants.HOST_APP_SCHEME)
+@Component(TahuConstants.BASE_SCHEME)
 public class TahuComponent extends DefaultComponent implements SSLContextParametersAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(TahuComponent.class);
@@ -42,43 +41,49 @@ public class TahuComponent extends DefaultComponent implements SSLContextParamet
     private final ConcurrentMap<String, TahuEndpoint> endpoints = new ConcurrentHashMap<>();
 
     @Metadata(label = "advanced")
-    TahuConfiguration configuration = new TahuConfiguration();
+    TahuConfiguration configuration;
 
     @Metadata(label = "security", defaultValue = "false")
     boolean useGlobalSslContextParameters;
 
     public TahuComponent() {
+        this.configuration = createConfiguration();
     }
 
     public TahuComponent(CamelContext camelContext) {
         super(camelContext);
+        this.configuration = createConfiguration();
     }
 
-    public final TahuEdgeNodeEndpoint createEdgeNodeEndpoint(String groupId, String edgeNode) throws Exception {
+    public TahuComponent(TahuConfiguration configuration) {
+        this.configuration = configuration;
+    }
+
+    public final TahuEndpoint createEdgeNodeEndpoint(String groupId, String edgeNode) throws Exception {
         String sparkplugDescriptorString = groupId + TahuConstants.MAJOR_SEPARATOR + edgeNode;
         String uri = TahuConstants.EDGE_NODE_SCHEME + ":" + sparkplugDescriptorString;
 
-        TahuEdgeNodeEndpoint endpoint = (TahuEdgeNodeEndpoint) createEndpoint(uri, sparkplugDescriptorString, Map.of());
+        TahuEndpoint endpoint = createEndpoint(uri, sparkplugDescriptorString, Map.of());
 
         return endpoint;
     }
 
-    public final TahuEdgeNodeEndpoint createDeviceEndpoint(
+    public final TahuEndpoint createDeviceEndpoint(
             String groupId, String edgeNode, String deviceId)
             throws Exception {
         String sparkplugDescriptorString = groupId + TahuConstants.MAJOR_SEPARATOR + edgeNode
                                            + TahuConstants.MAJOR_SEPARATOR + deviceId;
         String uri = TahuConstants.DEVICE_SCHEME + ":" + sparkplugDescriptorString;
 
-        TahuEdgeNodeEndpoint endpoint = (TahuEdgeNodeEndpoint) createEndpoint(uri, sparkplugDescriptorString, Map.of());
+        TahuEndpoint endpoint = createEndpoint(uri, sparkplugDescriptorString, Map.of());
 
         return endpoint;
     }
 
-    public final TahuHostAppEndpoint createHostAppEndpoint(String hostId) throws Exception {
+    public final TahuEndpoint createHostAppEndpoint(String hostId) throws Exception {
         String uri = TahuConstants.EDGE_NODE_SCHEME + ":" + hostId;
 
-        TahuHostAppEndpoint endpoint = (TahuHostAppEndpoint) createEndpoint(uri, hostId, Map.of());
+        TahuEndpoint endpoint = createEndpoint(uri, hostId, Map.of());
 
         return endpoint;
     }
@@ -103,15 +108,13 @@ public class TahuComponent extends DefaultComponent implements SSLContextParamet
             }
 
             TahuEndpoint answer;
-            if (uri.startsWith(TahuConstants.HOST_APP_SCHEME)) {
+            if (remaining.indexOf(TahuConstants.MAJOR_SEPARATOR) == -1) {
                 answer = createHostAppEndpoint(uri, remaining, endpointConfig);
-            } else if (uri.startsWith(TahuConstants.EDGE_NODE_SCHEME) || uri.startsWith(TahuConstants.DEVICE_SCHEME)) {
+            } else {
                 answer = createEdgeNodeEndpoint(uri, remaining, endpointConfig);
 
                 Map<String, Object> metricDataTypes = PropertiesHelper.extractProperties(parameters, "metric.");
-                ((TahuEdgeNodeEndpoint) answer).setMetricDataTypes(metricDataTypes);
-            } else {
-                throw new ResolveEndpointFailedException(uri, "unable to determine correct Endpoint type to create");
+                answer.setMetricDataTypes(metricDataTypes);
             }
 
             setProperties(answer, parameters);
@@ -122,14 +125,14 @@ public class TahuComponent extends DefaultComponent implements SSLContextParamet
         }
     }
 
-    private TahuHostAppEndpoint createHostAppEndpoint(
+    private TahuEndpoint createHostAppEndpoint(
             String uri, String hostId, TahuConfiguration tahuConfig)
             throws Exception {
-        TahuHostAppEndpoint answer = (TahuHostAppEndpoint) endpoints.get(hostId);
+        TahuEndpoint answer = endpoints.get(hostId);
         if (answer == null) {
-            answer = new TahuHostAppEndpoint(uri, this, tahuConfig, hostId);
+            answer = new TahuEndpoint(uri, this, tahuConfig, hostId);
 
-            TahuHostAppEndpoint existingAnswer = (TahuHostAppEndpoint) endpoints.putIfAbsent(hostId, answer);
+            TahuEndpoint existingAnswer = endpoints.putIfAbsent(hostId, answer);
             if (existingAnswer != null) {
                 answer = existingAnswer;
             }
@@ -138,34 +141,24 @@ public class TahuComponent extends DefaultComponent implements SSLContextParamet
         return answer;
     }
 
-    private TahuEdgeNodeEndpoint createEdgeNodeEndpoint(
+    private TahuEndpoint createEdgeNodeEndpoint(
             String uri, String remaining, TahuConfiguration tahuConfig)
             throws Exception {
-        TahuEdgeNodeEndpoint answer = (TahuEdgeNodeEndpoint) endpoints.get(remaining);
+        TahuEndpoint answer = endpoints.get(remaining);
         if (answer == null) {
-            int requiredSegments = 2;
-            if (uri.startsWith(TahuConstants.DEVICE_SCHEME)) {
-                requiredSegments = 3;
-            }
-
             List<String> descriptorSegments = Arrays
-                    .stream(remaining.split(TahuConstants.MAJOR_SEPARATOR, requiredSegments))
+                    .stream(remaining.split(TahuConstants.MAJOR_SEPARATOR, 3))
                     .map(String::trim).filter(ObjectHelper::isNotEmpty).toList();
-
-            if (descriptorSegments.size() < requiredSegments) {
-                throw new ResolveEndpointFailedException(uri, "missing required remaining segments: " + remaining);
-            }
 
             String groupId = descriptorSegments.get(0);
             String edgeNode = descriptorSegments.get(1);
             String deviceId = null;
-            if (requiredSegments == 3) {
+            if (descriptorSegments.size() == 3) {
                 deviceId = descriptorSegments.get(2);
             }
+            answer = new TahuEndpoint(uri, this, tahuConfig, groupId, edgeNode, deviceId);
 
-            answer = new TahuEdgeNodeEndpoint(uri, this, tahuConfig, groupId, edgeNode, deviceId);
-
-            TahuEdgeNodeEndpoint existingAnswer = (TahuEdgeNodeEndpoint) endpoints.putIfAbsent(remaining, answer);
+            TahuEndpoint existingAnswer = endpoints.putIfAbsent(remaining, answer);
             if (existingAnswer != null) {
                 answer = existingAnswer;
             }
@@ -183,6 +176,15 @@ public class TahuComponent extends DefaultComponent implements SSLContextParamet
      */
     public void setConfiguration(TahuConfiguration configuration) {
         this.configuration = configuration;
+    }
+
+    /**
+     * Factory method to create the default configuration instance
+     *
+     * @return a newly created configuration object which can then be further customized
+     */
+    TahuConfiguration createConfiguration() {
+        return new TahuConfiguration();
     }
 
     @Override
