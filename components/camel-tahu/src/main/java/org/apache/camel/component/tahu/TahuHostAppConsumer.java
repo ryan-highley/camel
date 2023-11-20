@@ -46,7 +46,7 @@ public class TahuHostAppConsumer extends DefaultConsumer {
     private static final ConcurrentMap<String, TahuHostAppHandler> hostHandlers = new ConcurrentHashMap<>();
 
     @SuppressWarnings("unused")
-    private final TahuHostAppEndpoint endpoint;
+    private final TahuEndpoint endpoint;
 
     @SuppressWarnings("unused")
     private final String hostId;
@@ -55,7 +55,7 @@ public class TahuHostAppConsumer extends DefaultConsumer {
 
     private final Marker loggingMarker;
 
-    TahuHostAppConsumer(TahuHostAppEndpoint endpoint, Processor processor, String hostId) {
+    TahuHostAppConsumer(TahuEndpoint endpoint, Processor processor, String hostId) {
         super(endpoint, processor);
 
         this.endpoint = endpoint;

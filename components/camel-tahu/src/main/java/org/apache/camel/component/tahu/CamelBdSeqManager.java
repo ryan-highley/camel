@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-public class CamelBdSeqManager implements BdSeqManager {
+public final class CamelBdSeqManager implements BdSeqManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(CamelBdSeqManager.class);
 
@@ -52,7 +52,7 @@ public class CamelBdSeqManager implements BdSeqManager {
         LOG.trace(loggingMarker, "BdSeqManager getNextDeathBdSeqNum called");
         try {
 
-            if (bdSeqNumFile.exists()) {
+            if (bdSeqNumFile.exists() && FileUtils.sizeOf(bdSeqNumFile) > 0L) {
                 String bdSeqFileContents = FileUtils.readFileToString(bdSeqNumFile, bdSeqNumFileCharset);
                 long bdSeqNum = normalizeBdSeq(Long.parseLong(bdSeqFileContents));
 

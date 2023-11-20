@@ -44,7 +44,7 @@ public class TahuEdgeNodeProducer extends DefaultProducer {
 
     private static final ConcurrentMap<EdgeNodeDescriptor, TahuEdgeNodeHandler> descriptorHandlers = new ConcurrentHashMap<>();
 
-    private final TahuEdgeNodeEndpoint endpoint;
+    private final TahuEndpoint endpoint;
     private final HeaderFilterStrategy headerFilterStrategy;
 
     private final TahuEdgeNodeHandler tahuEdgeNodeHandler;
@@ -53,7 +53,7 @@ public class TahuEdgeNodeProducer extends DefaultProducer {
 
     private final Marker loggingMarker;
 
-    TahuEdgeNodeProducer(TahuEdgeNodeEndpoint endpoint, String groupId, String edgeNode, String deviceId) {
+    TahuEdgeNodeProducer(TahuEndpoint endpoint, String groupId, String edgeNode, String deviceId) {
         super(endpoint);
 
         this.endpoint = endpoint;
