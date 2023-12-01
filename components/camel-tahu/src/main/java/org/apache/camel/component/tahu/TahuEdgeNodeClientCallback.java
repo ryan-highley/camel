@@ -18,7 +18,6 @@ package org.apache.camel.component.tahu;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.camel.RuntimeCamelException;
-import org.apache.camel.support.service.ServiceHelper;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.tahu.SparkplugParsingException;
 import org.eclipse.tahu.edge.EdgeClient;
@@ -41,20 +40,20 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-class TahuHostAppClientCallback implements ClientCallback {
+class TahuEdgeNodeClientCallback implements ClientCallback {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TahuHostAppClientCallback.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TahuEdgeNodeClientCallback.class);
 
     private EdgeClient client;
 
     private final EdgeNodeDescriptor edgeNodeDescriptor;
-    private final TahuEdgeNodeHandler tahuMetricHandler;
+    private final TahuEdgeNodeHandler tahuEdgeNodeHandler;
 
     private final Marker loggingMarker;
 
-    TahuHostAppClientCallback(EdgeNodeDescriptor edgeNodeDescriptor, TahuEdgeNodeHandler tahuMetricHandler) {
+    TahuEdgeNodeClientCallback(EdgeNodeDescriptor edgeNodeDescriptor, TahuEdgeNodeHandler tahuEdgeNodeHandler) {
         this.edgeNodeDescriptor = edgeNodeDescriptor;
-        this.tahuMetricHandler = tahuMetricHandler;
+        this.tahuEdgeNodeHandler = tahuEdgeNodeHandler;
 
         loggingMarker = MarkerFactory.getMarker(edgeNodeDescriptor.getDescriptorString());
     }
@@ -124,7 +123,7 @@ class TahuHostAppClientCallback implements ClientCallback {
                         throw new RuntimeCamelException(e);
                     }
 
-                    long currentBirthBdSeq = tahuMetricHandler.getCurrentBirthBdSeq();
+                    long currentBirthBdSeq = tahuEdgeNodeHandler.getCurrentBirthBdSeq();
 
                     if (currentBirthBdSeq == messageBdSeq) {
                         // This is our latest LWT - treat as a rebirth
@@ -160,9 +159,9 @@ class TahuHostAppClientCallback implements ClientCallback {
                 payload = decoder.buildFromByteArray(mqttMessage.getPayload(), null);
 
                 if (topic.isType(MessageType.NCMD)) {
-                    tahuMetricHandler.handleNCMDMessage(payload);
+                    tahuEdgeNodeHandler.handleNCMDMessage(payload);
                 } else if (topic.isType(MessageType.DCMD)) {
-                    tahuMetricHandler.handleDCMDMessage(payload, topic.getDeviceId());
+                    tahuEdgeNodeHandler.handleDCMDMessage(payload, topic.getDeviceId());
                 }
             } catch (Exception e) {
                 LOG.error(loggingMarker, "Exception caught decoding Sparkplug message with topic {} and payload {}", topic,
@@ -177,8 +176,6 @@ class TahuHostAppClientCallback implements ClientCallback {
     @Override
     public void shutdown() {
         LOG.trace(loggingMarker, "ClientCallback shutdown called");
-
-        ServiceHelper.stopAndShutdownService(tahuMetricHandler);
 
         LOG.trace(loggingMarker, "ClientCallback shutdown complete");
     }

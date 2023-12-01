@@ -39,29 +39,32 @@ public final class CamelBdSeqManager implements BdSeqManager {
     private final Marker loggingMarker;
 
     CamelBdSeqManager(EdgeNodeDescriptor edgeNodeDescriptor) {
+        loggingMarker = MarkerFactory.getMarker(edgeNodeDescriptor.getDescriptorString());
+        LOG.trace(loggingMarker, "CamelBdSeqManager constructor called");
+
         String bdSeqNumFileName = FileUtils.getTempDirectoryPath() + "/CamelTahuTemp/"
                                   + edgeNodeDescriptor.getDescriptorString() + "/bdSeqMgr";
 
         bdSeqNumFile = new File(bdSeqNumFileName);
 
-        loggingMarker = MarkerFactory.getMarker(edgeNodeDescriptor.getDescriptorString());
+        LOG.trace(loggingMarker, "CamelBdSeqManager constructor complete");
     }
 
     @Override
     public long getNextDeathBdSeqNum() {
         LOG.trace(loggingMarker, "BdSeqManager getNextDeathBdSeqNum called");
         try {
-
+            long bdSeqNum = 0L;
             if (bdSeqNumFile.exists() && FileUtils.sizeOf(bdSeqNumFile) > 0L) {
                 String bdSeqFileContents = FileUtils.readFileToString(bdSeqNumFile, bdSeqNumFileCharset);
-                long bdSeqNum = normalizeBdSeq(Long.parseLong(bdSeqFileContents));
+
+                // Add one to the previously stored value
+                bdSeqNum = normalizeBdSeq(Long.parseLong(bdSeqFileContents) + 1);
 
                 LOG.debug(loggingMarker, "Next Death bdSeq number: {}", bdSeqNum);
-                return bdSeqNum;
-            } else {
-                storeNextDeathBdSeqNum(0);
-                return 0;
             }
+            storeNextDeathBdSeqNum(bdSeqNum);
+            return bdSeqNum;
         } catch (Exception e) {
             LOG.debug(loggingMarker, "Failed to get the bdSeq number from the persistent directory", e);
             storeNextDeathBdSeqNum(0);

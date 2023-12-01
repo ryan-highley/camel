@@ -32,6 +32,8 @@ public class TahuComponentConfigurer extends PropertyConfigurerSupport implement
         case "autowiredEnabled": target.setAutowiredEnabled(property(camelContext, boolean.class, value)); return true;
         case "bridgeerrorhandler":
         case "bridgeErrorHandler": target.setBridgeErrorHandler(property(camelContext, boolean.class, value)); return true;
+        case "checkclientidlength":
+        case "checkClientIdLength": getOrCreateConfiguration(target).setCheckClientIdLength(property(camelContext, boolean.class, value)); return true;
         case "clientid":
         case "clientId": getOrCreateConfiguration(target).setClientId(property(camelContext, java.lang.String.class, value)); return true;
         case "configuration": target.setConfiguration(property(camelContext, org.apache.camel.component.tahu.TahuConfiguration.class, value)); return true;
@@ -59,6 +61,8 @@ public class TahuComponentConfigurer extends PropertyConfigurerSupport implement
         case "autowiredEnabled": return boolean.class;
         case "bridgeerrorhandler":
         case "bridgeErrorHandler": return boolean.class;
+        case "checkclientidlength":
+        case "checkClientIdLength": return boolean.class;
         case "clientid":
         case "clientId": return java.lang.String.class;
         case "configuration": return org.apache.camel.component.tahu.TahuConfiguration.class;
@@ -87,6 +91,8 @@ public class TahuComponentConfigurer extends PropertyConfigurerSupport implement
         case "autowiredEnabled": return target.isAutowiredEnabled();
         case "bridgeerrorhandler":
         case "bridgeErrorHandler": return target.isBridgeErrorHandler();
+        case "checkclientidlength":
+        case "checkClientIdLength": return getOrCreateConfiguration(target).isCheckClientIdLength();
         case "clientid":
         case "clientId": return getOrCreateConfiguration(target).getClientId();
         case "configuration": return target.getConfiguration();

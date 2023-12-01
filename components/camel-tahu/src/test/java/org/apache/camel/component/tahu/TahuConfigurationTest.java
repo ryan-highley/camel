@@ -19,11 +19,9 @@ package org.apache.camel.component.tahu;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.test.infra.core.CamelContextExtension;
+import org.apache.camel.test.junit5.CamelTestSupport;
 import org.eclipse.tahu.message.model.MetricDataType;
 import org.eclipse.tahu.model.MqttServerDefinition;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,9 +37,8 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
 
-@Disabled
 @SuppressWarnings("unused")
-public class TahuConfigurationTest extends TahuTestSupport {
+public class TahuConfigurationTest extends CamelTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(TahuConfigurationTest.class);
 
@@ -65,6 +62,7 @@ public class TahuConfigurationTest extends TahuTestSupport {
             assertThat(configuration, is(notNullValue()));
             assertThat(configuration,
                     allOf(hasProperty("clientId", is("client1")),
+                            hasProperty("checkClientIdLength", is(true)),
                             hasProperty("username", is("amq")),
                             hasProperty("password", is("amq")),
                             hasProperty("rebirthDebounceDelay", is(2000L)),
@@ -92,6 +90,7 @@ public class TahuConfigurationTest extends TahuTestSupport {
             assertThat(configuration, is(notNullValue()));
             assertThat(configuration,
                     allOf(hasProperty("clientId", is("client1")),
+                            hasProperty("checkClientIdLength", is(true)),
                             hasProperty("username", is("amq")),
                             hasProperty("password", is("amq")),
                             hasProperty("rebirthDebounceDelay", is(2000L)),
@@ -102,7 +101,7 @@ public class TahuConfigurationTest extends TahuTestSupport {
     @Test
     public void checkEdgeNodeMetricsOptions() throws Exception {
         String uri
-                = "tahu://Basic/EdgeNodeMetrics?metric.EdgeNodeMetrics/NT-1/int8=Int8&metric.EdgeNodeMetrics/NT-1/string=String&metric.EdgeNodeMetrics/NT-1/int64=Int64&metric.EdgeNodeMetrics/NT-2/int16=Int16&metric.EdgeNodeMetrics/NT-2/text=Text&metric.EdgeNodeMetrics/NT-2/uint32=UInt32&clientId=client1&primaryHostId=app1&username=amq&password=amq&useAliases=true&rebirthDebounceDelay=2000&keepAliveTimeout=20";
+                = "tahu://Basic/EdgeNodeMetrics?metric.EdgeNodeMetrics/NT-1/int8Data=Int8&metric.EdgeNodeMetrics/NT-1/stringData=String&metric.EdgeNodeMetrics/NT-1/int64Data=Int64&metric.EdgeNodeMetrics/NT-2/int16Data=Int16&metric.EdgeNodeMetrics/NT-2/textData=Text&metric.EdgeNodeMetrics/NT-2/uint32Data=UInt32&clientId=client1&primaryHostId=app1&username=amq&password=amq&useAliases=true&rebirthDebounceDelay=2000&keepAliveTimeout=20";
 
         try (TahuEndpoint endpoint = resolveMandatoryEndpoint(uri, TahuEndpoint.class)) {
 
@@ -115,12 +114,12 @@ public class TahuConfigurationTest extends TahuTestSupport {
                             hasProperty("useAliases", is(true))));
 
             Map<String, Object> metricDataTypes = endpoint.getMetricDataTypes();
-            assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-1/int8", MetricDataType.Int8.name()));
-            assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-1/string", MetricDataType.String.name()));
-            assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-1/int64", MetricDataType.Int64.name()));
-            assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-2/int16", MetricDataType.Int16.name()));
-            assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-2/text", MetricDataType.Text.name()));
-            assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-2/uint32", MetricDataType.UInt32.name()));
+            assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-1/int8Data", MetricDataType.Int8.name()));
+            assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-1/stringData", MetricDataType.String.name()));
+            assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-1/int64Data", MetricDataType.Int64.name()));
+            assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-2/int16Data", MetricDataType.Int16.name()));
+            assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-2/textData", MetricDataType.Text.name()));
+            assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-2/uint32Data", MetricDataType.UInt32.name()));
             assertThat(metricDataTypes.size(), is(6));
 
             TahuConfiguration configuration = endpoint.getConfiguration();
@@ -128,6 +127,7 @@ public class TahuConfigurationTest extends TahuTestSupport {
             assertThat(configuration, is(notNullValue()));
             assertThat(configuration,
                     allOf(hasProperty("clientId", is("client1")),
+                            hasProperty("checkClientIdLength", is(true)),
                             hasProperty("username", is("amq")),
                             hasProperty("password", is("amq")),
                             hasProperty("rebirthDebounceDelay", is(2000L)),
@@ -150,6 +150,7 @@ public class TahuConfigurationTest extends TahuTestSupport {
             assertThat(configuration, is(notNullValue()));
             assertThat(configuration,
                     allOf(hasProperty("clientId", is("client1")),
+                            hasProperty("checkClientIdLength", is(true)),
                             hasProperty("username", is("amq")),
                             hasProperty("password", is("amq")),
                             hasProperty("rebirthDebounceDelay", is(2000L)),
@@ -209,7 +210,8 @@ public class TahuConfigurationTest extends TahuTestSupport {
 
         assertThat(configuration, is(notNullValue()));
         assertThat(configuration,
-                allOf(hasProperty("clientId", is("clientId2")), hasProperty("username", is("user1")),
+                allOf(hasProperty("clientId", is("clientId2")), hasProperty("checkClientIdLength", is(true)),
+                        hasProperty("username", is("user1")),
                         hasProperty("password", is("mysecretpassw0rd")),
                         hasProperty("keepAliveTimeout", is(45))));
 
@@ -268,16 +270,5 @@ public class TahuConfigurationTest extends TahuTestSupport {
                         hasProperty("keepAliveTimeout",
                                 is(configuration.getKeepAliveTimeout())),
                         hasProperty("ndeathTopic", is(nullValue())))));
-    }
-
-    @Override
-    protected RouteBuilder createRouteBuilder() {
-        // No routes for configuration tests
-        return null;
-    }
-
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
     }
 }

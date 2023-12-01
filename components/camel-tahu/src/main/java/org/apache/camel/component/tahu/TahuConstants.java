@@ -21,9 +21,9 @@ import org.apache.camel.spi.Metadata;
 public final class TahuConstants {
 
     public static final String BASE_SCHEME = "tahu";
-    public static final String EDGE_NODE_SCHEME = BASE_SCHEME;
-    public static final String DEVICE_SCHEME = BASE_SCHEME;
-    public static final String HOST_APP_SCHEME = BASE_SCHEME;
+    public static final String EDGE_NODE_SCHEME = BASE_SCHEME; // + "-edge";
+    public static final String DEVICE_SCHEME = BASE_SCHEME; // + "-device";
+    public static final String HOST_APP_SCHEME = BASE_SCHEME; // + "-host";
 
     public static final String MAJOR_SEPARATOR = "/";
     public static final String MINOR_SEPARATOR = "+";
