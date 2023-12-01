@@ -12,11 +12,19 @@ Added `boolean` parameter to `matchProcess` method on `org.apache.camel.spi.Cond
 
 === camel-base-engine
 
-`org.apache.camel.impl.debuggerBacklogDebugger` has been splitted between an interface `org.apache.camel.spi.BacklogDebugger` and a default implementation `org.apache.camel.impl.debugger.DefaultBacklogDebugger`.
+The class `org.apache.camel.impl.DebuggerBacklogDebugger` has been refactored to an interface `org.apache.camel.spi.BacklogDebugger` and a default implementation `org.apache.camel.impl.debugger.DefaultBacklogDebugger`.
 
 === camel-main
 
 The option `camel.main.debugger` has been renamed to `camel.debug.enabled`.
+
+=== camel-management-api
+
+The `org.apache.camel.api.management.mbean.ManagedBacklogDebuggerMBean.dumpTracedMessagesAsXml(String, boolean)` has been deprecated.
+The second parameter is ignored with default implementation.
+
+To continue to have access to exchange properties, call `setIncludeExchangeProperties(true)` before messages
+are sent to have access to exchange properties.
 
 === camel-file
 

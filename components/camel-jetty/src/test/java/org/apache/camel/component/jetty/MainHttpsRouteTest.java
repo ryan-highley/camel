@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class MainHttpsRouteTest extends BaseJettyTest {
 
     public static final String NULL_VALUE_MARKER = CamelTestSupport.class.getCanonicalName();
-    protected Properties originalValues = new Properties();
+    protected final Properties originalValues = new Properties();
 
     @Override
     @BeforeEach
@@ -77,7 +77,7 @@ public class MainHttpsRouteTest extends BaseJettyTest {
 
         main.configure().addRoutesBuilder(new RouteBuilder() {
 
-            public void configure() throws URISyntaxException {
+            public void configure() {
                 Processor proc = exchange -> exchange.getMessage().setBody("<b>Hello World</b>");
                 from("jetty:https://localhost:" + port1 + "/hello").process(proc);
             }

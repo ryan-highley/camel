@@ -163,6 +163,19 @@ public interface ComponentsBuilderFactory {
         return org.apache.camel.builder.component.dsl.AwsCloudtrailComponentBuilderFactory.awsCloudtrail();
     }
     /**
+     * AWS Config Service (camel-aws-config)
+     * Manage AWS Config service.
+     * 
+     * Category: cloud,management
+     * Since: 4.3
+     * Maven coordinates: org.apache.camel:camel-aws-config
+     * 
+     * @return the dsl builder
+     */
+    static org.apache.camel.builder.component.dsl.AwsConfigComponentBuilderFactory.AwsConfigComponentBuilder awsConfig() {
+        return org.apache.camel.builder.component.dsl.AwsConfigComponentBuilderFactory.awsConfig();
+    }
+    /**
      * AWS Secrets Manager (camel-aws-secrets-manager)
      * Manage secrets using AWS Secrets Manager.
      * 
@@ -3672,7 +3685,7 @@ public interface ComponentsBuilderFactory {
      * Receive files from SMB (Server Message Block) shares.
      * 
      * Category: file
-     * Since: 4.3.0-SNAPSHOT
+     * Since: 4.3
      * Maven coordinates: org.apache.camel:camel-smb
      * 
      * @return the dsl builder

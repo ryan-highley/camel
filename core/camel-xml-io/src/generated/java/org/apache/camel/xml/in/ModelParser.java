@@ -1457,7 +1457,6 @@ public class ModelParser extends BaseParser {
                 case "callerRunsWhenRejected": def.setCallerRunsWhenRejected(val); break;
                 case "executorService": def.setExecutorService(val); break;
                 case "rejectExecution": def.setRejectExecution(val); break;
-                case "timePeriodMillis": def.setTimePeriodMillis(val); break;
                 default: return processorDefinitionAttributeHandler().accept(def, key, val);
             }
             return true;
@@ -1646,6 +1645,8 @@ public class ModelParser extends BaseParser {
     protected RegistryBeanDefinition doParseRegistryBeanDefinition() throws IOException, XmlPullParserException {
         return doParse(new RegistryBeanDefinition(), (def, key, val) -> {
             switch (key) {
+                case "builderClass": def.setBuilderClass(val); break;
+                case "builderMethod": def.setBuilderMethod(val); break;
                 case "destroyMethod": def.setDestroyMethod(val); break;
                 case "factoryBean": def.setFactoryBean(val); break;
                 case "factoryMethod": def.setFactoryMethod(val); break;
@@ -2820,6 +2821,16 @@ public class ModelParser extends BaseParser {
             return true;
         };
     }
+    protected JavaExpression doParseJavaExpression() throws IOException, XmlPullParserException {
+        return doParse(new JavaExpression(), (def, key, val) -> {
+            switch (key) {
+                case "preCompile": def.setPreCompile(val); break;
+                case "singleQuotes": def.setSingleQuotes(val); break;
+                default: return typedExpressionDefinitionAttributeHandler().accept(def, key, val);
+            }
+            return true;
+        }, noElementHandler(), expressionDefinitionValueHandler());
+    }
     protected JavaScriptExpression doParseJavaScriptExpression() throws IOException, XmlPullParserException {
         return doParse(new JavaScriptExpression(),
             typedExpressionDefinitionAttributeHandler(), noElementHandler(), expressionDefinitionValueHandler());
@@ -3484,6 +3495,7 @@ public class ModelParser extends BaseParser {
             case "groovy": return doParseGroovyExpression();
             case "header": return doParseHeaderExpression();
             case "hl7terser": return doParseHl7TerserExpression();
+            case "java": return doParseJavaExpression();
             case "js": return doParseJavaScriptExpression();
             case "joor": return doParseJoorExpression();
             case "jq": return doParseJqExpression();

@@ -83,13 +83,13 @@ public abstract class SecurityAuthenticatorSupport implements SecurityAuthentica
         StringBuilder sb = new StringBuilder();
         for (Principal p : subject.getPrincipals()) {
             if (isRoleClass(p)) {
-                if (sb.length() > 0) {
+                if (!sb.isEmpty()) {
                     sb.append(",");
                 }
                 sb.append(p.getName());
             }
         }
-        if (sb.length() > 0) {
+        if (!sb.isEmpty()) {
             return sb.toString();
         } else {
             return null;
@@ -110,7 +110,7 @@ public abstract class SecurityAuthenticatorSupport implements SecurityAuthentica
         }
 
         @Override
-        public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+        public void handle(Callback[] callbacks) {
             for (Callback callback : callbacks) {
                 LOG.trace("Callback {}", callback);
                 if (callback instanceof PasswordCallback) {

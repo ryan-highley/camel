@@ -1508,6 +1508,49 @@ public class StaticEndpointBuilders {
         return org.apache.camel.builder.endpoint.dsl.CloudtrailEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
+     * AWS Config Service (camel-aws-config)
+     * Manage AWS Config service.
+     * 
+     * Category: cloud,management
+     * Since: 4.3
+     * Maven coordinates: org.apache.camel:camel-aws-config
+     * 
+     * Syntax: <code>aws-config:label</code>
+     * 
+     * Path parameter: label (required)
+     * Logical name
+     * 
+     * @param path label
+     * @return the dsl builder
+     */
+    public static org.apache.camel.builder.endpoint.dsl.AWSConfigEndpointBuilderFactory.AWSConfigEndpointBuilder awsConfig(
+            String path) {
+        return org.apache.camel.builder.endpoint.dsl.AWSConfigEndpointBuilderFactory.endpointBuilder("aws-config", path);
+    }
+    /**
+     * AWS Config Service (camel-aws-config)
+     * Manage AWS Config service.
+     * 
+     * Category: cloud,management
+     * Since: 4.3
+     * Maven coordinates: org.apache.camel:camel-aws-config
+     * 
+     * Syntax: <code>aws-config:label</code>
+     * 
+     * Path parameter: label (required)
+     * Logical name
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path label
+     * @return the dsl builder
+     */
+    public static org.apache.camel.builder.endpoint.dsl.AWSConfigEndpointBuilderFactory.AWSConfigEndpointBuilder awsConfig(
+            String componentName,
+            String path) {
+        return org.apache.camel.builder.endpoint.dsl.AWSConfigEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
      * AWS Secrets Manager (camel-aws-secrets-manager)
      * Manage secrets using AWS Secrets Manager.
      * 
@@ -2799,10 +2842,10 @@ public class StaticEndpointBuilders {
      * Allows you to specify the name of a Language to use for evaluating the
      * message body. If there is any result from the evaluation, then the result
      * is put in the message body.
-     * There are 22 enums and the value can be one of: bean, constant, csimple,
-     * datasonnet, exchangeProperty, file, groovy, header, hl7terser, joor, jq,
-     * jsonpath, mvel, ognl, python, ref, simple, spel, tokenize, xpath, xquery,
-     * xtokenize
+     * There are 23 enums and the value can be one of: bean, constant, csimple,
+     * datasonnet, exchangeProperty, file, groovy, header, hl7terser, java,
+     * joor, jq, jsonpath, mvel, ognl, python, ref, simple, spel, tokenize,
+     * xpath, xquery, xtokenize
      * 
      * @param path command:language
      * @return the dsl builder
@@ -2829,10 +2872,10 @@ public class StaticEndpointBuilders {
      * Allows you to specify the name of a Language to use for evaluating the
      * message body. If there is any result from the evaluation, then the result
      * is put in the message body.
-     * There are 22 enums and the value can be one of: bean, constant, csimple,
-     * datasonnet, exchangeProperty, file, groovy, header, hl7terser, joor, jq,
-     * jsonpath, mvel, ognl, python, ref, simple, spel, tokenize, xpath, xquery,
-     * xtokenize
+     * There are 23 enums and the value can be one of: bean, constant, csimple,
+     * datasonnet, exchangeProperty, file, groovy, header, hl7terser, java,
+     * joor, jq, jsonpath, mvel, ognl, python, ref, simple, spel, tokenize,
+     * xpath, xquery, xtokenize
      * 
      * @param componentName to use a custom component name for the endpoint
      * instead of the default name
@@ -9368,10 +9411,10 @@ public class StaticEndpointBuilders {
      * 
      * Path parameter: languageName (required)
      * Sets the name of the language to use
-     * There are 22 enums and the value can be one of: bean, constant, csimple,
-     * datasonnet, exchangeProperty, file, groovy, header, hl7terser, joor, jq,
-     * jsonpath, mvel, ognl, ref, simple, spel, sql, tokenize, xpath, xquery,
-     * xtokenize
+     * There are 23 enums and the value can be one of: bean, constant, csimple,
+     * datasonnet, exchangeProperty, file, groovy, header, hl7terser, java,
+     * joor, jq, jsonpath, mvel, ognl, ref, simple, spel, sql, tokenize, xpath,
+     * xquery, xtokenize
      * 
      * Path parameter: resourceUri
      * Path to the resource, or a reference to lookup a bean in the Registry to
@@ -9398,10 +9441,10 @@ public class StaticEndpointBuilders {
      * 
      * Path parameter: languageName (required)
      * Sets the name of the language to use
-     * There are 22 enums and the value can be one of: bean, constant, csimple,
-     * datasonnet, exchangeProperty, file, groovy, header, hl7terser, joor, jq,
-     * jsonpath, mvel, ognl, ref, simple, spel, sql, tokenize, xpath, xquery,
-     * xtokenize
+     * There are 23 enums and the value can be one of: bean, constant, csimple,
+     * datasonnet, exchangeProperty, file, groovy, header, hl7terser, java,
+     * joor, jq, jsonpath, mvel, ognl, ref, simple, spel, sql, tokenize, xpath,
+     * xquery, xtokenize
      * 
      * Path parameter: resourceUri
      * Path to the resource, or a reference to lookup a bean in the Registry to
@@ -13029,7 +13072,7 @@ public class StaticEndpointBuilders {
      * Receive files from SMB (Server Message Block) shares.
      * 
      * Category: file
-     * Since: 4.3.0-SNAPSHOT
+     * Since: 4.3
      * Maven coordinates: org.apache.camel:camel-smb
      * 
      * Syntax: <code>smb:hostname:port/shareName</code>
@@ -13056,7 +13099,7 @@ public class StaticEndpointBuilders {
      * Receive files from SMB (Server Message Block) shares.
      * 
      * Category: file
-     * Since: 4.3.0-SNAPSHOT
+     * Since: 4.3
      * Maven coordinates: org.apache.camel:camel-smb
      * 
      * Syntax: <code>smb:hostname:port/shareName</code>

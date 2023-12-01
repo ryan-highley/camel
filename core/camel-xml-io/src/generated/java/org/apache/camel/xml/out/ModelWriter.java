@@ -822,6 +822,9 @@ public class ModelWriter extends BaseWriter {
             throws IOException {
         doWriteHl7TerserExpression("hl7terser", def);
     }
+    public void writeJavaExpression(JavaExpression def) throws IOException {
+        doWriteJavaExpression("java", def);
+    }
     public void writeJavaScriptExpression(
             JavaScriptExpression def)
             throws IOException {
@@ -2332,7 +2335,6 @@ public class ModelWriter extends BaseWriter {
             throws IOException {
         startElement(name);
         doWriteProcessorDefinitionAttributes(def);
-        doWriteAttribute("timePeriodMillis", def.getTimePeriodMillis());
         doWriteAttribute("rejectExecution", def.getRejectExecution());
         doWriteAttribute("callerRunsWhenRejected", def.getCallerRunsWhenRejected());
         doWriteAttribute("executorService", def.getExecutorService());
@@ -2583,7 +2585,9 @@ public class ModelWriter extends BaseWriter {
         doWriteAttribute("factoryMethod", def.getFactoryMethod());
         doWriteAttribute("initMethod", def.getInitMethod());
         doWriteAttribute("scriptLanguage", def.getScriptLanguage());
+        doWriteAttribute("builderClass", def.getBuilderClass());
         doWriteAttribute("name", def.getName());
+        doWriteAttribute("builderMethod", def.getBuilderMethod());
         doWriteAttribute("destroyMethod", def.getDestroyMethod());
         doWriteAttribute("type", def.getType());
         doWriteAttribute("factoryBean", def.getFactoryBean());
@@ -3882,6 +3886,17 @@ public class ModelWriter extends BaseWriter {
         doWriteValue(def.getExpression());
         endElement(name);
     }
+    protected void doWriteJavaExpression(
+            String name,
+            JavaExpression def)
+            throws IOException {
+        startElement(name);
+        doWriteTypedExpressionDefinitionAttributes(def);
+        doWriteAttribute("preCompile", def.getPreCompile());
+        doWriteAttribute("singleQuotes", def.getSingleQuotes());
+        doWriteValue(def.getExpression());
+        endElement(name);
+    }
     protected void doWriteJavaScriptExpression(
             String name,
             JavaScriptExpression def)
@@ -4976,6 +4991,7 @@ public class ModelWriter extends BaseWriter {
                 case "GroovyExpression" -> doWriteGroovyExpression("groovy", (GroovyExpression) v);
                 case "HeaderExpression" -> doWriteHeaderExpression("header", (HeaderExpression) v);
                 case "Hl7TerserExpression" -> doWriteHl7TerserExpression("hl7terser", (Hl7TerserExpression) v);
+                case "JavaExpression" -> doWriteJavaExpression("java", (JavaExpression) v);
                 case "JavaScriptExpression" -> doWriteJavaScriptExpression("js", (JavaScriptExpression) v);
                 case "JoorExpression" -> doWriteJoorExpression("joor", (JoorExpression) v);
                 case "JqExpression" -> doWriteJqExpression("jq", (JqExpression) v);
