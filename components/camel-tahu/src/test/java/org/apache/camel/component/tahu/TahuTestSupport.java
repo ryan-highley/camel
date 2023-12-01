@@ -47,4 +47,9 @@ public abstract class TahuTestSupport implements CamelTestSupportHelper, Configu
     }
 
     protected abstract RouteBuilder createRouteBuilder();
+
+    @Override
+    public CamelContextExtension getCamelContextExtension() {
+        return camelContextExtension;
+    }
 }

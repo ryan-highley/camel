@@ -35,6 +35,7 @@ import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.DefaultEndpoint;
 import org.apache.camel.support.DefaultHeaderFilterStrategy;
 import org.apache.camel.util.ObjectHelper;
+import org.eclipse.tahu.message.BdSeqManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -43,7 +44,8 @@ import org.slf4j.MarkerFactory;
 /**
  * Sparkplug B Edge Node and Host Application support over MQTT using Eclipse Tahu
  */
-@UriEndpoint(firstVersion = "4.0.0", scheme = TahuConstants.BASE_SCHEME,
+@UriEndpoint(firstVersion = "4.0.0",
+             scheme = TahuConstants.BASE_SCHEME,
              title = "Tahu",
              syntax = TahuConstants.DEVICE_ENDPOINT_URI_SYNTAX,
              alternativeSyntax = TahuConstants.HOST_APP_ENDPOINT_URI_SYNTAX,
@@ -80,11 +82,10 @@ public class TahuEndpoint extends DefaultEndpoint implements HeaderFilterStrateg
                             + "' character, meaning commas are allowed in metric names but NOT edge node or device IDs. The edge node ID and device IDs can be intermixed in the list to support configuring the same metric name and data type across both the edge node and devices.",
               prefix = "metric.", multiValue = true,
               enums = "Int8,Int16,Int32,Int64,UInt8,UInt16,UInt32,UInt64,Float,Double,Boolean,"
-                      +
-                      "String,DateTime,Text,UUID,DataSet,Bytes,File,Template,Int8Array," +
-                      "Int16Array,Int32Array,Int64Array,UInt8Array,UInt16Array,UInt32Array," +
-                      "UInt64Array,FloatArray,DoubleArray,BooleanArray,StringArray," +
-                      "DateTimeArray,Unknown")
+                      + "String,DateTime,Text,UUID,DataSet,Bytes,File,Template,Int8Array,"
+                      + "Int16Array,Int32Array,Int64Array,UInt8Array,UInt16Array,UInt32Array,"
+                      + "UInt64Array,FloatArray,DoubleArray,BooleanArray,StringArray,"
+                      + "DateTimeArray,Unknown")
     @Metadata(applicableFor = TahuConstants.EDGE_NODE_SCHEME)
     private Map<String, Object> metricDataTypes = Map.of();
 
@@ -102,6 +103,11 @@ public class TahuEndpoint extends DefaultEndpoint implements HeaderFilterStrateg
                                  + TahuConstants.METRIC_HEADER_PREFIX + "\", including those with null values")
     @Metadata(applicableFor = { TahuConstants.EDGE_NODE_SCHEME, TahuConstants.DEVICE_SCHEME })
     private volatile HeaderFilterStrategy headerFilterStrategy;
+
+    @UriParam(label = "producer,advanced",
+              description = "To use a specific org.eclipse.tahu.message.BdSeqManager implementation to manage edge node birth-death sequence numbers",
+              defaultValue = "org.apache.camel.component.tahu.CamelBdSeqManager")
+    private volatile BdSeqManager bdSeqManager;
 
     private Map<String, Map<String, Object>> metricDataTypeMap = Map.of();
 
@@ -263,6 +269,14 @@ public class TahuEndpoint extends DefaultEndpoint implements HeaderFilterStrateg
 
     public void setUseAliases(boolean useAliases) {
         this.useAliases = useAliases;
+    }
+
+    public BdSeqManager getBdSeqManager() {
+        return bdSeqManager;
+    }
+
+    public void setBdSeqManager(BdSeqManager bdSeqManager) {
+        this.bdSeqManager = bdSeqManager;
     }
 
     public Map<String, Map<String, Object>> getMetricDataTypeMap() {

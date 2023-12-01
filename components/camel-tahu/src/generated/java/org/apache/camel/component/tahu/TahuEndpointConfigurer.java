@@ -21,8 +21,12 @@ public class TahuEndpointConfigurer extends PropertyConfigurerSupport implements
     public boolean configure(CamelContext camelContext, Object obj, String name, Object value, boolean ignoreCase) {
         TahuEndpoint target = (TahuEndpoint) obj;
         switch (ignoreCase ? name.toLowerCase() : name) {
+        case "bdseqmanager":
+        case "bdSeqManager": target.setBdSeqManager(property(camelContext, org.eclipse.tahu.message.BdSeqManager.class, value)); return true;
         case "bridgeerrorhandler":
         case "bridgeErrorHandler": target.setBridgeErrorHandler(property(camelContext, boolean.class, value)); return true;
+        case "checkclientidlength":
+        case "checkClientIdLength": target.getConfiguration().setCheckClientIdLength(property(camelContext, boolean.class, value)); return true;
         case "clientid":
         case "clientId": target.getConfiguration().setClientId(property(camelContext, java.lang.String.class, value)); return true;
         case "exceptionhandler":
@@ -55,8 +59,12 @@ public class TahuEndpointConfigurer extends PropertyConfigurerSupport implements
     @Override
     public Class<?> getOptionType(String name, boolean ignoreCase) {
         switch (ignoreCase ? name.toLowerCase() : name) {
+        case "bdseqmanager":
+        case "bdSeqManager": return org.eclipse.tahu.message.BdSeqManager.class;
         case "bridgeerrorhandler":
         case "bridgeErrorHandler": return boolean.class;
+        case "checkclientidlength":
+        case "checkClientIdLength": return boolean.class;
         case "clientid":
         case "clientId": return java.lang.String.class;
         case "exceptionhandler":
@@ -90,8 +98,12 @@ public class TahuEndpointConfigurer extends PropertyConfigurerSupport implements
     public Object getOptionValue(Object obj, String name, boolean ignoreCase) {
         TahuEndpoint target = (TahuEndpoint) obj;
         switch (ignoreCase ? name.toLowerCase() : name) {
+        case "bdseqmanager":
+        case "bdSeqManager": return target.getBdSeqManager();
         case "bridgeerrorhandler":
         case "bridgeErrorHandler": return target.isBridgeErrorHandler();
+        case "checkclientidlength":
+        case "checkClientIdLength": return target.getConfiguration().isCheckClientIdLength();
         case "clientid":
         case "clientId": return target.getConfiguration().getClientId();
         case "exceptionhandler":

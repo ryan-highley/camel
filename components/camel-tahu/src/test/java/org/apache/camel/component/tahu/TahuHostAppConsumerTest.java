@@ -16,6 +16,7 @@
  */
 package org.apache.camel.component.tahu;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,8 +29,12 @@ import org.apache.camel.Processor;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.direct.DirectEndpoint;
+import org.apache.camel.component.log.LogEndpoint;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.infra.core.CamelContextExtension;
+import org.apache.camel.component.paho.PahoComponent;
+import org.apache.camel.component.paho.PahoConfiguration;
+import org.apache.camel.component.paho.PahoEndpoint;
+import org.apache.camel.component.paho.PahoPersistence;
 import org.apache.camel.test.infra.core.annotations.ContextFixture;
 import org.eclipse.tahu.edge.sim.DataSimulator;
 import org.eclipse.tahu.edge.sim.RandomDataSimulator;
@@ -52,8 +57,8 @@ public class TahuHostAppConsumerTest extends TahuTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(TahuHostAppConsumerTest.class);
 
-    @EndpointInject("mock:result")
-    MockEndpoint mock;
+    @EndpointInject("mock:sparkplug-tck-result")
+    MockEndpoint sparkplugTckResultEndpoint;
 
     @EndpointInject("direct:node-birth")
     DirectEndpoint nodeBirthEndpoint;
@@ -67,21 +72,34 @@ public class TahuHostAppConsumerTest extends TahuTestSupport {
     @EndpointInject("direct:device-data")
     DirectEndpoint deviceDataEndpoint;
 
+    @EndpointInject("paho:SPARKPLUG_TCK/TEST_CONTROL")
+    PahoEndpoint testControlEndpoint;
+
+    @EndpointInject("log:org.apache.camel.component.tahu.TahuEdgeNodePublisherTest?showAll=true&multiline=true&level=DEBUG&skipBodyLineSeparator=false")
+    LogEndpoint logEndpoint;
+
     private ProducerTemplate template;
-    private TahuComponent tahuComponent;
 
     @ContextFixture
     public void configureContext(CamelContext context) {
 
+        final String containerAddress = service.getMqttHostAddress();
+
         TahuConfiguration tahuConfig = new TahuConfiguration();
 
-        // tahuConfig.setServers("TahuHostAppConsumerTestServer:tcp://" + service.getMqttHostAddress());
+        tahuConfig.setServers("Mqtt Server One:" + containerAddress);
+        tahuConfig.setClientId("Tahu_Host_Application");
+        tahuConfig.setCheckClientIdLength(false);
         tahuConfig.setUsername("admin");
         tahuConfig.setPassword("changeme");
 
-        tahuComponent = context.getComponent("tahu", TahuComponent.class);
+        TahuComponent tahuComponent = context.getComponent("tahu", TahuComponent.class);
         tahuComponent.setConfiguration(tahuConfig);
 
+        PahoComponent pahoComponent = context.getComponent("paho", PahoComponent.class);
+        PahoConfiguration pahoConfiguration = pahoComponent.getConfiguration();
+        pahoConfiguration.setBrokerUrl(containerAddress);
+        pahoConfiguration.setPersistence(PahoPersistence.MEMORY);
     }
 
     @BeforeEach
@@ -91,11 +109,11 @@ public class TahuHostAppConsumerTest extends TahuTestSupport {
 
     @Test
     public void testNodeBirth() throws Exception {
-        mock.expectedMessageCount(1);
+        sparkplugTckResultEndpoint.expectedMessageCount(1);
 
         template.sendBody(nodeBirthEndpoint, null);
 
-        mock.assertIsSatisfied();
+        sparkplugTckResultEndpoint.assertIsSatisfied();
     }
 
     @Override
@@ -108,14 +126,12 @@ public class TahuHostAppConsumerTest extends TahuTestSupport {
             @Override
             public void configure() throws Exception {
 
-                TahuEndpoint tahuHostAppEndpoint = getCamelContext().getEndpoint(
-                        "tahu:CamelHostApp?clientId=TestConsumerId", TahuEndpoint.class);
+                TahuEndpoint tahuHostAppEndpoint = getCamelContext().getEndpoint("tahu:IamHost", TahuEndpoint.class);
 
-                TahuEndpoint tahuEdgeNodeEndpoint
-                        = getCamelContext().getEndpoint("tahu:CamelGroup/Node1?clientId=TestProducerId", TahuEndpoint.class);
+                TahuEndpoint tahuEdgeNodeEndpoint = getCamelContext().getEndpoint("tahu:G2/E2?clientId=TestProducerId",
+                        TahuEndpoint.class);
 
-                TahuEndpoint tahuDeviceEndpoint
-                        = getCamelContext().getEndpoint("tahu:CamelGroup/Node1/Device1", TahuEndpoint.class);
+                TahuEndpoint tahuDeviceEndpoint = getCamelContext().getEndpoint("tahu:G2/E2/D2", TahuEndpoint.class);
 
                 edgeNodeDescriptor
                         = new EdgeNodeDescriptor(tahuEdgeNodeEndpoint.getGroupId(), tahuEdgeNodeEndpoint.getEdgeNode());
@@ -149,29 +165,45 @@ public class TahuHostAppConsumerTest extends TahuTestSupport {
                 tahuEdgeNodeEndpoint.setMetricDataTypes(Map.copyOf(metricDataTypes));
 
                 from(tahuHostAppEndpoint)
-                        .to("log:host-app?showAll=true&multiline=true")
-                        .to(mock);
+                        .to(logEndpoint)
+                        .to(sparkplugTckResultEndpoint);
 
                 from(nodeBirthEndpoint)
-                        .process((exch) -> processPayload(exch, nBirthPayload))
-                        .to("log:node-birth?showAll=true&multiline=true")
+                        .id("node-birth-test-route")
+                        .process((exch) -> processPayload(exch, "NBIRTH", nBirthPayload))
+                        .to(logEndpoint)
                         .to(tahuEdgeNodeEndpoint);
 
                 from(nodeDataEndpoint)
+                        .id("node-data-test-route")
                         .process(getNodeDataPayload)
                         .to(tahuEdgeNodeEndpoint);
 
                 from(deviceBirthEndpoint)
-                        .process((exch) -> processPayload(exch, dBirthPayload))
+                        .id("device-birth-test-route")
+                        .process((exch) -> processPayload(exch, "DBIRTH", dBirthPayload))
                         .to(tahuDeviceEndpoint);
 
                 from(deviceDataEndpoint)
+                        .id("device-data-test-route")
                         .process(getDeviceDataPayload)
                         .to(tahuDeviceEndpoint);
+
+                from("paho:SPARKPLUG_TCK/RESULT")
+                        .id("sparkplug-tck-result-route")
+                        .convertBodyTo(String.class, StandardCharsets.UTF_8.name())
+                        .to(logEndpoint)
+                        .to(sparkplugTckResultEndpoint);
+
             }
 
-            private void processPayload(Exchange exch, SparkplugBPayload payload) {
+            private void processPayload(Exchange exch, String messageType, SparkplugBPayload payload) {
                 Message message = exch.getMessage();
+
+                message.setHeader(TahuConstants.MESSAGE_TYPE, messageType);
+                message.setHeader(TahuConstants.MESSAGE_UUID, payload.getUuid());
+                message.setHeader(TahuConstants.MESSAGE_TIMESTAMP, payload.getTimestamp());
+                message.setHeader(TahuConstants.MESSAGE_SEQUENCE_NUMBER, payload.getSeq());
 
                 payload.getMetrics().forEach(m -> {
                     message.setHeader(TahuConstants.METRIC_HEADER_PREFIX + m.getName(), m.getValue());
@@ -181,19 +213,14 @@ public class TahuHostAppConsumerTest extends TahuTestSupport {
             }
 
             private Processor getNodeDataPayload = (exch) -> {
-                processPayload(exch, dataSimulator.getNodeDataPayload(edgeNodeDescriptor));
+                processPayload(exch, "NDATA", dataSimulator.getNodeDataPayload(edgeNodeDescriptor));
             };
 
             private Processor getDeviceDataPayload = (exch) -> {
-                processPayload(exch, dataSimulator.getDeviceDataPayload(deviceDescriptor));
+                processPayload(exch, "DDATA", dataSimulator.getDeviceDataPayload(deviceDescriptor));
             };
 
         };
-    }
-
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
     }
 
 }

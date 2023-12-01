@@ -205,14 +205,12 @@ public class TahuHostAppHandler extends ServiceSupport implements HostApplicatio
 
     @Override
     public void onConnect() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'onConnect'");
+        LOG.trace(loggingMarker, "HostApplicationEventHandler onConnect...");
     }
 
     @Override
     public void onDisconnect() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'onDisconnect'");
+        LOG.trace(loggingMarker, "HostApplicationEventHandler onDisconnect...");
     }
 
 }

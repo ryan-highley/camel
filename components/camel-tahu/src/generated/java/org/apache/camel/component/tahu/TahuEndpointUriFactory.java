@@ -21,8 +21,10 @@ public class TahuEndpointUriFactory extends org.apache.camel.support.component.E
     private static final Set<String> SECRET_PROPERTY_NAMES;
     private static final Set<String> MULTI_VALUE_PREFIXES;
     static {
-        Set<String> props = new HashSet<>(19);
+        Set<String> props = new HashSet<>(21);
+        props.add("bdSeqManager");
         props.add("bridgeErrorHandler");
+        props.add("checkClientIdLength");
         props.add("clientId");
         props.add("deviceId");
         props.add("edgeNode");

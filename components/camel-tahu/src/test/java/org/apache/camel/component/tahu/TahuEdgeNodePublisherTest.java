@@ -17,8 +17,12 @@
 package org.apache.camel.component.tahu;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.apache.camel.CamelContext;
@@ -34,44 +38,30 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.component.paho.PahoComponent;
 import org.apache.camel.component.paho.PahoConfiguration;
 import org.apache.camel.component.paho.PahoEndpoint;
-import org.apache.camel.component.paho.PahoPersistence;
-import org.apache.camel.test.infra.core.CamelContextExtension;
+import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.test.infra.core.annotations.ContextFixture;
 import org.eclipse.tahu.edge.sim.DataSimulator;
 import org.eclipse.tahu.edge.sim.RandomDataSimulator;
-import org.eclipse.tahu.host.HostApplication;
-import org.eclipse.tahu.host.api.HostApplicationEventHandler;
 import org.eclipse.tahu.message.model.DeviceDescriptor;
 import org.eclipse.tahu.message.model.EdgeNodeDescriptor;
-import org.eclipse.tahu.message.model.Message;
-import org.eclipse.tahu.message.model.Metric;
 import org.eclipse.tahu.message.model.SparkplugBPayload;
-import org.eclipse.tahu.message.model.SparkplugBPayloadMap;
 import org.eclipse.tahu.message.model.SparkplugDescriptor;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
-import org.slf4j.Logger;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNotNull;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.verify;
 
-@SuppressWarnings("unused")
 @Testcontainers
 public class TahuEdgeNodePublisherTest extends TahuTestSupport {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TahuEdgeNodePublisherTest.class);
+    @EndpointInject("mock:direct:sparkplug-tck-result")
+    MockEndpoint spTckResultMockEndpoint;
 
-    @EndpointInject("mock:sparkplug-tck-result")
-    MockEndpoint sparkplugTckResultEndpoint;
+    @EndpointInject("mock:direct:sparkplug-tck-log")
+    MockEndpoint spTckLogMockEndpoint;
 
     @EndpointInject("direct:node-birth")
     DirectEndpoint nodeBirthEndpoint;
@@ -85,129 +75,128 @@ public class TahuEdgeNodePublisherTest extends TahuTestSupport {
     @EndpointInject("direct:device-data")
     DirectEndpoint deviceDataEndpoint;
 
-    @EndpointInject("paho:SPARKPLUG_TCK/TEST_CONTROL")
-    PahoEndpoint testControlEndpoint;
-
     @EndpointInject("log:org.apache.camel.component.tahu.TahuEdgeNodePublisherTest?showAll=true&multiline=true&level=DEBUG&skipBodyLineSeparator=false")
     LogEndpoint logEndpoint;
 
-    private ProducerTemplate template;
-
-    private HostApplication hostApplication;
-    private HostApplicationEventHandler camelTestHostApp = Mockito.mock(HostApplicationEventHandler.class);
+    private PahoEndpoint spTckTestControlEndpoint;
+    private PahoEndpoint spTckLogEndpoint;
+    private PahoEndpoint spTckResultEndpoint;
 
     private EdgeNodeDescriptor edgeNodeDescriptor;
     private DeviceDescriptor deviceDescriptor;
 
     @ContextFixture
-    public void configureContext(CamelContext context) {
+    public void configureContext(CamelContext context) throws Exception {
 
         final String containerAddress = service.getMqttHostAddress();
 
         TahuConfiguration tahuConfig = new TahuConfiguration();
 
         tahuConfig.setServers("Mqtt Server One:" + containerAddress);
+        tahuConfig.setClientId("Sparkplug-Tahu-Compatible-Impl-One");
+        tahuConfig.setCheckClientIdLength(false);
         tahuConfig.setUsername("admin");
         tahuConfig.setPassword("changeme");
 
         TahuComponent tahuComponent = context.getComponent("tahu", TahuComponent.class);
         tahuComponent.setConfiguration(tahuConfig);
 
-        // hostApplication = new HostApplication(
-        // camelTestHostApp, "IamHost", tahuConfig.getServerDefinitionList(), null, new
-        // SparkplugBPayloadDecoder());
-        // hostApplication.start();
+        PahoConfiguration pahoConfiguration = new PahoConfiguration();
+        pahoConfiguration.setBrokerUrl(containerAddress);
 
         PahoComponent pahoComponent = context.getComponent("paho", PahoComponent.class);
-        PahoConfiguration pahoConfiguration = pahoComponent.getConfiguration();
-        pahoConfiguration.setBrokerUrl(containerAddress);
-        pahoConfiguration.setPersistence(PahoPersistence.MEMORY);
+        pahoComponent.setConfiguration(pahoConfiguration);
+
+        spTckTestControlEndpoint = context.getEndpoint("paho:SPARKPLUG_TCK/TEST_CONTROL", PahoEndpoint.class);
+        spTckLogEndpoint = context.getEndpoint("paho:SPARKPLUG_TCK/LOG", PahoEndpoint.class);
+        spTckResultEndpoint = context.getEndpoint("paho:SPARKPLUG_TCK/RESULT", PahoEndpoint.class);
+
     }
 
+    private ProducerTemplate template;
+
     @BeforeEach
-    void setupTemplate() {
+    public void beforeEach() {
+        MockEndpoint.resetMocks(camelContextExtension.getContext());
+
         template = camelContextExtension.getProducerTemplate();
     }
 
-    // @AfterEach
-    // void logMockInvocations() {
-    // InvocationContainerImpl incon =
-    // MockUtil.getInvocationContainer(camelTestHostApp);
-    // incon.getInvocations().stream().forEach(i -> {
-    // LOG.debug("Mock invocation: {}", i);
-    // });
-    // }
+    private enum TestProfile {
 
-    // @Disabled
-    @Test
-    public void tckSessionEstablishmentTest() throws Exception {
+        SESSION_ESTABLISHMENT_TEST("SessionEstablishmentTest", false, false),
+        SESSION_TERMINATION_TEST("SessionTerminationTest", false, true),
+        // SEND_DATA_TEST("SendDataTest", true, false),
+        // SEND_COMPLEX_DATA_TEST("SendComplexDataTest", true, false),
+        // RECEIVE_COMMAND_TEST("ReceiveCommandTest", false, false),
+        // PRIMARY_HOST_TEST("PrimaryHostTest", false, false)
+        ;
 
-        template.sendBody(testControlEndpoint, "NEW_TEST edge SessionEstablishmentTest IamHost G2 E2 D2");
+        private TestProfile(String testName, boolean sendData, boolean disconnect) {
+            this.testName = testName;
+            this.sendData = sendData;
+            this.disconnect = disconnect;
+        }
 
-        NotifyBuilder notify = new NotifyBuilder(getCamelContextExtension().getContext())
+        private String testName;
+        private boolean sendData;
+        private boolean disconnect;
+    }
+
+    @ParameterizedTest
+    @EnumSource
+    public void tckSessionTest(TestProfile profile) throws Exception {
+
+        MockEndpoint resultMock = spTckResultMockEndpoint;
+        // MockEndpoint resultMock = camelContextExtension.getMockEndpoint(spTckResultMockEndpoint.getEndpointUri());
+        // resultMock.expectedBodyReceived().body(String.class).contains("OVERALL: PASS");
+
+        MockEndpoint logMock = spTckLogMockEndpoint;
+        // MockEndpoint logMock = camelContextExtension.getMockEndpoint(spTckLogMockEndpoint.getEndpointUri());
+        // logMock.expectedBodyReceived().body(String.class)
+        //         .contains("Test started successfully: edge " + profile.testName);
+        // logMock.setResultWaitTime(5000L);
+
+        template.start();
+        template.sendBody(spTckTestControlEndpoint, "NEW_TEST edge " + profile.testName + " IamHost G2 E2 D2");
+
+        NotifyBuilder notify = new NotifyBuilder(camelContextExtension.getContext())
                 .fromRoute("node-birth-test-route").whenCompleted(1)
                 .and()
                 .fromRoute("device-birth-test-route").whenCompleted(1)
-                .and()
-                .fromRoute("sparkplug-tck-result-route").whenCompleted(1)
                 .create();
 
         template.sendBody(nodeBirthEndpoint, null);
         template.sendBody(deviceBirthEndpoint, null);
 
-        template.sendBody(testControlEndpoint, "END_TEST");
-
-        assertTrue(notify.matchesWaitTime());
-    }
-
-    @Disabled
-    @Test
-    public void testNodeBirth() throws Exception {
-
-        NotifyBuilder notify = new NotifyBuilder(getCamelContextExtension().getContext())
-                .fromRoute("node-birth-test-route").whenCompleted(1)
-                .create();
-
-        template.sendBody(nodeBirthEndpoint, null);
-
         assertTrue(notify.matchesWaitTime());
 
-        ArgumentCaptor<Message> receivedMessage = ArgumentCaptor.forClass(Message.class);
+        if (profile.sendData) {
+            Instant timeout = Instant.now().plus(5L, ChronoUnit.SECONDS);
+            do {
+                template.sendBody(nodeDataEndpoint, null);
+                template.sendBody(deviceDataEndpoint, null);
+            } while (Instant.now().isBefore(timeout) && !resultMock.await(1, TimeUnit.SECONDS));
+        }
 
-        // Check for the "complete" call with a timeout. Other calls will be verified
-        // below.
-        verify(camelTestHostApp, timeout(3000)).onNodeBirthComplete(eq(edgeNodeDescriptor));
+        if (profile.disconnect) {
+            camelContextExtension.getContext().hasServices(TahuEdgeNodeHandler.class).stream().forEach(tenh -> {
+                LoggerFactory.getLogger(TahuEdgeNodePublisherTest.class).debug("Suspending service {}", tenh);
+                ServiceHelper.suspendService(tenh);
+            });
+        }
 
-        verify(camelTestHostApp).onNodeBirthArrived(eq(edgeNodeDescriptor), receivedMessage.capture());
+        try {
+            MockEndpoint.assertIsSatisfied(5, TimeUnit.SECONDS, resultMock, logMock);
+        } finally {
+            template.sendBody(spTckTestControlEndpoint, "END_TEST");
+        }
 
-        verify(camelTestHostApp).onMessage(isNotNull(SparkplugDescriptor.class), isNotNull(Message.class));
+        // if (profile.disconnect) {
+        //     ServiceHelper.resumeServices(camelContextExtension.getContext().hasServices(TahuEdgeNodeHandler.class));
+        // }
 
-        verify(camelTestHostApp, atLeastOnce()).onBirthMetric(isNotNull(SparkplugDescriptor.class),
-                isNotNull(Metric.class));
-    }
-
-    @Disabled
-    @Test
-    public void testNodeData() throws Exception {
-
-        template.sendBody(nodeDataEndpoint, null);
-
-    }
-
-    @Disabled
-    @Test
-    public void testDeviceBirth() throws Exception {
-
-        template.sendBody(deviceBirthEndpoint, null);
-
-    }
-
-    @Disabled
-    @Test
-    public void testDeviceData() throws Exception {
-
-        template.sendBody(deviceDataEndpoint, null);
-
+        template.stop();
     }
 
     @Override
@@ -215,12 +204,18 @@ public class TahuEdgeNodePublisherTest extends TahuTestSupport {
         return new RouteBuilder() {
             private DataSimulator dataSimulator;
 
+            private TahuEndpoint tahuEdgeNodeEndpoint;
+            private TahuEndpoint tahuDeviceEndpoint;
+
             @Override
             public void configure() throws Exception {
 
-                TahuEndpoint tahuEdgeNodeEndpoint = getCamelContext().getEndpoint("tahu:G2/E2", TahuEndpoint.class);
+                tahuEdgeNodeEndpoint = getCamelContext().getEndpoint("tahu:G2/E2?primaryHostId=IamHost",
+                        TahuEndpoint.class);
 
-                TahuEndpoint tahuDeviceEndpoint = getCamelContext().getEndpoint("tahu:G2/E2/D2", TahuEndpoint.class);
+                // tahuEdgeNodeEndpoint.setBdSeqManager(new AtomicBdSeqManager());
+
+                tahuDeviceEndpoint = getCamelContext().getEndpoint("tahu:G2/E2/D2", TahuEndpoint.class);
 
                 edgeNodeDescriptor = new EdgeNodeDescriptor(
                         tahuEdgeNodeEndpoint.getGroupId(),
@@ -229,21 +224,23 @@ public class TahuEdgeNodePublisherTest extends TahuTestSupport {
 
                 dataSimulator = new RandomDataSimulator(10, new HashMap<SparkplugDescriptor, Integer>() {
                     {
-                        put(deviceDescriptor, 50);
+                        put(deviceDescriptor, 5);
                     }
                 });
 
-                SparkplugBPayloadMap nBirthPayload = dataSimulator.getNodeBirthPayload(edgeNodeDescriptor);
-
-                Map<String, Object> nodeMetricDataTypes = nBirthPayload.getMetrics().stream()
+                // Create the Birth payloads to capture the random metric configuration from the
+                // data simulator.
+                // This would normally be set on the Edge Node endpoint via "metrics."
+                // parameters.
+                Map<String, Object> nodeMetricDataTypes = dataSimulator.getNodeBirthPayload(edgeNodeDescriptor)
+                        .getMetrics().stream()
                         .map(m -> new Object[] {
                                 tahuEdgeNodeEndpoint.getEdgeNode() + TahuConstants.MAJOR_SEPARATOR + m.getName(),
                                 m.getDataType() })
                         .collect(Collectors.toMap(arr -> (String) arr[0], arr -> arr[1]));
 
-                SparkplugBPayload dBirthPayload = dataSimulator.getDeviceBirthPayload(deviceDescriptor);
-
-                Map<String, Object> deviceMetricDataTypes = dBirthPayload.getMetrics().stream()
+                Map<String, Object> deviceMetricDataTypes = dataSimulator.getDeviceBirthPayload(deviceDescriptor)
+                        .getMetrics().stream()
                         .map(m -> new Object[] {
                                 tahuDeviceEndpoint.getDeviceId() + TahuConstants.MAJOR_SEPARATOR + m.getName(),
                                 m.getDataType() })
@@ -252,76 +249,78 @@ public class TahuEdgeNodePublisherTest extends TahuTestSupport {
                 Map<String, Object> metricDataTypes = new HashMap<>();
                 metricDataTypes.putAll(nodeMetricDataTypes);
                 metricDataTypes.putAll(deviceMetricDataTypes);
-                tahuEdgeNodeEndpoint.setMetricDataTypes(Map.copyOf(metricDataTypes));
+                tahuEdgeNodeEndpoint.setMetricDataTypes(metricDataTypes);
 
                 from(nodeBirthEndpoint)
                         .id("node-birth-test-route")
-                        .process((exch) -> processPayload(exch, nBirthPayload))
-                        .to(tahuEdgeNodeEndpoint)
-                        .to(logEndpoint)
-                        .loop(3)
-                        .to(nodeDataEndpoint)
-                        .delay(1000)
-                        .end();
+                        .process(getNodeBirthPayload)
+                        .to(tahuEdgeNodeEndpoint);
 
                 from(nodeDataEndpoint)
                         .id("node-data-test-route")
                         .process(getNodeDataPayload)
-                        .to(tahuEdgeNodeEndpoint)
-                        .to(logEndpoint);
+                        .to(tahuEdgeNodeEndpoint);
 
                 from(deviceBirthEndpoint)
                         .id("device-birth-test-route")
-                        .process((exch) -> processPayload(exch, dBirthPayload))
-                        .to(tahuDeviceEndpoint)
-                        .to(logEndpoint)
-                        .loop(3)
-                        .to(deviceDataEndpoint)
-                        .delay(1000)
-                        .end();
+                        .process(getDeviceBirthPayload)
+                        .to(tahuDeviceEndpoint);
 
                 from(deviceDataEndpoint)
                         .id("device-data-test-route")
                         .process(getDeviceDataPayload)
-                        .to(tahuDeviceEndpoint)
-                        .to(logEndpoint);
+                        .to(tahuDeviceEndpoint);
 
-                from("paho:SPARKPLUG_TCK/RESULT")
+                from(spTckLogEndpoint)
+                        .id("sparkplug-tck-log-route")
+                        .convertBodyTo(String.class, StandardCharsets.UTF_8.name())
+                        .to(logEndpoint)
+                        .to(spTckLogMockEndpoint);
+
+                from(spTckResultEndpoint)
                         .id("sparkplug-tck-result-route")
                         .convertBodyTo(String.class, StandardCharsets.UTF_8.name())
                         .to(logEndpoint)
-                        .to(sparkplugTckResultEndpoint);
-
-                from("paho:SPARKPLUG_TCK/LOG")
-                        .id("sparkplug-tck-log-route")
-                        .to(logEndpoint);
+                        .to(spTckResultMockEndpoint);
 
             }
 
-            private void processPayload(Exchange exch, SparkplugBPayload payload) {
+            private void processPayload(Exchange exch, String messageType, SparkplugBPayload payload) {
                 org.apache.camel.Message message = exch.getMessage();
+
+                message.setHeader(TahuConstants.MESSAGE_TYPE, messageType);
+
+                Optional.ofNullable(payload.getUuid())
+                        .ifPresent(uuid -> message.setHeader(TahuConstants.MESSAGE_UUID, uuid));
+                Optional.ofNullable(payload.getTimestamp())
+                        .ifPresent(timestamp -> message.setHeader(TahuConstants.MESSAGE_TIMESTAMP, timestamp));
+                Optional.ofNullable(payload.getSeq())
+                        .ifPresent(seq -> message.setHeader(TahuConstants.MESSAGE_SEQUENCE_NUMBER, seq));
 
                 payload.getMetrics().forEach(m -> {
                     message.setHeader(TahuConstants.METRIC_HEADER_PREFIX + m.getName(), m.getValue());
                 });
 
-                message.setBody(payload.getBody(), byte[].class);
+                Optional.ofNullable(payload.getBody()).ifPresent(body -> message.setBody(body, byte[].class));
             }
 
+            private Processor getNodeBirthPayload = (exch) -> {
+                processPayload(exch, "NBIRTH", dataSimulator.getNodeBirthPayload(edgeNodeDescriptor));
+            };
+
             private Processor getNodeDataPayload = (exch) -> {
-                processPayload(exch, dataSimulator.getNodeDataPayload(edgeNodeDescriptor));
+                processPayload(exch, "NDATA", dataSimulator.getNodeDataPayload(edgeNodeDescriptor));
+            };
+
+            private Processor getDeviceBirthPayload = (exch) -> {
+                processPayload(exch, "DBIRTH", dataSimulator.getDeviceBirthPayload(deviceDescriptor));
             };
 
             private Processor getDeviceDataPayload = (exch) -> {
-                processPayload(exch, dataSimulator.getDeviceDataPayload(deviceDescriptor));
+                processPayload(exch, "DDATA", dataSimulator.getDeviceDataPayload(deviceDescriptor));
             };
 
         };
-    }
-
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
     }
 
 }

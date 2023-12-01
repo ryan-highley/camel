@@ -46,6 +46,10 @@ public class TahuConfiguration implements Cloneable {
               defaultValueNote = "If neither the clientId parameter nor an MqttClientId defined for an MQTT Server, a random MQTT Client ID will be generated, prefaced with \"Camel\"")
     private String clientId;
 
+    @UriParam(label = "common",
+              description = "MQTT client ID length check enabled", defaultValue = "true")
+    private boolean checkClientIdLength = true;
+
     @UriParam(label = "security", description = "Username for MQTT server authentication", secret = true)
     private String username;
 
@@ -102,7 +106,7 @@ public class TahuConfiguration implements Cloneable {
 
             clientId = Stream.of(clientId, this.clientId).filter(ObjectHelper::isNotEmpty).findFirst()
                     .orElse(MqttClientId.generate("Camel"));
-            MqttClientId mqttClientId = new MqttClientId(clientId, true);
+            MqttClientId mqttClientId = new MqttClientId(clientId, checkClientIdLength);
 
             return new MqttServerDefinition(
                     mqttServerName, mqttClientId, new MqttServerUrl(serverUrl), username, password, keepAliveTimeout,
@@ -118,6 +122,14 @@ public class TahuConfiguration implements Cloneable {
 
     public void setClientId(String clientId) {
         this.clientId = clientId;
+    }
+
+    public boolean isCheckClientIdLength() {
+        return checkClientIdLength;
+    }
+
+    public void setCheckClientIdLength(boolean checkClientIdLength) {
+        this.checkClientIdLength = checkClientIdLength;
     }
 
     public String getUsername() {

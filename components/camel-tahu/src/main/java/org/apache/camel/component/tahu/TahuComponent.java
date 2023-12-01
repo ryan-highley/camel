@@ -81,7 +81,7 @@ public class TahuComponent extends DefaultComponent implements SSLContextParamet
     }
 
     public final TahuEndpoint createHostAppEndpoint(String hostId) throws Exception {
-        String uri = TahuConstants.EDGE_NODE_SCHEME + ":" + hostId;
+        String uri = TahuConstants.HOST_APP_SCHEME + ":" + hostId;
 
         TahuEndpoint endpoint = createEndpoint(uri, hostId, Map.of());
 
@@ -128,26 +128,15 @@ public class TahuComponent extends DefaultComponent implements SSLContextParamet
     private TahuEndpoint createHostAppEndpoint(
             String uri, String hostId, TahuConfiguration tahuConfig)
             throws Exception {
-        TahuEndpoint answer = endpoints.get(hostId);
-        if (answer == null) {
-            answer = new TahuEndpoint(uri, this, tahuConfig, hostId);
-
-            TahuEndpoint existingAnswer = endpoints.putIfAbsent(hostId, answer);
-            if (existingAnswer != null) {
-                answer = existingAnswer;
-            }
-        }
-
-        return answer;
+        return endpoints.computeIfAbsent(hostId, h -> new TahuEndpoint(uri, this, tahuConfig, h));
     }
 
     private TahuEndpoint createEdgeNodeEndpoint(
             String uri, String remaining, TahuConfiguration tahuConfig)
             throws Exception {
-        TahuEndpoint answer = endpoints.get(remaining);
-        if (answer == null) {
+        return endpoints.computeIfAbsent(remaining, r -> {
             List<String> descriptorSegments = Arrays
-                    .stream(remaining.split(TahuConstants.MAJOR_SEPARATOR, 3))
+                    .stream(r.split(TahuConstants.MAJOR_SEPARATOR, 3))
                     .map(String::trim).filter(ObjectHelper::isNotEmpty).toList();
 
             String groupId = descriptorSegments.get(0);
@@ -156,15 +145,9 @@ public class TahuComponent extends DefaultComponent implements SSLContextParamet
             if (descriptorSegments.size() == 3) {
                 deviceId = descriptorSegments.get(2);
             }
-            answer = new TahuEndpoint(uri, this, tahuConfig, groupId, edgeNode, deviceId);
 
-            TahuEndpoint existingAnswer = endpoints.putIfAbsent(remaining, answer);
-            if (existingAnswer != null) {
-                answer = existingAnswer;
-            }
-        }
-
-        return answer;
+            return new TahuEndpoint(uri, this, tahuConfig, groupId, edgeNode, deviceId);
+        });
     }
 
     public TahuConfiguration getConfiguration() {
