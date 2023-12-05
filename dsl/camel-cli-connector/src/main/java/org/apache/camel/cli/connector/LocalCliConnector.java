@@ -64,6 +64,7 @@ import org.apache.camel.model.language.ExpressionDefinition;
 import org.apache.camel.spi.CliConnector;
 import org.apache.camel.spi.CliConnectorFactory;
 import org.apache.camel.spi.ContextReloadStrategy;
+import org.apache.camel.spi.EndpointUriFactory;
 import org.apache.camel.spi.Language;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.ResourceLoader;
@@ -73,11 +74,13 @@ import org.apache.camel.support.EndpointHelper;
 import org.apache.camel.support.MessageHelper;
 import org.apache.camel.support.PatternHelper;
 import org.apache.camel.support.PluginHelper;
+import org.apache.camel.support.PropertyBindingSupport;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.support.service.ServiceSupport;
 import org.apache.camel.util.FileUtil;
 import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.StopWatch;
+import org.apache.camel.util.URISupport;
 import org.apache.camel.util.concurrent.ThreadHelper;
 import org.apache.camel.util.json.JsonArray;
 import org.apache.camel.util.json.JsonObject;
@@ -277,19 +280,22 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
         long timestamp = System.currentTimeMillis();
         String source = root.getString("source");
         String language = root.getString("language");
+        String component = root.getString("component");
+        String dataformat = root.getString("dataformat");
         String template = Jsoner.unescape(root.getStringOrDefault("template", ""));
-        if (template.startsWith("file:")) {
+        if (component == null && template.startsWith("file:")) {
             template = "resource:" + template;
         }
         String body = Jsoner.unescape(root.getString("body"));
         InputStream is = null;
         Object b = body;
-        Map<String, Object> map = null;
         if (body.startsWith("file:")) {
             File file = new File(body.substring(5));
             is = new FileInputStream(file);
             b = IOHelper.loadText(is);
         }
+        final Object inputBody = b;
+        Map<String, Object> map = null;
         Collection<JsonObject> headers = root.getCollection("headers");
         if (headers != null) {
             map = new LinkedHashMap<>();
@@ -297,8 +303,16 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                 map.put(jo.getString("key"), jo.getString("value"));
             }
         }
-        final Object inputBody = b;
         final Map<String, Object> inputHeaders = map;
+        Map<String, Object> map2 = null;
+        Collection<JsonObject> options = root.getCollection("options");
+        if (options != null) {
+            map2 = new LinkedHashMap<>();
+            for (JsonObject jo : options) {
+                map2.put(jo.getString("key"), jo.getString("value"));
+            }
+        }
+        final Map<String, Object> inputOptions = map2;
         Exchange out = camelContext.getCamelContextExtension().getExchangeFactory().create(false);
         try {
             if (source != null) {
@@ -380,10 +394,44 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                     String result = lastSourceExpression.evaluate(out, String.class);
                     out.getMessage().setBody(result);
                 }
+            } else if (component != null) {
+                // transform via component
+                out.setPattern(ExchangePattern.InOut);
+                out.getMessage().setBody(inputBody);
+                if (inputHeaders != null) {
+                    out.getMessage().setHeaders(inputHeaders);
+                }
+                String uri = component + ":" + template;
+                // must disable any kind of content cache on the component, so template is always reloaded
+                EndpointUriFactory euf = camelContext.getCamelContextExtension().getEndpointUriFactory(component);
+                if (euf.propertyNames().contains("contentCache")) {
+                    uri = uri + "?contentCache=false";
+                }
+                if (inputOptions != null) {
+                    uri = URISupport.appendParametersToURI(uri, inputOptions);
+                }
+                out = producer.send(uri, out);
+            } else if (dataformat != null) {
+                // transform via dataformat
+                out.setPattern(ExchangePattern.InOut);
+                out.getMessage().setBody(inputBody);
+                if (inputHeaders != null) {
+                    out.getMessage().setHeaders(inputHeaders);
+                }
+                String uri = "dataformat:" + dataformat + ":unmarshal";
+                if (inputOptions != null) {
+                    uri = URISupport.appendParametersToURI(uri, inputOptions);
+                }
+                out = producer.send(uri, out);
             } else {
                 // transform via language
                 Language lan = camelContext.resolveLanguage(language);
                 Expression exp = lan.createExpression(template);
+                // configure expression if options provided
+                if (inputOptions != null) {
+                    PropertyBindingSupport.build()
+                            .withCamelContext(camelContext).withTarget(exp).withProperties(inputOptions).bind();
+                }
                 exp.init(camelContext);
                 // create dummy exchange with
                 out.setPattern(ExchangePattern.InOut);

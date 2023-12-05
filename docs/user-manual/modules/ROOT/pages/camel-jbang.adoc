@@ -2017,6 +2017,83 @@ To set a breakpoint at line 18 and 34
 camel debug hello.yaml --breakpoint=18,34
 ----
 
+==== Editing code using VSCode or IDEA editors
+
+You can use JBang to edit the source code by using the `jbang` CLI to download dependencies
+and setup project for being ready to load into an IDE of choice, such as IDEA, VSCode, or Eclipse.
+
+This is typically in use when you use Java DSL and have Camel routes in .java source code.
+To let JBang understand which dependencies are in use, then you need to use JBang style for specifying
+dependencies by using `//DEPS` code comments in Java code.
+
+Given the following source file in `foo.java` file:
+
+[source,java]
+----
+//DEPS org.apache.camel:camel-bom:4.3.0@pom
+//DEPS org.apache.camel:camel-endpointdsl
+//DEPS org.apache.camel:camel-netty-http
+//DEPS org.apache.camel:camel-stream
+
+// add more dependencies here
+
+import org.apache.camel.builder.endpoint.EndpointRouteBuilder;
+import org.apache.camel.component.netty.http.NettyHttpMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class foo extends EndpointRouteBuilder {
+
+    private static final Logger LOG = LoggerFactory.getLogger(foo.class);
+
+    @Override
+    public void configure() {
+        from(timer("trigger").period(5000).repeatCount(3))
+                .to(nettyHttp("https://random-data-api.com/api/v2/banks").keepAlive(true))
+                .process(e -> {
+                    // use classes from camel-netty-http dependency in the source code
+                    // and have jbang able to generate project with the dependencies ready
+                    // to use in your IDE of choice
+                    NettyHttpMessage msg = e.getMessage(NettyHttpMessage.class);
+                    LOG.info("Netty HTTP response:\n\n\n{}\n\n\n", msg.getHttpResponse());
+                })
+                .log("Found bank:")
+          .to(stream("out"));
+    }
+}
+----
+
+TIP: You can use `camel dependency update --source=foo.java` to update the dependencies.
+
+Notice how we in the top of the file specify https://www.jbang.dev/documentation/guide/latest/dependencies.html[JBang dependencies] we want JBang to know and prepare for the IDE of choice.
+The first `//DEPS` is the `@pom` which set up the Camel version to use.
+The following `//DEPS` declares the Camel component we use.
+
+You can now open this source file for editing in your IDE of choice by using jbang CLI as follows:
+
+[source,bash]
+----
+$ jbang edit -b foo.java
+----
+
+You can find this example at: https://github.com/apache/camel-kamelets-examples/tree/main/jbang/jbang-edit
+
+==== Updating dependencies in source code
+
+When working with Java source code, then you can keep the JBang dependencies up-to-date using the following command:
+
+[source,bash]
+----
+$ camel dependency update --source=foo.java
+----
+
+TIP: You can use `--clean` to not keep any existing dependencies and generate a clean fresh list.
+
+This will then automatic insert or update the JBang depencies (`//DEPS`) in the top of the source file.
+
+You may want to use this for making it easier to load the source into an IDE editor to do coding.
+See previous section for more details.
+
 
 ==== Camel route debugging using VSCode or IDEA editors
 
@@ -2385,6 +2462,141 @@ You can also transform the message from JSon to XML as shown (or any other kind 
         id: simple-b320
     id: setBody-fa01
 ----
+
+You can configure options that the language format should use, such as shown below:
+
+[source,bash]
+----
+$ camel transform message --body=file:sample.json --language=jsonpath --template="beer.unknown" --option=suppressExceptions=true
+----
+
+TIP: You can specify multiple options by repeating the `--option` argument.
+
+Pay attention that we now use JSONPath as the language, and the template is a tiny json path expression.
+Because the sample does not have a `beer.unknown` path, then JSonPath would normally throw an exception.
+This can be suppressed by setting the option `suppressExceptions` to `true` as shown above. Then the output is as follows:
+
+[source,text]
+----
+2023-12-04 13:02:50.923  66291 --- Message transformed (success) (239ms)
+ Exchange  (DefaultExchange)  InOut   6118686CA3995FF-0000000000000000
+ Message   (DefaultMessage)
+ Body      (null) (bytes: 14)
+ [Body is null]
+----
+
+
+=== Transforming message using Components
+
+Some components can also be used for message transformation such as Flatpack, Velocity, Freemarker, Thymaleaf, and good old XSLT.
+
+TIP: You can use `camel catalog component --filter=transform` to see which components can be transformation.
+
+Given the below XML in the `sample.xml` file:
+
+[source,xml]
+----
+<hash>
+  <id type="integer">1369</id>
+  <uid>8c946e1a-fdc5-40d3-9098-44271bdfad65</uid>
+  <account-number>8673088731</account-number>
+  <iban>GB38EFUA27474531363797</iban>
+  <bank-name>ABN AMRO MEZZANINE (UK) LIMITED</bank-name>
+  <routing-number>053228004</routing-number>
+  <swift-bic>AACCGB21</swift-bic>
+</hash>
+----
+
+Then you can transform this using an XSLT named `mystyle.xsl`:
+
+[source,xml]
+----
+<?xml version = "1.0"?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+  <xsl:template match="/">
+    <bank>
+    	<name><xsl:value-of select="/hash/bank-name/text()"/></name>
+    	<bic><xsl:value-of select="/hash/swift-bic/text()"/></bic>
+    </bank>
+  </xsl:template>
+
+</xsl:stylesheet>
+----
+
+Then you can do live changes to the stylesheet and see the output in real-time with Camel JBang by running:
+
+[source,bash]
+----
+$ camel transform message --body=file:sample.xml --component=xslt --template=file:mystyle.xsl --pretty --watch
+----
+
+You can then edit the `mystyle.xsl` file, and save the file, and watch the terminal for updated result.
+
+You can find this example at: https://github.com/apache/camel-kamelets-examples/tree/main/jbang/xslt-transform
+
+You can configure options that the XSLT component format should use, such as shown below:
+
+[source,bash]
+----
+$ camel transform message --body=file:sample.xml --component=xslt --template=file:mystyle.xsl --option=output=bytes --pretty --watch
+----
+
+TIP: You can specify multiple options by repeating the `--option` argument.
+
+NOTE: The transform message with component is limited as some components requires configuring complex options that cannot be set from command line.
+
+=== Transforming message using Data Formats
+
+Some data-formats can also be used for message transformation such as Base64, Csv, Flatpack.
+
+TIP: You can use `camel catalog dataformat --filter=transform` to see which components can be transformation.
+
+Given the below CSV file in the `daltons.csv`:
+
+[source,text]
+----
+Jack Dalton, 115, mad at Averell
+Joe Dalton, 105, calming Joe
+William Dalton, 105, keeping Joe from killing Averell
+Averell Dalton, 80, playing with Rantanplan
+Lucky Luke, 120, capturing the Daltons
+----
+
+Then you can transform this via Camel CSV dataformat from its form into Java objects (unmarshal).
+This will NOT transform the CSV into another format such as XML, but allows you to quickly try out the dataformat,
+and be able to inspect the Java object inside Camel.
+
+[source,bash]
+----
+$ camel transform message --body=file:daltons.csv --dataformat=csv
+----
+
+This will then output:
+
+[source,text]
+----
+2023-12-04 10:53:45.578  55793 --- Message transformed (success) (176ms)
+ Exchange  (DefaultExchange)  InOut   6673987D34F3B54-0000000000000000
+ Message   (DefaultMessage)
+ Body      (ArrayList) (size: 5 bytes: 224)
+ [[Jack Dalton,  115,  mad at Averell], [Joe Dalton,  105,  calming Joe], [William Dalton,  105,  keeping Joe from killing Averell], [Averell Dalton,  80,
+ playing with Rantanplan], [Lucky Luke,  120,  capturing the Daltons]]
+----
+
+As you can see Camel CSV dataformat will then unarmshal the input (from CSV file) to a `java.util.ArrayList` object
+with 5 elements (one per row), and each row is another List of the columns.
+
+You can configure options that the CSV data format should use, such as shown below:
+
+[source,bash]
+----
+$ camel transform message --body=file:daltons.csv --dataformat=csv --option=captureHeaderRecord=true
+----
+
+TIP: You can specify multiple options by repeating the `--option` argument.
+
+NOTE: The transform message with dataformat is limited as some dataformat requires configuring complex options that cannot be set from command line.
 
 == Listing what Camel components is available
 

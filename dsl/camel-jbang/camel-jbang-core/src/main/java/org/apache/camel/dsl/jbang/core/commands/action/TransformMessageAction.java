@@ -65,9 +65,23 @@ public class TransformMessageAction extends ActionWatchCommand {
     private String language;
 
     @CommandLine.Option(names = {
+            "--component" },
+                        description = "The component to use for message transformation")
+    private String component;
+
+    @CommandLine.Option(names = {
+            "--dataformat" },
+                        description = "The dataformat to use for message transformation")
+    private String dataformat;
+
+    @CommandLine.Option(names = {
             "--template" },
                         description = "The template to use for message transformation (prefix with file: to refer to loading message body from file)")
     private String template;
+
+    @CommandLine.Option(names = { "--option" },
+                        description = "Option for additional configuration of the used language, component or dataformat (key=value)")
+    List<String> options;
 
     @CommandLine.Option(names = {
             "--output" },
@@ -111,14 +125,34 @@ public class TransformMessageAction extends ActionWatchCommand {
 
     @Override
     public Integer doCall() throws Exception {
-        // either source or language/template is required
-        if (source == null && template == null && language == null) {
-            System.err.println("Either source or template and language must be configured");
-            return -1;
+        if (dataformat == null) {
+            // either source or language/template is required
+            if (source == null && template == null && language == null && component == null) {
+                System.err.println("Either source or template and one of language/component must be configured");
+                return -1;
+            }
+            if (source == null && (template == null || language == null && component == null)) {
+                System.err.println("Both template and one of language/component must be configured");
+                return -1;
+            }
         }
-        if (source == null && (template == null || language == null)) {
-            System.err.println("Both template and language must be configured");
-            return -1;
+
+        // does files exists
+        if (source != null && source.startsWith("file:")) {
+            String s = source.substring(5);
+            s = StringHelper.beforeLast(s, ":", s); // remove line number
+            File f = new File(s);
+            if (!f.exists()) {
+                System.err.println("Source file does not exist: " + f);
+                return -1;
+            }
+        }
+        if (template != null && template.startsWith("file:")) {
+            File f = new File(template.substring(5));
+            if (!f.exists()) {
+                System.err.println("Template file does not exist: " + f);
+                return -1;
+            }
         }
 
         Integer exit;
@@ -166,6 +200,12 @@ public class TransformMessageAction extends ActionWatchCommand {
         if (language != null) {
             root.put("language", language);
         }
+        if (component != null) {
+            root.put("component", component);
+        }
+        if (dataformat != null) {
+            root.put("dataformat", dataformat);
+        }
         if (template != null) {
             root.put("template", Jsoner.escape(template));
         }
@@ -183,6 +223,20 @@ public class TransformMessageAction extends ActionWatchCommand {
                 arr.add(jo);
             }
             root.put("headers", arr);
+        }
+        if (options != null) {
+            JsonArray arr = new JsonArray();
+            for (String h : options) {
+                JsonObject jo = new JsonObject();
+                if (!h.contains("=")) {
+                    System.out.println("Option must be in key=value format, was: " + h);
+                    return 0;
+                }
+                jo.put("key", StringHelper.before(h, "="));
+                jo.put("value", StringHelper.after(h, "="));
+                arr.add(jo);
+            }
+            root.put("options", arr);
         }
         File f = getActionFile(Long.toString(pid));
         try {
