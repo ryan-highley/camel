@@ -33,6 +33,7 @@ import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.NotifyBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.direct.DirectEndpoint;
+import org.apache.camel.component.log.LogComponent;
 import org.apache.camel.component.log.LogEndpoint;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.component.paho.PahoComponent;
@@ -49,6 +50,7 @@ import org.eclipse.tahu.message.model.SparkplugDescriptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -57,11 +59,7 @@ import static org.junit.Assert.assertTrue;
 @Testcontainers
 public class TahuEdgeNodePublisherTest extends TahuTestSupport {
 
-    @EndpointInject("mock:direct:sparkplug-tck-result")
-    MockEndpoint spTckResultMockEndpoint;
-
-    @EndpointInject("mock:direct:sparkplug-tck-log")
-    MockEndpoint spTckLogMockEndpoint;
+    private static final Logger LOG = LoggerFactory.getLogger(TahuEdgeNodePublisherTest.class);
 
     @EndpointInject("direct:node-birth")
     DirectEndpoint nodeBirthEndpoint;
@@ -75,18 +73,21 @@ public class TahuEdgeNodePublisherTest extends TahuTestSupport {
     @EndpointInject("direct:device-data")
     DirectEndpoint deviceDataEndpoint;
 
-    @EndpointInject("log:org.apache.camel.component.tahu.TahuEdgeNodePublisherTest?showAll=true&multiline=true&level=DEBUG&skipBodyLineSeparator=false")
-    LogEndpoint logEndpoint;
+    private LogEndpoint logEndpoint;
 
     private PahoEndpoint spTckTestControlEndpoint;
     private PahoEndpoint spTckLogEndpoint;
     private PahoEndpoint spTckResultEndpoint;
+
+    private MockEndpoint spTckResultMockEndpoint;
+    private MockEndpoint spTckLogMockEndpoint;
 
     private EdgeNodeDescriptor edgeNodeDescriptor;
     private DeviceDescriptor deviceDescriptor;
 
     @ContextFixture
     public void configureContext(CamelContext context) throws Exception {
+        LOG.trace("configureContext called");
 
         final String containerAddress = service.getMqttHostAddress();
 
@@ -111,15 +112,30 @@ public class TahuEdgeNodePublisherTest extends TahuTestSupport {
         spTckLogEndpoint = context.getEndpoint("paho:SPARKPLUG_TCK/LOG", PahoEndpoint.class);
         spTckResultEndpoint = context.getEndpoint("paho:SPARKPLUG_TCK/RESULT", PahoEndpoint.class);
 
+        LogComponent logComponent = context.getComponent("log", LogComponent.class);
+        logComponent.setSourceLocationLoggerName(true);
+
+        logEndpoint = context.getEndpoint(
+                "log:tahu-edge-node-publisher-test?showAll=true&multiline=true&level=DEBUG&skipBodyLineSeparator=false",
+                LogEndpoint.class);
+
+        spTckLogMockEndpoint = camelContextExtension.getMockEndpoint("mock:sparkplug-tck-log");
+        spTckResultMockEndpoint = camelContextExtension.getMockEndpoint("mock:sparkplug-tck-result");
+
+        LOG.trace("configureContext complete");
     }
 
     private ProducerTemplate template;
 
     @BeforeEach
     public void beforeEach() {
+        LOG.trace("beforeEach called");
+
         MockEndpoint.resetMocks(camelContextExtension.getContext());
 
         template = camelContextExtension.getProducerTemplate();
+
+        LOG.trace("beforeEach complete");
     }
 
     private enum TestProfile {
@@ -147,15 +163,12 @@ public class TahuEdgeNodePublisherTest extends TahuTestSupport {
     @EnumSource
     public void tckSessionTest(TestProfile profile) throws Exception {
 
-        MockEndpoint resultMock = spTckResultMockEndpoint;
-        // MockEndpoint resultMock = camelContextExtension.getMockEndpoint(spTckResultMockEndpoint.getEndpointUri());
-        // resultMock.expectedBodyReceived().body(String.class).contains("OVERALL: PASS");
+        MockEndpoint resultMock = camelContextExtension.getMockEndpoint(spTckResultMockEndpoint.getEndpointUri());
+        resultMock.expectedBodyReceived().body(String.class).contains("OVERALL: PASS");
 
-        MockEndpoint logMock = spTckLogMockEndpoint;
-        // MockEndpoint logMock = camelContextExtension.getMockEndpoint(spTckLogMockEndpoint.getEndpointUri());
-        // logMock.expectedBodyReceived().body(String.class)
-        //         .contains("Test started successfully: edge " + profile.testName);
-        // logMock.setResultWaitTime(5000L);
+        MockEndpoint logMock = camelContextExtension.getMockEndpoint(spTckLogMockEndpoint.getEndpointUri());
+        logMock.expectedBodyReceived().body(String.class)
+                .contains("Test started successfully: edge " + profile.testName);
 
         template.start();
         template.sendBody(spTckTestControlEndpoint, "NEW_TEST edge " + profile.testName + " IamHost G2 E2 D2");
@@ -192,15 +205,16 @@ public class TahuEdgeNodePublisherTest extends TahuTestSupport {
             template.sendBody(spTckTestControlEndpoint, "END_TEST");
         }
 
-        // if (profile.disconnect) {
-        //     ServiceHelper.resumeServices(camelContextExtension.getContext().hasServices(TahuEdgeNodeHandler.class));
-        // }
+        if (profile.disconnect) {
+            ServiceHelper.resumeServices(camelContextExtension.getContext().hasServices(TahuEdgeNodeHandler.class));
+        }
 
         template.stop();
     }
 
     @Override
     protected RouteBuilder createRouteBuilder() {
+        LOG.trace("createRouteBuilder called/complete");
         return new RouteBuilder() {
             private DataSimulator dataSimulator;
 
@@ -209,6 +223,7 @@ public class TahuEdgeNodePublisherTest extends TahuTestSupport {
 
             @Override
             public void configure() throws Exception {
+                LOG.trace("RouteBuilder.configure called");
 
                 tahuEdgeNodeEndpoint = getCamelContext().getEndpoint("tahu:G2/E2?primaryHostId=IamHost",
                         TahuEndpoint.class);
@@ -283,6 +298,7 @@ public class TahuEdgeNodePublisherTest extends TahuTestSupport {
                         .to(logEndpoint)
                         .to(spTckResultMockEndpoint);
 
+                LOG.trace("RouteBuilder.configure complete");
             }
 
             private void processPayload(Exchange exch, String messageType, SparkplugBPayload payload) {
