@@ -28,12 +28,13 @@ public final class AtomicBdSeqManager implements BdSeqManager {
 
     private final AtomicLong bdSeqNum = new AtomicLong(0);
 
+    // This method is NOT intended to increment the stored value, only to retrieve it
     @Override
     public long getNextDeathBdSeqNum() {
         LOG.trace("BdSeqManager getNextDeathBdSeqNum called");
 
         // Returns 0-255 by zeroing all bits above lowest 8
-        long nextBdSeqNum = bdSeqNum.getAndIncrement() & 0xFFL;
+        long nextBdSeqNum = bdSeqNum.get() & 0xFFL;
 
         LOG.trace("BdSeqManager getNextDeathBdSeqNum complete: nextBdSeqNum {}", nextBdSeqNum);
         return nextBdSeqNum;

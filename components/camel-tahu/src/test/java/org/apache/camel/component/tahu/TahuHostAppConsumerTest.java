@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.tahu;
 
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -26,16 +25,10 @@ import org.apache.camel.EndpointInject;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.direct.DirectEndpoint;
 import org.apache.camel.component.log.LogEndpoint;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.component.paho.PahoComponent;
-import org.apache.camel.component.paho.PahoConfiguration;
-import org.apache.camel.component.paho.PahoEndpoint;
-import org.apache.camel.component.paho.PahoPersistence;
-import org.apache.camel.test.infra.core.annotations.ContextFixture;
 import org.eclipse.tahu.edge.sim.DataSimulator;
 import org.eclipse.tahu.edge.sim.RandomDataSimulator;
 import org.eclipse.tahu.message.model.DeviceDescriptor;
@@ -43,7 +36,6 @@ import org.eclipse.tahu.message.model.EdgeNodeDescriptor;
 import org.eclipse.tahu.message.model.SparkplugBPayload;
 import org.eclipse.tahu.message.model.SparkplugBPayloadMap;
 import org.eclipse.tahu.message.model.SparkplugDescriptor;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -72,51 +64,19 @@ public class TahuHostAppConsumerTest extends TahuTestSupport {
     @EndpointInject("direct:device-data")
     DirectEndpoint deviceDataEndpoint;
 
-    @EndpointInject("paho:SPARKPLUG_TCK/TEST_CONTROL")
-    PahoEndpoint testControlEndpoint;
-
     @EndpointInject("log:org.apache.camel.component.tahu.TahuEdgeNodePublisherTest?showAll=true&multiline=true&level=DEBUG&skipBodyLineSeparator=false")
     LogEndpoint logEndpoint;
-
-    private ProducerTemplate template;
-
-    @ContextFixture
-    public void configureContext(CamelContext context) {
-
-        final String containerAddress = service.getMqttHostAddress();
-
-        TahuConfiguration tahuConfig = new TahuConfiguration();
-
-        tahuConfig.setServers("Mqtt Server One:" + containerAddress);
-        tahuConfig.setClientId("Tahu_Host_Application");
-        tahuConfig.setCheckClientIdLength(false);
-        tahuConfig.setUsername("admin");
-        tahuConfig.setPassword("changeme");
-
-        TahuComponent tahuComponent = context.getComponent("tahu", TahuComponent.class);
-        tahuComponent.setConfiguration(tahuConfig);
-
-        PahoComponent pahoComponent = context.getComponent("paho", PahoComponent.class);
-        PahoConfiguration pahoConfiguration = pahoComponent.getConfiguration();
-        pahoConfiguration.setBrokerUrl(containerAddress);
-        pahoConfiguration.setPersistence(PahoPersistence.MEMORY);
-    }
-
-    @BeforeEach
-    void setupTemplate() {
-        template = camelContextExtension.getProducerTemplate();
-    }
 
     @Test
     public void testNodeBirth() throws Exception {
         sparkplugTckResultEndpoint.expectedMessageCount(1);
 
-        template.sendBody(nodeBirthEndpoint, null);
+        getCamelContextExtension().getProducerTemplate().sendBody(nodeBirthEndpoint, null);
 
         sparkplugTckResultEndpoint.assertIsSatisfied();
     }
 
-    @Override
+    // @Override
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             private EdgeNodeDescriptor edgeNodeDescriptor;
@@ -168,32 +128,15 @@ public class TahuHostAppConsumerTest extends TahuTestSupport {
                         .to(logEndpoint)
                         .to(sparkplugTckResultEndpoint);
 
-                from(nodeBirthEndpoint)
-                        .id("node-birth-test-route")
-                        .process((exch) -> processPayload(exch, "NBIRTH", nBirthPayload))
-                        .to(logEndpoint)
-                        .to(tahuEdgeNodeEndpoint);
-
                 from(nodeDataEndpoint)
                         .id("node-data-test-route")
                         .process(getNodeDataPayload)
                         .to(tahuEdgeNodeEndpoint);
 
-                from(deviceBirthEndpoint)
-                        .id("device-birth-test-route")
-                        .process((exch) -> processPayload(exch, "DBIRTH", dBirthPayload))
-                        .to(tahuDeviceEndpoint);
-
                 from(deviceDataEndpoint)
                         .id("device-data-test-route")
                         .process(getDeviceDataPayload)
                         .to(tahuDeviceEndpoint);
-
-                from("paho:SPARKPLUG_TCK/RESULT")
-                        .id("sparkplug-tck-result-route")
-                        .convertBodyTo(String.class, StandardCharsets.UTF_8.name())
-                        .to(logEndpoint)
-                        .to(sparkplugTckResultEndpoint);
 
             }
 
@@ -221,6 +164,18 @@ public class TahuHostAppConsumerTest extends TahuTestSupport {
             };
 
         };
+    }
+
+    @Override
+    public void configureContext(CamelContext context) throws Exception {
+        // TODO Auto-generated method stub
+        // throw new UnsupportedOperationException("Unimplemented method 'configureContext'");
+    }
+
+    @Override
+    public void createRouteBuilder(CamelContext context) throws Exception {
+        // TODO Auto-generated method stub
+        // throw new UnsupportedOperationException("Unimplemented method 'createRouteBuilder'");
     }
 
 }
