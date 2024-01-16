@@ -56,7 +56,7 @@ public interface KubernetesJobComponentBuilderFactory {
          * The option is a:
          * &lt;code&gt;io.fabric8.kubernetes.client.KubernetesClient&lt;/code&gt; type.
          * 
-         * Group: common
+         * Group: producer
          * 
          * @param kubernetesClient the value to set
          * @return the dsl builder
@@ -64,33 +64,6 @@ public interface KubernetesJobComponentBuilderFactory {
         default KubernetesJobComponentBuilder kubernetesClient(
                 io.fabric8.kubernetes.client.KubernetesClient kubernetesClient) {
             doSetProperty("kubernetesClient", kubernetesClient);
-            return this;
-        }
-        /**
-         * Allows for bridging the consumer to the Camel routing Error Handler,
-         * which mean any exceptions (if possible) occurred while the Camel
-         * consumer is trying to pickup incoming messages, or the likes, will
-         * now be processed as a message and handled by the routing Error
-         * Handler. Important: This is only possible if the 3rd party component
-         * allows Camel to be alerted if an exception was thrown. Some
-         * components handle this internally only, and therefore
-         * bridgeErrorHandler is not possible. In other situations we may
-         * improve the Camel component to hook into the 3rd party component and
-         * make this possible for future releases. By default the consumer will
-         * use the org.apache.camel.spi.ExceptionHandler to deal with
-         * exceptions, that will be logged at WARN or ERROR level and ignored.
-         * 
-         * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
-         * 
-         * Default: false
-         * Group: consumer
-         * 
-         * @param bridgeErrorHandler the value to set
-         * @return the dsl builder
-         */
-        default KubernetesJobComponentBuilder bridgeErrorHandler(
-                boolean bridgeErrorHandler) {
-            doSetProperty("bridgeErrorHandler", bridgeErrorHandler);
             return this;
         }
         /**
@@ -156,7 +129,6 @@ public interface KubernetesJobComponentBuilderFactory {
                 Object value) {
             switch (name) {
             case "kubernetesClient": ((KubernetesJobComponent) component).setKubernetesClient((io.fabric8.kubernetes.client.KubernetesClient) value); return true;
-            case "bridgeErrorHandler": ((KubernetesJobComponent) component).setBridgeErrorHandler((boolean) value); return true;
             case "lazyStartProducer": ((KubernetesJobComponent) component).setLazyStartProducer((boolean) value); return true;
             case "autowiredEnabled": ((KubernetesJobComponent) component).setAutowiredEnabled((boolean) value); return true;
             default: return false;

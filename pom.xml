@@ -29,7 +29,7 @@
 
     <groupId>org.apache.camel</groupId>
     <artifactId>camel</artifactId>
-    <version>4.3.0-SNAPSHOT</version>
+    <version>4.4.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Camel</name>
@@ -125,22 +125,22 @@
         <gmavenplus-plugin-version>2.1.0</gmavenplus-plugin-version>
         <license-maven-plugin-version>4.3</license-maven-plugin-version>
         <maven-assembly-plugin-version>3.6.0</maven-assembly-plugin-version>
-        <maven-compiler-plugin-version>3.11.0</maven-compiler-plugin-version>
+        <maven-compiler-plugin-version>3.12.1</maven-compiler-plugin-version>
         <maven-dependency-plugin-version>3.6.1</maven-dependency-plugin-version>
         <maven-enforcer-plugin-version>3.4.1</maven-enforcer-plugin-version>
         <maven-invoker-plugin-version>3.6.0</maven-invoker-plugin-version>
-        <maven-javadoc-plugin-version>3.5.0</maven-javadoc-plugin-version>
+        <maven-javadoc-plugin-version>3.6.3</maven-javadoc-plugin-version>
         <maven-release-plugin-version>3.0.1</maven-release-plugin-version>
         <maven-remote-resources-plugin-version>3.1.0</maven-remote-resources-plugin-version>
-        <maven-surefire-plugin-version>3.2.2</maven-surefire-plugin-version>
-        <versions-maven-plugin-version>2.16.0</versions-maven-plugin-version>
+        <maven-surefire-plugin-version>3.2.5</maven-surefire-plugin-version>
+        <versions-maven-plugin-version>2.16.2</versions-maven-plugin-version>
 
         <jaxb-core-version>4.0.4</jaxb-core-version>
         <jaxb-impl-version>4.0.4</jaxb-impl-version>
         <jaxb-osgi-version>4.0.4</jaxb-osgi-version>
         <jaxb-xjc-version>4.0.4</jaxb-xjc-version>
         <jaxb-jxc-version>4.0.4</jaxb-jxc-version>
-        <groovy-version>4.0.16</groovy-version>
+        <groovy-version>4.0.17</groovy-version>
 
         <camel.javadoc.offline>false</camel.javadoc.offline>
 
@@ -280,6 +280,7 @@
                                     <exclude>**/*utf16.vm</exclude>
                                     <exclude>**/.eslint*</exclude>
                                     <exclude>**/.pnp*</exclude>
+                                    <exclude>**/*.jte</exclude>
                                     <exclude>**/.yarn/**</exclude>
                                     <exclude>**/.yarnrc.yml</exclude>
                                     <exclude>**/CamelJBang.java</exclude>

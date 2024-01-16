@@ -2558,7 +2558,7 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * Adds a processor which sets the header on the IN message
      *
      * @param  name the header name
-     * @return      a expression builder clause to set the header
+     * @return      an expression builder clause to set the header
      */
     public ExpressionClause<ProcessorDefinition<Type>> setHeader(String name) {
         ExpressionClause<ProcessorDefinition<Type>> clause = new ExpressionClause<>(this);
@@ -2606,7 +2606,50 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
                 return supplier.get();
             }
         });
+        addOutput(answer);
+        return asType();
+    }
 
+    /**
+     * Adds a processor which sets the variable
+     *
+     * @param  name the variable name
+     * @return      an expression builder clause to set the variable
+     */
+    public ExpressionClause<ProcessorDefinition<Type>> setVariable(String name) {
+        ExpressionClause<ProcessorDefinition<Type>> clause = new ExpressionClause<>(this);
+        SetVariableDefinition answer = new SetVariableDefinition(name, clause);
+        addOutput(answer);
+        return clause;
+    }
+
+    /**
+     * Adds a processor which sets the variable
+     *
+     * @param  name       the variable name
+     * @param  expression the expression used to set the variable
+     * @return            the builder
+     */
+    public Type setVariable(String name, Expression expression) {
+        SetVariableDefinition answer = new SetVariableDefinition(name, expression);
+        addOutput(answer);
+        return asType();
+    }
+
+    /**
+     * Adds a processor which sets the variable
+     *
+     * @param  name     the variable name
+     * @param  supplier the supplier used to set the variable
+     * @return          the builder
+     */
+    public Type setVariable(String name, final Supplier<Object> supplier) {
+        SetVariableDefinition answer = new SetVariableDefinition(name, new ExpressionAdapter() {
+            @Override
+            public Object evaluate(Exchange exchange) {
+                return supplier.get();
+            }
+        });
         addOutput(answer);
         return asType();
     }
@@ -2689,6 +2732,18 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      */
     public Type removeHeaders(String pattern, String... excludePatterns) {
         RemoveHeadersDefinition answer = new RemoveHeadersDefinition(pattern, excludePatterns);
+        addOutput(answer);
+        return asType();
+    }
+
+    /**
+     * Adds a processor which removes the variable
+     *
+     * @param  name the variable name
+     * @return      the builder
+     */
+    public Type removeVariable(String name) {
+        RemoveVariableDefinition answer = new RemoveVariableDefinition(name);
         addOutput(answer);
         return asType();
     }
@@ -2780,6 +2835,19 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
     /**
      * Converts the IN message header to the specified type
      *
+     * @param  name   the header name
+     * @param  toName to use another header to store the result
+     * @param  type   the type to convert to
+     * @return        the builder
+     */
+    public Type convertHeaderTo(String name, String toName, Class<?> type) {
+        addOutput(new ConvertHeaderDefinition(name, toName, type));
+        return asType();
+    }
+
+    /**
+     * Converts the IN message header to the specified type
+     *
      * @param  name      the header name
      * @param  type      the type to convert to
      * @param  mandatory whether to use mandatory type conversion or not
@@ -2800,6 +2868,57 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      */
     public Type convertHeaderTo(String name, Class<?> type, String charset) {
         addOutput(new ConvertHeaderDefinition(name, type, charset));
+        return asType();
+    }
+
+    /**
+     * Converts the variable to the specified type
+     *
+     * @param  name the variable name
+     * @param  type the type to convert to
+     * @return      the builder
+     */
+    public Type convertVariableTo(String name, Class<?> type) {
+        addOutput(new ConvertVariableDefinition(name, type));
+        return asType();
+    }
+
+    /**
+     * Converts the variable to the specified type
+     *
+     * @param  name   the variable name
+     * @param  toName to use another variable to store the result
+     * @param  type   the type to convert to
+     * @return        the builder
+     */
+    public Type convertVariableTo(String name, String toName, Class<?> type) {
+        addOutput(new ConvertVariableDefinition(name, toName, type));
+        return asType();
+    }
+
+    /**
+     * Converts the variable to the specified type
+     *
+     * @param  name      the variable name
+     * @param  type      the type to convert to
+     * @param  mandatory whether to use mandatory type conversion or not
+     * @return           the builder
+     */
+    public Type convertVariableTo(String name, Class<?> type, boolean mandatory) {
+        addOutput(new ConvertVariableDefinition(name, type, mandatory));
+        return asType();
+    }
+
+    /**
+     * Converts the variable to the specified type
+     *
+     * @param  name    the variable name
+     * @param  type    the type to convert to
+     * @param  charset the charset to use by type converters (not all converters support specific charset)
+     * @return         the builder
+     */
+    public Type convertVariableTo(String name, Class<?> type, String charset) {
+        addOutput(new ConvertVariableDefinition(name, type, charset));
         return asType();
     }
 

@@ -16,6 +16,14 @@
  */
 package org.apache.camel.component.salesforce;
 
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Supplier;
+import java.util.regex.Pattern;
+
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
@@ -51,14 +59,6 @@ import org.eclipse.jetty.client.Socks4Proxy;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Supplier;
-import java.util.regex.Pattern;
 
 import static org.apache.camel.component.salesforce.SalesforceLoginConfig.DEFAULT_LOGIN_URL;
 
@@ -973,7 +973,7 @@ public class SalesforceComponent extends DefaultComponent implements SSLContextP
             if (httpProxyExcludedAddresses != null && !httpProxyExcludedAddresses.isEmpty()) {
                 proxy.getExcludedAddresses().addAll(httpProxyExcludedAddresses);
             }
-            httpClient.getProxyConfiguration().getProxies().add(proxy);
+            httpClient.getProxyConfiguration().addProxy(proxy);
         }
         if (httpProxyUsername != null && httpProxyPassword != null) {
             StringHelper.notEmpty(httpProxyAuthUri, "httpProxyAuthUri");

@@ -11,7 +11,7 @@
     "supportLevel": "Stable",
     "groupId": "org.apache.camel",
     "artifactId": "camel-disruptor",
-    "version": "4.3.0-SNAPSHOT",
+    "version": "4.4.0-SNAPSHOT",
     "scheme": "disruptor-vm",
     "extendsScheme": "",
     "alternativeSchemes": "disruptor,disruptor-vm",
@@ -20,7 +20,8 @@
     "api": false,
     "consumerOnly": false,
     "producerOnly": false,
-    "lenientProperties": false
+    "lenientProperties": false,
+    "remote": false
   },
   "componentProperties": {
     "bufferSize": { "index": 0, "kind": "property", "displayName": "Buffer Size", "group": "common", "label": "", "required": false, "type": "integer", "javaType": "int", "deprecated": false, "autowired": false, "secret": false, "defaultValue": 1024, "description": "To configure the ring buffer size" },

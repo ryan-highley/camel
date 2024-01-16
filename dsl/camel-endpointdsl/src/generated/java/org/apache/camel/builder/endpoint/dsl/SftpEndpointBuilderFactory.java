@@ -1111,7 +1111,7 @@ public interface SftpEndpointBuilderFactory {
          * readLockTimeout value must be higher than readLockCheckInterval, but
          * a rule of thumb is to have a timeout that is at least 2 or more times
          * higher than the readLockCheckInterval. This is needed to ensure that
-         * amble time is allowed for the read lock process to try to grab the
+         * ample time is allowed for the read lock process to try to grab the
          * lock before the timeout was hit.
          * 
          * The option is a: &lt;code&gt;long&lt;/code&gt; type.
@@ -1137,7 +1137,7 @@ public interface SftpEndpointBuilderFactory {
          * readLockTimeout value must be higher than readLockCheckInterval, but
          * a rule of thumb is to have a timeout that is at least 2 or more times
          * higher than the readLockCheckInterval. This is needed to ensure that
-         * amble time is allowed for the read lock process to try to grab the
+         * ample time is allowed for the read lock process to try to grab the
          * lock before the timeout was hit.
          * 
          * The option will be converted to a &lt;code&gt;long&lt;/code&gt; type.
@@ -1621,7 +1621,7 @@ public interface SftpEndpointBuilderFactory {
          * readLockTimeout value must be higher than readLockCheckInterval, but
          * a rule of thumb is to have a timeout that is at least 2 or more times
          * higher than the readLockCheckInterval. This is needed to ensure that
-         * amble time is allowed for the read lock process to try to grab the
+         * ample time is allowed for the read lock process to try to grab the
          * lock before the timeout was hit.
          * 
          * The option is a: &lt;code&gt;long&lt;/code&gt; type.
@@ -1647,7 +1647,7 @@ public interface SftpEndpointBuilderFactory {
          * readLockTimeout value must be higher than readLockCheckInterval, but
          * a rule of thumb is to have a timeout that is at least 2 or more times
          * higher than the readLockCheckInterval. This is needed to ensure that
-         * amble time is allowed for the read lock process to try to grab the
+         * ample time is allowed for the read lock process to try to grab the
          * lock before the timeout was hit.
          * 
          * The option will be converted to a &lt;code&gt;long&lt;/code&gt; type.
@@ -2780,7 +2780,7 @@ public interface SftpEndpointBuilderFactory {
         /**
          * Whether to ignore when (trying to list files in directories or when
          * downloading a file), which does not exist or due to permission error.
-         * By default when a directory or file does not exists or insufficient
+         * By default when a directory or file does not exist or insufficient
          * permission, then an exception is thrown. Setting this option to true
          * allows to ignore that instead.
          * 
@@ -2800,7 +2800,7 @@ public interface SftpEndpointBuilderFactory {
         /**
          * Whether to ignore when (trying to list files in directories or when
          * downloading a file), which does not exist or due to permission error.
-         * By default when a directory or file does not exists or insufficient
+         * By default when a directory or file does not exist or insufficient
          * permission, then an exception is thrown. Setting this option to true
          * allows to ignore that instead.
          * 

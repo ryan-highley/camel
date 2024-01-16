@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-parent</artifactId>
-        <version>4.3.0-SNAPSHOT</version>
+        <version>4.4.0-SNAPSHOT</version>
         <relativePath>../parent</relativePath>
     </parent>
 
@@ -122,6 +122,7 @@
         <module>camel-dynamic-router</module>
         <module>camel-ehcache</module>
         <module>camel-elasticsearch</module>
+        <module>camel-elasticsearch-rest-client</module>
         <module>camel-elytron</module>
         <module>camel-etcd3</module>
         <module>camel-exec</module>
@@ -146,7 +147,6 @@
         <module>camel-guava-eventbus</module>
         <module>camel-hashicorp-vault</module>
         <module>camel-hazelcast</module>
-        <module>camel-hdfs</module>
         <module>camel-headersmap</module>
         <module>camel-hl7</module>
         <module>camel-huawei</module>
@@ -188,6 +188,7 @@
         <module>camel-json-patch</module>
         <module>camel-jt400</module>
         <module>camel-jta</module>
+        <module>camel-jte</module>
         <module>camel-kafka</module>
         <module>camel-kamelet</module>
         <module>camel-knative</module>

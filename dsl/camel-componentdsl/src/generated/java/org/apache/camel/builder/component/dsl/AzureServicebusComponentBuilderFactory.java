@@ -340,6 +340,23 @@ public interface AzureServicebusComponentBuilderFactory {
             return this;
         }
         /**
+         * If the consumer has connection failure to Azure ServiceBus, then
+         * delay (millis) some time before re-connecting.
+         * 
+         * The option is a: &lt;code&gt;int&lt;/code&gt; type.
+         * 
+         * Default: 5000
+         * Group: consumer (advanced)
+         * 
+         * @param reconnectDelay the value to set
+         * @return the dsl builder
+         */
+        default AzureServicebusComponentBuilder reconnectDelay(
+                int reconnectDelay) {
+            doSetProperty("reconnectDelay", reconnectDelay);
+            return this;
+        }
+        /**
          * Set binary mode. If true, message body will be sent as byte. By
          * default, it is false.
          * 
@@ -484,6 +501,23 @@ public interface AzureServicebusComponentBuilderFactory {
             return this;
         }
         /**
+         * Determines the credential strategy to adopt.
+         * 
+         * The option is a:
+         * &lt;code&gt;org.apache.camel.component.azure.servicebus.CredentialType&lt;/code&gt; type.
+         * 
+         * Default: CONNECTION_STRING
+         * Group: security
+         * 
+         * @param credentialType the value to set
+         * @return the dsl builder
+         */
+        default AzureServicebusComponentBuilder credentialType(
+                org.apache.camel.component.azure.servicebus.CredentialType credentialType) {
+            doSetProperty("credentialType", credentialType);
+            return this;
+        }
+        /**
          * Fully Qualified Namespace of the service bus.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
@@ -555,6 +589,7 @@ public interface AzureServicebusComponentBuilderFactory {
             case "serviceBusReceiveMode": getOrCreateConfiguration((ServiceBusComponent) component).setServiceBusReceiveMode((com.azure.messaging.servicebus.models.ServiceBusReceiveMode) value); return true;
             case "subQueue": getOrCreateConfiguration((ServiceBusComponent) component).setSubQueue((com.azure.messaging.servicebus.models.SubQueue) value); return true;
             case "subscriptionName": getOrCreateConfiguration((ServiceBusComponent) component).setSubscriptionName((java.lang.String) value); return true;
+            case "reconnectDelay": getOrCreateConfiguration((ServiceBusComponent) component).setReconnectDelay((int) value); return true;
             case "binary": getOrCreateConfiguration((ServiceBusComponent) component).setBinary((boolean) value); return true;
             case "lazyStartProducer": ((ServiceBusComponent) component).setLazyStartProducer((boolean) value); return true;
             case "producerOperation": getOrCreateConfiguration((ServiceBusComponent) component).setProducerOperation((org.apache.camel.component.azure.servicebus.ServiceBusProducerOperationDefinition) value); return true;
@@ -563,6 +598,7 @@ public interface AzureServicebusComponentBuilderFactory {
             case "serviceBusTransactionContext": getOrCreateConfiguration((ServiceBusComponent) component).setServiceBusTransactionContext((com.azure.messaging.servicebus.ServiceBusTransactionContext) value); return true;
             case "autowiredEnabled": ((ServiceBusComponent) component).setAutowiredEnabled((boolean) value); return true;
             case "connectionString": getOrCreateConfiguration((ServiceBusComponent) component).setConnectionString((java.lang.String) value); return true;
+            case "credentialType": getOrCreateConfiguration((ServiceBusComponent) component).setCredentialType((org.apache.camel.component.azure.servicebus.CredentialType) value); return true;
             case "fullyQualifiedNamespace": getOrCreateConfiguration((ServiceBusComponent) component).setFullyQualifiedNamespace((java.lang.String) value); return true;
             case "tokenCredential": getOrCreateConfiguration((ServiceBusComponent) component).setTokenCredential((com.azure.core.credential.TokenCredential) value); return true;
             default: return false;

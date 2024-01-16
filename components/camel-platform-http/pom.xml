@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>components</artifactId>
-        <version>4.3.0-SNAPSHOT</version>
+        <version>4.4.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-platform-http</artifactId>
@@ -54,11 +54,13 @@
             <groupId>org.eclipse.jetty.ee10</groupId>
             <artifactId>jetty-ee10-servlet</artifactId>
             <version>${jetty-version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty.ee10</groupId>
             <artifactId>jetty-ee10-servlets</artifactId>
             <version>${jetty-version}</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>

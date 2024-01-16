@@ -11,7 +11,7 @@
     "supportLevel": "Stable",
     "groupId": "org.apache.camel",
     "artifactId": "camel-google-calendar",
-    "version": "4.3.0-SNAPSHOT",
+    "version": "4.4.0-SNAPSHOT",
     "scheme": "google-calendar",
     "extendsScheme": "",
     "syntax": "google-calendar:apiName\/methodName",
@@ -20,7 +20,8 @@
     "apiSyntax": "apiName\/methodName",
     "consumerOnly": false,
     "producerOnly": false,
-    "lenientProperties": false
+    "lenientProperties": false,
+    "remote": true
   },
   "componentProperties": {
     "applicationName": { "index": 0, "kind": "property", "displayName": "Application Name", "group": "common", "label": "", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "configurationClass": "org.apache.camel.component.google.calendar.GoogleCalendarConfiguration", "configurationField": "configuration", "description": "Google calendar application name. Example would be camel-google-calendar\/1.0" },

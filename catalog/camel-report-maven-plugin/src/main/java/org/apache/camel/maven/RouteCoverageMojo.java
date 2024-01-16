@@ -76,6 +76,7 @@ import static org.apache.camel.catalog.common.CatalogHelper.stripRootPath;
 @Mojo(name = "route-coverage", threadSafe = true)
 public class RouteCoverageMojo extends AbstractExecMojo {
 
+    public static final String DESTINATION_DIR = "/target/camel-route-coverage";
     /**
      * The maven project.
      */
@@ -223,106 +224,21 @@ public class RouteCoverageMojo extends AbstractExecMojo {
             }
 
             // grab dump data for the route
-            try {
-                List<CoverageData> coverageData = RouteCoverageHelper
-                        .parseDumpRouteCoverageByRouteId(project.getBasedir() + "/target/camel-route-coverage", routeId);
-                if (coverageData.isEmpty()) {
-                    getLog().warn("No route coverage data found for route: " + routeId
-                                  + ". Make sure to enable route coverage in your unit tests and assign unique route ids to your routes. Also remember to run unit tests first.");
-                } else {
-                    List<RouteCoverageNode> coverage = gatherRouteCoverageSummary(List.of(t), coverageData);
-                    totalNumberOfNodes += coverage.size();
-                    String out = templateCoverageData(fileName, routeId, coverage, notCovered, coveredNodes);
-                    getLog().info("Route coverage summary:\n\n" + out);
-                    getLog().info("");
-
-                    if (generateJacocoXmlReport && report != null) {
-                        appendSourcefileNode(document, sourceFileName, pack, coverage);
-                    }
-                }
-
-            } catch (Exception e) {
-                throw new MojoExecutionException("Error during gathering route coverage data for route: " + routeId, e);
-            }
+            totalNumberOfNodes
+                    = grabDumpData(t, routeId, totalNumberOfNodes, fileName, notCovered, coveredNodes, report, document,
+                            sourceFileName, pack);
         }
 
         if (generateJacocoXmlReport && report != null) {
-            try {
-                getLog().info("Generating Jacoco XML report: " + file + "\n\n");
-                createJacocoXmlFile(document, file);
-            } catch (Exception e) {
-                getLog().warn("Error generating Jacoco XML report due " + e.getMessage());
-            }
+            doGenerateJacocoReport(file, document);
         }
 
         if (anonymousRoutes && !anonymousRouteTrees.isEmpty()) {
-            // grab dump data for the route
-            try {
-                Map<String, List<CoverageData>> datas = RouteCoverageHelper
-                        .parseDumpRouteCoverageByClassAndTestMethod(project.getBasedir() + "/target/camel-route-coverage");
-                if (datas.isEmpty()) {
-                    getLog().warn("No route coverage data found"
-                                  + ". Make sure to enable route coverage in your unit tests. Also remember to run unit tests first.");
-                } else {
-                    Map<String, List<CamelNodeDetails>> routes = groupAnonymousRoutesByClassName(anonymousRouteTrees);
-                    // attempt to match anonymous routes via the unit test class
-                    for (Map.Entry<String, List<CamelNodeDetails>> t : routes.entrySet()) {
-                        List<RouteCoverageNode> coverage = new ArrayList<>();
-                        String className = t.getKey();
-
-                        // we may have multiple tests in the same test class that tests different parts of the same
-                        // routes so merge their coverage reports into a single coverage
-                        for (Map.Entry<String, List<CoverageData>> entry : datas.entrySet()) {
-                            String key = entry.getKey();
-                            String dataClassName = key.substring(0, key.indexOf('-'));
-                            if (dataClassName.equals(className)) {
-                                List<RouteCoverageNode> result = gatherRouteCoverageSummary(t.getValue(), entry.getValue());
-                                // merge them together
-                                mergeCoverageData(coverage, result);
-                            }
-                        }
-
-                        if (!coverage.isEmpty()) {
-                            totalNumberOfNodes += coverage.size();
-                            String fileName
-                                    = stripRootPath(asRelativeFile(t.getValue().get(0).getFileName(), project), project);
-                            String out = templateCoverageData(fileName, null, coverage, notCovered, coveredNodes);
-                            getLog().info("Route coverage summary:\n\n" + out);
-                            getLog().info("");
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                throw new MojoExecutionException("Error during gathering route coverage data ", e);
-            }
+            totalNumberOfNodes = handleAnonymousRoutes(anonymousRouteTrees, totalNumberOfNodes, notCovered, coveredNodes);
         }
 
         if (generateHtmlReport) {
-            try {
-                final String baseHtmlPath = "/target/site/route-coverage/html";
-                final File htmlPath = new File(project.getBasedir() + baseHtmlPath);
-                if (!htmlPath.exists()) {
-                    htmlPath.mkdirs();
-                }
-                final File cssPath = new File(project.getBasedir() + baseHtmlPath + "/static/css");
-                if (!cssPath.exists()) {
-                    cssPath.mkdirs();
-                }
-                final File jsPath = new File(project.getBasedir() + baseHtmlPath + "/static/js");
-                if (!jsPath.exists()) {
-                    jsPath.mkdirs();
-                }
-                getLog().info("");
-                getLog().info("Generating HTML route coverage reports: " + htmlPath + "\n");
-                CoverageResultsProcessor processor = new CoverageResultsProcessor();
-                processor.writeCSS(cssPath);
-                processor.writeJS(jsPath);
-                File xmlPath = new File(project.getBasedir() + "/target/camel-route-coverage");
-                String out = processor.generateReport(project, xmlPath, htmlPath);
-                getLog().info(out);
-            } catch (Exception e) {
-                getLog().warn("Error generating HTML route coverage reports " + e.getMessage());
-            }
+            doGenerateHtmlReport();
         }
 
         // compute and log overall coverage across routes
@@ -335,6 +251,117 @@ public class RouteCoverageMojo extends AbstractExecMojo {
             throw new MojoExecutionException("There are " + notCovered.get() + " route(s) not fully covered!");
         } else if (failOnError && !overallCoverageAboveThreshold.get()) {
             throw new MojoExecutionException("The overall coverage is below " + overallCoverageThreshold + "%!");
+        }
+    }
+
+    private int grabDumpData(
+            CamelNodeDetails t, String routeId, int totalNumberOfNodes, String fileName, AtomicInteger notCovered,
+            AtomicInteger coveredNodes, Element report, Document document, String sourceFileName, Element pack)
+            throws MojoExecutionException {
+        try {
+            List<CoverageData> coverageData = RouteCoverageHelper
+                    .parseDumpRouteCoverageByRouteId(project.getBasedir() + DESTINATION_DIR, routeId);
+            if (coverageData.isEmpty()) {
+                getLog().warn("No route coverage data found for route: " + routeId
+                              + ". Make sure to enable route coverage in your unit tests and assign unique route ids to your routes. Also remember to run unit tests first.");
+            } else {
+                List<RouteCoverageNode> coverage = gatherRouteCoverageSummary(List.of(t), coverageData);
+                totalNumberOfNodes += coverage.size();
+                String out = templateCoverageData(fileName, routeId, coverage, notCovered, coveredNodes);
+                getLog().info("Route coverage summary:\n\n" + out);
+                getLog().info("");
+
+                if (generateJacocoXmlReport && report != null) {
+                    appendSourcefileNode(document, sourceFileName, pack, coverage);
+                }
+            }
+
+        } catch (Exception e) {
+            throw new MojoExecutionException("Error during gathering route coverage data for route: " + routeId, e);
+        }
+        return totalNumberOfNodes;
+    }
+
+    private void doGenerateJacocoReport(File file, Document document) {
+        try {
+            getLog().info("Generating Jacoco XML report: " + file + "\n\n");
+            createJacocoXmlFile(document, file);
+        } catch (Exception e) {
+            getLog().warn("Error generating Jacoco XML report due " + e.getMessage());
+        }
+    }
+
+    private int handleAnonymousRoutes(
+            List<CamelNodeDetails> anonymousRouteTrees, int totalNumberOfNodes, AtomicInteger notCovered,
+            AtomicInteger coveredNodes)
+            throws MojoExecutionException {
+        // grab dump data for the route
+        try {
+            Map<String, List<CoverageData>> datas = RouteCoverageHelper
+                    .parseDumpRouteCoverageByClassAndTestMethod(project.getBasedir() + DESTINATION_DIR);
+            if (datas.isEmpty()) {
+                getLog().warn("No route coverage data found"
+                              + ". Make sure to enable route coverage in your unit tests. Also remember to run unit tests first.");
+            } else {
+                Map<String, List<CamelNodeDetails>> routes = groupAnonymousRoutesByClassName(anonymousRouteTrees);
+                // attempt to match anonymous routes via the unit test class
+                for (Map.Entry<String, List<CamelNodeDetails>> t : routes.entrySet()) {
+                    List<RouteCoverageNode> coverage = new ArrayList<>();
+                    String className = t.getKey();
+
+                    // we may have multiple tests in the same test class that tests different parts of the same
+                    // routes so merge their coverage reports into a single coverage
+                    for (Map.Entry<String, List<CoverageData>> entry : datas.entrySet()) {
+                        String key = entry.getKey();
+                        String dataClassName = key.substring(0, key.indexOf('-'));
+                        if (dataClassName.equals(className)) {
+                            List<RouteCoverageNode> result = gatherRouteCoverageSummary(t.getValue(), entry.getValue());
+                            // merge them together
+                            mergeCoverageData(coverage, result);
+                        }
+                    }
+
+                    if (!coverage.isEmpty()) {
+                        totalNumberOfNodes += coverage.size();
+                        String fileName
+                                = stripRootPath(asRelativeFile(t.getValue().get(0).getFileName(), project), project);
+                        String out = templateCoverageData(fileName, null, coverage, notCovered, coveredNodes);
+                        getLog().info("Route coverage summary:\n\n" + out);
+                        getLog().info("");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new MojoExecutionException("Error during gathering route coverage data ", e);
+        }
+        return totalNumberOfNodes;
+    }
+
+    private void doGenerateHtmlReport() {
+        try {
+            final String baseHtmlPath = "/target/site/route-coverage/html";
+            final File htmlPath = new File(project.getBasedir() + baseHtmlPath);
+            if (!htmlPath.exists()) {
+                htmlPath.mkdirs();
+            }
+            final File cssPath = new File(project.getBasedir() + baseHtmlPath + "/static/css");
+            if (!cssPath.exists()) {
+                cssPath.mkdirs();
+            }
+            final File jsPath = new File(project.getBasedir() + baseHtmlPath + "/static/js");
+            if (!jsPath.exists()) {
+                jsPath.mkdirs();
+            }
+            getLog().info("");
+            getLog().info("Generating HTML route coverage reports: " + htmlPath + "\n");
+            CoverageResultsProcessor processor = new CoverageResultsProcessor();
+            processor.writeCSS(cssPath);
+            processor.writeJS(jsPath);
+            File xmlPath = new File(project.getBasedir() + DESTINATION_DIR);
+            String out = processor.generateReport(project, xmlPath, htmlPath);
+            getLog().info(out);
+        } catch (Exception e) {
+            getLog().warn("Error generating HTML route coverage reports " + e.getMessage());
         }
     }
 

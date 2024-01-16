@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-jbang-parent</artifactId>
-        <version>4.3.0-SNAPSHOT</version>
+        <version>4.4.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -39,6 +39,8 @@
         <label>jbang</label>
         <supportLevel>Preview</supportLevel>
         <camel-prepare-component>false</camel-prepare-component>
+
+        <camel.surefire.reuseForks>false</camel.surefire.reuseForks>
     </properties>
 
     <dependencies>
@@ -150,6 +152,13 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!-- test dependencies -->
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-test-junit5</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>

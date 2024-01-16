@@ -24,7 +24,7 @@
      <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>components</artifactId>
-        <version>4.3.0-SNAPSHOT</version>
+        <version>4.4.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-jsonata</artifactId>
@@ -51,9 +51,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.ibm.jsonata4java</groupId>
-            <artifactId>JSONata4Java</artifactId>
-            <version>${jsonata4java-version}</version>
+            <groupId>com.dashjoin</groupId>
+            <artifactId>jsonata</artifactId>
+            <version>${jsonata-version}</version>
         </dependency>
 
         <!-- testing -->

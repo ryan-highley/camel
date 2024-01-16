@@ -45,7 +45,7 @@ import static org.apache.camel.support.LoggerHelper.getLineNumberLoggerName;
  * Camel uses sfl4j which allows you to configure logging to the actual logging system.
  */
 @UriEndpoint(firstVersion = "1.1.0", scheme = "log", title = "Log",
-             syntax = "log:loggerName", producerOnly = true, category = { Category.CORE, Category.MONITORING })
+             remote = false, syntax = "log:loggerName", producerOnly = true, category = { Category.CORE, Category.MONITORING })
 public class LogEndpoint extends ProcessorEndpoint implements LineNumberAware {
 
     private volatile Processor logger;
@@ -73,6 +73,10 @@ public class LogEndpoint extends ProcessorEndpoint implements LineNumberAware {
     private Boolean logMask;
     @UriParam(label = "advanced")
     private ExchangeFormatter exchangeFormatter;
+    @UriParam(label = "formatting", description = "Show route ID.")
+    private boolean showRouteId;
+    @UriParam(label = "formatting", description = "Show route Group.")
+    private boolean showRouteGroup;
     @UriParam(label = "formatting", description = "Show the unique exchange ID.")
     private boolean showExchangeId;
     @UriParam(label = "formatting",
@@ -83,6 +87,8 @@ public class LogEndpoint extends ProcessorEndpoint implements LineNumberAware {
     private boolean showProperties;
     @UriParam(label = "formatting", description = "Show all of the exchange properties (both internal and custom).")
     private boolean showAllProperties;
+    @UriParam(label = "formatting", description = "Show the variables.")
+    private boolean showVariables;
     @UriParam(label = "formatting", description = "Show the message headers.")
     private boolean showHeaders;
     @UriParam(label = "formatting", defaultValue = "true",
@@ -158,7 +164,8 @@ public class LogEndpoint extends ProcessorEndpoint implements LineNumberAware {
             // are any options configured if not we can optimize to use shared default
             boolean changed = showExchangePattern || !skipBodyLineSeparator || !showBody || !showBodyType || maxChars != 10000
                     || style != DefaultExchangeFormatter.OutputStyle.Default || plain;
-            changed |= showExchangeId || showProperties || showAllProperties || showHeaders || showException
+            changed |= showRouteId || showRouteGroup;
+            changed |= showExchangeId || showProperties || showAllProperties || showVariables || showHeaders || showException
                     || showCaughtException
                     || showStackTrace;
             changed |= showAll || multiline || showFuture || !showCachedStreams || showStreams || showFiles;
@@ -166,6 +173,8 @@ public class LogEndpoint extends ProcessorEndpoint implements LineNumberAware {
             if (changed) {
                 DefaultExchangeFormatter def = new DefaultExchangeFormatter();
                 def.setPlain(plain);
+                def.setShowRouteId(showRouteId);
+                def.setShowRouteGroup(showRouteGroup);
                 def.setShowAll(showAll);
                 def.setShowBody(showBody);
                 def.setShowBodyType(showBodyType);
@@ -176,6 +185,7 @@ public class LogEndpoint extends ProcessorEndpoint implements LineNumberAware {
                 def.setShowFiles(showFiles);
                 def.setShowFuture(showFuture);
                 def.setShowHeaders(showHeaders);
+                def.setShowVariables(showVariables);
                 def.setShowProperties(showProperties);
                 def.setShowAllProperties(showAllProperties);
                 def.setShowStackTrace(showStackTrace);
@@ -440,6 +450,22 @@ public class LogEndpoint extends ProcessorEndpoint implements LineNumberAware {
         this.exchangeFormatter = exchangeFormatter;
     }
 
+    public boolean isShowRouteId() {
+        return showRouteId;
+    }
+
+    public void setShowRouteId(boolean showRouteId) {
+        this.showRouteId = showRouteId;
+    }
+
+    public boolean isShowRouteGroup() {
+        return showRouteGroup;
+    }
+
+    public void setShowRouteGroup(boolean showRouteGroup) {
+        this.showRouteGroup = showRouteGroup;
+    }
+
     public boolean isShowExchangeId() {
         return showExchangeId;
     }
@@ -470,6 +496,14 @@ public class LogEndpoint extends ProcessorEndpoint implements LineNumberAware {
 
     public void setShowAllProperties(boolean showAllProperties) {
         this.showAllProperties = showAllProperties;
+    }
+
+    public boolean isShowVariables() {
+        return showVariables;
+    }
+
+    public void setShowVariables(boolean showVariables) {
+        this.showVariables = showVariables;
     }
 
     public boolean isShowHeaders() {

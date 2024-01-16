@@ -318,6 +318,20 @@ public class ModelParser extends BaseParser {
                 case "charset": def.setCharset(val); break;
                 case "mandatory": def.setMandatory(val); break;
                 case "name": def.setName(val); break;
+                case "toName": def.setToName(val); break;
+                case "type": def.setType(val); break;
+                default: return processorDefinitionAttributeHandler().accept(def, key, val);
+            }
+            return true;
+        }, optionalIdentifiedDefinitionElementHandler(), noValueHandler());
+    }
+    protected ConvertVariableDefinition doParseConvertVariableDefinition() throws IOException, XmlPullParserException {
+        return doParse(new ConvertVariableDefinition(), (def, key, val) -> {
+            switch (key) {
+                case "charset": def.setCharset(val); break;
+                case "mandatory": def.setMandatory(val); break;
+                case "name": def.setName(val); break;
+                case "toName": def.setToName(val); break;
                 case "type": def.setType(val); break;
                 default: return processorDefinitionAttributeHandler().accept(def, key, val);
             }
@@ -390,6 +404,7 @@ public class ModelParser extends BaseParser {
                 case "aggregationStrategyMethodAllowNull": def.setAggregationStrategyMethodAllowNull(val); break;
                 case "aggregationStrategyMethodName": def.setAggregationStrategyMethodName(val); break;
                 case "allowOptimisedComponents": def.setAllowOptimisedComponents(val); break;
+                case "autoStartComponents": def.setAutoStartComponents(val); break;
                 case "cacheSize": def.setCacheSize(val); break;
                 case "ignoreInvalidEndpoint": def.setIgnoreInvalidEndpoint(val); break;
                 case "shareUnitOfWork": def.setShareUnitOfWork(val); break;
@@ -743,6 +758,7 @@ public class ModelParser extends BaseParser {
                 case "aggregationStrategy": def.setAggregationStrategy(val); break;
                 case "aggregationStrategyMethodAllowNull": def.setAggregationStrategyMethodAllowNull(val); break;
                 case "aggregationStrategyMethodName": def.setAggregationStrategyMethodName(val); break;
+                case "autoStartComponents": def.setAutoStartComponents(val); break;
                 case "cacheSize": def.setCacheSize(val); break;
                 case "ignoreInvalidEndpoint": def.setIgnoreInvalidEndpoint(val); break;
                 case "timeout": def.setTimeout(val); break;
@@ -857,12 +873,21 @@ public class ModelParser extends BaseParser {
             return processorDefinitionAttributeHandler().accept(def, key, val);
         }, optionalIdentifiedDefinitionElementHandler(), noValueHandler());
     }
+    protected RemoveVariableDefinition doParseRemoveVariableDefinition() throws IOException, XmlPullParserException {
+        return doParse(new RemoveVariableDefinition(), (def, key, val) -> {
+            if ("name".equals(key)) {
+                def.setName(val);
+                return true;
+            }
+            return processorDefinitionAttributeHandler().accept(def, key, val);
+        }, optionalIdentifiedDefinitionElementHandler(), noValueHandler());
+    }
     protected ResequenceDefinition doParseResequenceDefinition() throws IOException, XmlPullParserException {
         return doParse(new ResequenceDefinition(),
             processorDefinitionAttributeHandler(), (def, key) -> {
             switch (key) {
-                case "batch-config": def.setResequencerConfig(doParseBatchResequencerConfig()); break;
-                case "stream-config": def.setResequencerConfig(doParseStreamResequencerConfig()); break;
+                case "batchConfig": def.setResequencerConfig(doParseBatchResequencerConfig()); break;
+                case "streamConfig": def.setResequencerConfig(doParseStreamResequencerConfig()); break;
                 default: 
                     ExpressionDefinition v = doParseExpressionDefinitionRef(key);
                     if (v != null) { 
@@ -1318,6 +1343,15 @@ public class ModelParser extends BaseParser {
     }
     protected SetPropertyDefinition doParseSetPropertyDefinition() throws IOException, XmlPullParserException {
         return doParse(new SetPropertyDefinition(), (def, key, val) -> {
+            if ("name".equals(key)) {
+                def.setName(val);
+                return true;
+            }
+            return processorDefinitionAttributeHandler().accept(def, key, val);
+        }, expressionNodeElementHandler(), noValueHandler());
+    }
+    protected SetVariableDefinition doParseSetVariableDefinition() throws IOException, XmlPullParserException {
+        return doParse(new SetVariableDefinition(), (def, key, val) -> {
             if ("name".equals(key)) {
                 def.setName(val);
                 return true;
@@ -2450,6 +2484,7 @@ public class ModelParser extends BaseParser {
         return doParse(new ParquetAvroDataFormat(), (def, key, val) -> {
             switch (key) {
                 case "compressionCodecName": def.setCompressionCodecName(val); break;
+                case "lazyLoad": def.setLazyLoad(val); break;
                 case "unmarshalType": def.setUnmarshalTypeName(val); break;
                 default: return identifiedTypeAttributeHandler().accept(def, key, val);
             }
@@ -3439,6 +3474,7 @@ public class ModelParser extends BaseParser {
             case "claimCheck": return doParseClaimCheckDefinition();
             case "convertBodyTo": return doParseConvertBodyDefinition();
             case "convertHeaderTo": return doParseConvertHeaderDefinition();
+            case "convertVariableTo": return doParseConvertVariableDefinition();
             case "delay": return doParseDelayDefinition();
             case "dynamicRouter": return doParseDynamicRouterDefinition();
             case "enrich": return doParseEnrichDefinition();
@@ -3466,6 +3502,7 @@ public class ModelParser extends BaseParser {
             case "removeHeaders": return doParseRemoveHeadersDefinition();
             case "removeProperties": return doParseRemovePropertiesDefinition();
             case "removeProperty": return doParseRemovePropertyDefinition();
+            case "removeVariable": return doParseRemoveVariableDefinition();
             case "resequence": return doParseResequenceDefinition();
             case "resumable": return doParseResumableDefinition();
             case "rollback": return doParseRollbackDefinition();
@@ -3479,6 +3516,7 @@ public class ModelParser extends BaseParser {
             case "setHeader": return doParseSetHeaderDefinition();
             case "setHeaders": return doParseSetHeadersDefinition();
             case "setProperty": return doParseSetPropertyDefinition();
+            case "setVariable": return doParseSetVariableDefinition();
             case "sort": return doParseSortDefinition();
             case "split": return doParseSplitDefinition();
             case "step": return doParseStepDefinition();

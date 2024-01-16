@@ -43,6 +43,8 @@ import org.apache.camel.Headers;
 import org.apache.camel.InvalidPayloadException;
 import org.apache.camel.Producer;
 import org.apache.camel.RuntimeCamelException;
+import org.apache.camel.Variable;
+import org.apache.camel.Variables;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.StringHelper;
@@ -53,6 +55,7 @@ public abstract class AbstractCamelInvocationHandler implements InvocationHandle
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractCamelInvocationHandler.class);
     private static final List<Method> EXCLUDED_METHODS = new ArrayList<>();
+    public static final String CAMEL_INVOCATION_HANDLER = "CamelInvocationHandler";
     private static ExecutorService executorService;
     protected final Endpoint endpoint;
     protected final Producer producer;
@@ -97,7 +100,7 @@ public abstract class AbstractCamelInvocationHandler implements InvocationHandle
     @SuppressWarnings("unchecked")
     protected Object invokeProxy(final Method method, final ExchangePattern pattern, Object[] args, boolean binding)
             throws Throwable {
-        final Exchange exchange = new DefaultExchange(endpoint, pattern);
+        final Exchange exchange = DefaultExchange.newFromEndpoint(endpoint, pattern);
 
         //Need to check if there are mutiple arguments and the parameters have no annotations for binding,
         //then use the original bean invocation.
@@ -108,6 +111,8 @@ public abstract class AbstractCamelInvocationHandler implements InvocationHandle
             for (Parameter parameter : method.getParameters()) {
                 if (parameter.isAnnotationPresent(Header.class)
                         || parameter.isAnnotationPresent(Headers.class)
+                        || parameter.isAnnotationPresent(Variable.class)
+                        || parameter.isAnnotationPresent(Variables.class)
                         || parameter.isAnnotationPresent(ExchangeProperty.class)
                         || parameter.isAnnotationPresent(Body.class)) {
                     canUseBinding = true;
@@ -137,6 +142,16 @@ public abstract class AbstractCamelInvocationHandler implements InvocationHandle
                                     = exchange.getContext().getTypeConverter().tryConvertTo(Map.class, exchange, value);
                             if (map != null) {
                                 exchange.getIn().getHeaders().putAll(map);
+                            }
+                        } else if (ann.annotationType().isAssignableFrom(Variable.class)) {
+                            Variable variable = (Variable) ann;
+                            String name = variable.value();
+                            exchange.setVariable(name, value);
+                        } else if (ann.annotationType().isAssignableFrom(Variables.class)) {
+                            Map<String, Object> map
+                                    = exchange.getContext().getTypeConverter().tryConvertTo(Map.class, exchange, value);
+                            if (map != null) {
+                                exchange.getVariables().putAll(map);
                             }
                         } else if (ann.annotationType().isAssignableFrom(ExchangeProperty.class)) {
                             ExchangeProperty ep = (ExchangeProperty) ann;
@@ -172,7 +187,7 @@ public abstract class AbstractCamelInvocationHandler implements InvocationHandle
     }
 
     protected Object invokeWithBody(final Method method, Object body, final ExchangePattern pattern) throws Throwable {
-        final Exchange exchange = new DefaultExchange(endpoint, pattern);
+        final Exchange exchange = DefaultExchange.newFromEndpoint(endpoint, pattern);
         exchange.getIn().setBody(body);
 
         return doInvoke(method, exchange);
@@ -281,14 +296,14 @@ public abstract class AbstractCamelInvocationHandler implements InvocationHandle
         // re-create it (its a shared static instance)
         if (executorService == null || executorService.isTerminated() || executorService.isShutdown()) {
             // try to lookup a pool first based on id/profile
-            executorService = context.getRegistry().lookupByNameAndType("CamelInvocationHandler", ExecutorService.class);
+            executorService = context.getRegistry().lookupByNameAndType(CAMEL_INVOCATION_HANDLER, ExecutorService.class);
             if (executorService == null) {
                 executorService = context.getExecutorServiceManager().newThreadPool(CamelInvocationHandler.class,
-                        "CamelInvocationHandler", "CamelInvocationHandler");
+                        CAMEL_INVOCATION_HANDLER, CAMEL_INVOCATION_HANDLER);
             }
             if (executorService == null) {
                 executorService = context.getExecutorServiceManager().newDefaultThreadPool(CamelInvocationHandler.class,
-                        "CamelInvocationHandler");
+                        CAMEL_INVOCATION_HANDLER);
             }
         }
         return executorService;

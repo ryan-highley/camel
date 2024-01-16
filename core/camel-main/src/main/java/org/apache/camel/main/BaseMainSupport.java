@@ -72,6 +72,7 @@ import org.apache.camel.spi.Registry;
 import org.apache.camel.spi.RouteTemplateParameterSource;
 import org.apache.camel.spi.RoutesLoader;
 import org.apache.camel.spi.StartupStepRecorder;
+import org.apache.camel.spi.SupervisingRouteController;
 import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.support.DefaultContextReloadStrategy;
 import org.apache.camel.support.LifecycleStrategySupport;
@@ -969,12 +970,14 @@ public abstract class BaseMainSupport extends BaseService {
         OrderedLocationProperties otelProperties = new OrderedLocationProperties();
         OrderedLocationProperties metricsProperties = new OrderedLocationProperties();
         OrderedLocationProperties routeTemplateProperties = new OrderedLocationProperties();
+        OrderedLocationProperties variableProperties = new OrderedLocationProperties();
         OrderedLocationProperties beansProperties = new OrderedLocationProperties();
         OrderedLocationProperties devConsoleProperties = new OrderedLocationProperties();
         OrderedLocationProperties globalOptions = new OrderedLocationProperties();
         OrderedLocationProperties httpServerProperties = new OrderedLocationProperties();
         OrderedLocationProperties sslProperties = new OrderedLocationProperties();
         OrderedLocationProperties debuggerProperties = new OrderedLocationProperties();
+        OrderedLocationProperties routeControllerProperties = new OrderedLocationProperties();
         for (String key : prop.stringPropertyNames()) {
             String loc = prop.getLocation(key);
             if (key.startsWith("camel.context.")) {
@@ -1049,6 +1052,12 @@ public abstract class BaseMainSupport extends BaseService {
                 String option = key.substring(17);
                 validateOptionAndValue(key, option, value);
                 devConsoleProperties.put(loc, optionKey(option), value);
+            } else if (key.startsWith("camel.variable.")) {
+                // grab the value
+                String value = prop.getProperty(key);
+                String option = key.substring(15);
+                validateOptionAndValue(key, option, value);
+                variableProperties.put(loc, optionKey(option), value);
             } else if (key.startsWith("camel.beans.")) {
                 // grab the value
                 String value = prop.getProperty(key);
@@ -1079,6 +1088,12 @@ public abstract class BaseMainSupport extends BaseService {
                 String option = key.substring(12);
                 validateOptionAndValue(key, option, value);
                 debuggerProperties.put(loc, optionKey(option), value);
+            } else if (key.startsWith("camel.routeController.")) {
+                // grab the value
+                String value = prop.getProperty(key);
+                String option = key.substring(22);
+                validateOptionAndValue(key, option, value);
+                routeControllerProperties.put(loc, optionKey(option), value);
             }
         }
 
@@ -1088,6 +1103,11 @@ public abstract class BaseMainSupport extends BaseService {
                 Object value = globalOptions.getProperty(name);
                 mainConfigurationProperties.addGlobalOption(name, value);
             }
+        }
+        // create variables first as they may be used later
+        if (!variableProperties.isEmpty()) {
+            LOG.debug("Auto-configuring Variables from loaded properties: {}", variableProperties.size());
+            MainSupportModelConfigurer.setVariableProperties(camelContext, variableProperties, autoConfiguredProperties);
         }
         // create beans first as they may be used later
         if (!beansProperties.isEmpty()) {
@@ -1172,12 +1192,23 @@ public abstract class BaseMainSupport extends BaseService {
                     mainConfigurationProperties.isAutoConfigurationFailFast(),
                     autoConfiguredProperties);
         }
+        if (!routeControllerProperties.isEmpty() || mainConfigurationProperties.hasRouteControllerConfiguration()) {
+            LOG.debug("Auto-configuring Route Controller from loaded properties: {}", routeControllerProperties.size());
+            setRouteControllerProperties(camelContext, routeControllerProperties,
+                    mainConfigurationProperties.isAutoConfigurationFailFast(),
+                    autoConfiguredProperties);
+        }
 
         // configure which requires access to the model
         MainSupportModelConfigurer.configureModelCamelContext(camelContext, mainConfigurationProperties,
                 autoConfiguredProperties, resilience4jProperties, faultToleranceProperties);
 
         // log which options was not set
+        if (!variableProperties.isEmpty()) {
+            variableProperties.forEach((k, v) -> {
+                LOG.warn("Property not auto-configured: camel.variable.{}={}", k, v);
+            });
+        }
         if (!beansProperties.isEmpty()) {
             beansProperties.forEach((k, v) -> {
                 LOG.warn("Property not auto-configured: camel.beans.{}={}", k, v);
@@ -1226,6 +1257,16 @@ public abstract class BaseMainSupport extends BaseService {
         if (!debuggerProperties.isEmpty()) {
             debuggerProperties.forEach((k, v) -> {
                 LOG.warn("Property not auto-configured: camel.debug.{}={}", k, v);
+            });
+        }
+        if (!routeControllerProperties.isEmpty()) {
+            routeControllerProperties.forEach((k, v) -> {
+                LOG.warn("Property not auto-configured: camel.routeController.{}={}", k, v);
+            });
+        }
+        if (!devConsoleProperties.isEmpty()) {
+            devConsoleProperties.forEach((k, v) -> {
+                LOG.warn("Property not auto-configured: camel.devConsole.{}={}", k, v);
             });
         }
         if (!routeTemplateProperties.isEmpty()) {
@@ -1616,6 +1657,51 @@ public abstract class BaseMainSupport extends BaseService {
         });
 
         camelContext.addService(debugger);
+    }
+
+    private void setRouteControllerProperties(
+            CamelContext camelContext, OrderedLocationProperties properties,
+            boolean failIfNotSet, OrderedLocationProperties autoConfiguredProperties)
+            throws Exception {
+
+        RouteControllerConfigurationProperties config = mainConfigurationProperties.routeControllerConfig();
+        setPropertiesOnTarget(camelContext, config, properties, "camel.routeController.",
+                failIfNotSet, true, autoConfiguredProperties);
+
+        // supervising route controller
+        if (config.isEnabled()) {
+            SupervisingRouteController src = camelContext.getRouteController().supervising();
+            if (config.getIncludeRoutes() != null) {
+                src.setIncludeRoutes(config.getIncludeRoutes());
+            }
+            if (config.getExcludeRoutes() != null) {
+                src.setExcludeRoutes(config.getExcludeRoutes());
+            }
+            if (config.getThreadPoolSize() > 0) {
+                src.setThreadPoolSize(config.getThreadPoolSize());
+            }
+            if (config.getBackOffDelay() > 0) {
+                src.setBackOffDelay(config.getBackOffDelay());
+            }
+            if (config.getInitialDelay() > 0) {
+                src.setInitialDelay(config.getInitialDelay());
+            }
+            if (config.getBackOffMaxAttempts() > 0) {
+                src.setBackOffMaxAttempts(config.getBackOffMaxAttempts());
+            }
+            if (config.getBackOffMaxDelay() > 0) {
+                src.setBackOffMaxDelay(config.getBackOffDelay());
+            }
+            if (config.getBackOffMaxElapsedTime() > 0) {
+                src.setBackOffMaxElapsedTime(config.getBackOffMaxElapsedTime());
+            }
+            if (config.getBackOffMultiplier() > 0) {
+                src.setBackOffMultiplier(config.getBackOffMultiplier());
+            }
+            src.setUnhealthyOnExhausted(config.isUnhealthyOnExhausted());
+            src.setUnhealthyOnRestarting(config.isUnhealthyOnRestarting());
+        }
+
     }
 
     private void bindBeansToRegistry(

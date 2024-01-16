@@ -11,7 +11,7 @@
     "supportLevel": "Stable",
     "groupId": "org.apache.camel",
     "artifactId": "camel-caffeine",
-    "version": "4.3.0-SNAPSHOT",
+    "version": "4.4.0-SNAPSHOT",
     "scheme": "caffeine-loadcache",
     "extendsScheme": "",
     "syntax": "caffeine-loadcache:cacheName",
@@ -19,7 +19,8 @@
     "api": false,
     "consumerOnly": false,
     "producerOnly": true,
-    "lenientProperties": false
+    "lenientProperties": false,
+    "remote": false
   },
   "componentProperties": {
     "action": { "index": 0, "kind": "property", "displayName": "Action", "group": "producer", "label": "", "required": false, "type": "string", "javaType": "java.lang.String", "enum": [ "GET", "GET_ALL", "PUT", "PUT_ALL", "INVALIDATE", "INVALIDATE_ALL", "CLEANUP", "AS_MAP" ], "deprecated": false, "autowired": false, "secret": false, "configurationClass": "org.apache.camel.component.caffeine.CaffeineConfiguration", "configurationField": "configuration", "description": "To configure the default cache action. If an action is set in the message header, then the operation from the header takes precedence." },

@@ -11,7 +11,7 @@
     "supportLevel": "Stable",
     "groupId": "org.apache.camel",
     "artifactId": "camel-aws2-ses",
-    "version": "4.3.0-SNAPSHOT",
+    "version": "4.4.0-SNAPSHOT",
     "scheme": "aws2-ses",
     "extendsScheme": "",
     "syntax": "aws2-ses:from",
@@ -19,7 +19,8 @@
     "api": false,
     "consumerOnly": false,
     "producerOnly": true,
-    "lenientProperties": false
+    "lenientProperties": false,
+    "remote": true
   },
   "componentProperties": {
     "bcc": { "index": 0, "kind": "property", "displayName": "Bcc", "group": "producer", "label": "", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "configurationClass": "org.apache.camel.component.aws2.ses.Ses2Configuration", "configurationField": "configuration", "description": "List of comma separated destination blind carbon copy (bcc) email address. Can be overridden with 'CamelAwsSesBcc' header." },

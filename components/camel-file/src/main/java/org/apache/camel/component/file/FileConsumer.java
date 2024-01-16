@@ -160,7 +160,7 @@ public class FileConsumer extends GenericFileConsumer<File> implements ResumeAwa
 
         File directory = new File(fileName);
         if (!directory.exists() || !directory.isDirectory()) {
-            LOG.debug("Cannot poll as directory does not exists or its not a directory: {}", directory);
+            LOG.debug("Cannot poll as directory does not exist or its not a directory: {}", directory);
             if (getEndpoint().isDirectoryMustExist()) {
                 throw new GenericFileOperationFailedException("Directory does not exist: " + directory);
             }
@@ -171,7 +171,7 @@ public class FileConsumer extends GenericFileConsumer<File> implements ResumeAwa
     }
 
     private File[] listFiles(File directory) {
-        if (!getEndpoint().isIncludeHiddenDirs() && directory.getName().startsWith(".")) {
+        if (!getEndpoint().isIncludeHiddenDirs() && directory.isHidden()) {
             return null;
         }
         final File[] dirFiles = directory.listFiles();

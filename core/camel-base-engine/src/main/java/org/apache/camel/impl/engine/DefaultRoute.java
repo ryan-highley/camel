@@ -59,6 +59,7 @@ import org.apache.camel.support.resume.AdapterHelper;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.support.service.ServiceSupport;
 import org.apache.camel.util.ObjectHelper;
+import org.apache.camel.util.StopWatch;
 import org.apache.camel.util.TimeUtils;
 
 /**
@@ -106,7 +107,7 @@ public class DefaultRoute extends ServiceSupport implements Route {
     private final Endpoint endpoint;
     private final Map<String, Object> properties = new HashMap<>();
     private final List<Service> services = new ArrayList<>();
-    private long startDate;
+    private StopWatch stopWatch = new StopWatch(false);
     private RouteError routeError;
     private Integer startupOrder;
     private RouteController routeController;
@@ -156,10 +157,7 @@ public class DefaultRoute extends ServiceSupport implements Route {
 
     @Override
     public long getUptimeMillis() {
-        if (startDate == 0) {
-            return 0;
-        }
-        return System.currentTimeMillis() - startDate;
+        return stopWatch.taken();
     }
 
     @Override
@@ -206,6 +204,7 @@ public class DefaultRoute extends ServiceSupport implements Route {
 
     @Override
     public void initializeServices() throws Exception {
+        services.clear();
         // gather all the services for this route
         gatherServices(services);
     }
@@ -247,13 +246,13 @@ public class DefaultRoute extends ServiceSupport implements Route {
 
     @Override
     protected void doStart() throws Exception {
-        startDate = System.currentTimeMillis();
+        stopWatch.restart();
     }
 
     @Override
     protected void doStop() throws Exception {
         // and clear start date
-        startDate = 0;
+        stopWatch.stop();
     }
 
     @Override
@@ -636,7 +635,7 @@ public class DefaultRoute extends ServiceSupport implements Route {
         }
     }
 
-    protected void gatherRootServices(List<Service> services) throws Exception {
+    private void gatherRootServices(List<Service> services) throws Exception {
         Endpoint endpoint = getEndpoint();
         consumer = endpoint.createConsumer(processor);
         if (consumer != null) {

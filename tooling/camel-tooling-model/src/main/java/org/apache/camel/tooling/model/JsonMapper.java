@@ -188,6 +188,7 @@ public final class JsonMapper {
         model.setConsumerOnly(mobj.getBooleanOrDefault("consumerOnly", false));
         model.setProducerOnly(mobj.getBooleanOrDefault("producerOnly", false));
         model.setLenientProperties(mobj.getBooleanOrDefault("lenientProperties", false));
+        model.setRemote(mobj.getBooleanOrDefault("remote", false));
         parseArtifact(mobj, model);
     }
 
@@ -219,6 +220,7 @@ public final class JsonMapper {
         obj.put("consumerOnly", model.isConsumerOnly());
         obj.put("producerOnly", model.isProducerOnly());
         obj.put("lenientProperties", model.isLenientProperties());
+        obj.put("remote", model.isRemote());
         obj.put("verifiers", model.getVerifiers());
         obj.entrySet().removeIf(e -> e.getValue() == null);
         JsonObject wrapper = new JsonObject();
@@ -458,6 +460,8 @@ public final class JsonMapper {
         option.setGetterMethod(mp.getString("getterMethod"));
         option.setSetterMethod(mp.getString("setterMethod"));
         option.setSupportFileReference(mp.getBooleanOrDefault("supportFileReference", false));
+        option.setLargeInput(mp.getBooleanOrDefault("largeInput", false));
+        option.setInputLanguage(mp.getString("inputLanguage"));
     }
 
     private static void parseGroup(JsonObject mp, MainGroupModel option) {
@@ -537,6 +541,14 @@ public final class JsonMapper {
         if (option.isSupportFileReference()) {
             // only include if supported to not regen all files
             prop.put("supportFileReference", option.isSupportFileReference());
+        }
+        if (option.isLargeInput()) {
+            // only include if supported to not regen all files
+            prop.put("largeInput", option.isLargeInput());
+        }
+        if (!Strings.isNullOrEmpty(option.getInputLanguage())) {
+            // only include if supported to not regen all files
+            prop.put("inputLanguage", option.getInputLanguage());
         }
         prop.put("asPredicate", option.isAsPredicate());
         prop.put("configurationClass", option.getConfigurationClass());

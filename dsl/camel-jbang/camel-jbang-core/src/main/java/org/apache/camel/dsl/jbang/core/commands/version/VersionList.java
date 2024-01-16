@@ -63,8 +63,8 @@ public class VersionList extends CamelCommand {
     String runtime;
 
     @CommandLine.Option(names = { "--from-version" },
-                        description = "Filter by Camel version (inclusive)", defaultValue = "3.14.0")
-    String fromVersion = "3.14.0";
+                        description = "Filter by Camel version (inclusive)", defaultValue = "4.0.0")
+    String fromVersion = "4.0.0";
 
     @CommandLine.Option(names = { "--to-version" },
                         description = "Filter by Camel version (exclusive)")
@@ -110,7 +110,7 @@ public class VersionList extends CamelCommand {
                 a = "camel-quarkus-catalog";
             }
 
-            RepositoryResolver rr = main.getCamelContext().hasService(RepositoryResolver.class);
+            RepositoryResolver rr = downloader.getRepositoryResolver();
             if (rr != null) {
                 repo = rr.resolveRepository(repo);
             }
@@ -133,7 +133,7 @@ public class VersionList extends CamelCommand {
             main.stop();
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Error downloading available Camel versions");
+            printer().println("Error downloading available Camel versions");
             return 1;
         }
 
@@ -173,7 +173,7 @@ public class VersionList extends CamelCommand {
         rows.sort(this::sortRow);
 
         // camel-quarkus is not LTS and have its own release schedule
-        System.out.println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
+        printer().println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
                 new Column().header("CAMEL VERSION")
                         .headerAlign(HorizontalAlign.CENTER).dataAlign(HorizontalAlign.CENTER).with(r -> r.coreVersion),
                 new Column().header("QUARKUS").visible("quarkus".equalsIgnoreCase(runtime))

@@ -348,7 +348,7 @@ public class OriginalSimpleTest extends LanguageTestSupport {
 
         exchange.getIn().setBody(map);
 
-        assertExpression("${BodyAs(Map)?.get(\"list\")[0].toString}", null);
+        assertExpression("${bodyAs(Map)?.get(\"list\")[0].toString}", null);
     }
 
     @Test
@@ -658,7 +658,8 @@ public class OriginalSimpleTest extends LanguageTestSupport {
 
     @Test
     public void testDateExchangeCreated() {
-        Object out = evaluateExpression("${date:exchangeCreated:hh:mm:ss a}", "" + exchange.getCreated());
+        Object out = evaluateExpression("${date:exchangeCreated:hh:mm:ss a}",
+                String.valueOf(exchange.getClock().getCreated()));
         assertNotNull(out);
     }
 

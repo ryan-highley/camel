@@ -44,6 +44,8 @@ import org.apache.camel.spi.Language;
 import org.apache.camel.spi.PropertiesComponent;
 import org.apache.camel.spi.Registry;
 import org.apache.camel.spi.UnitOfWork;
+import org.apache.camel.spi.VariableRepository;
+import org.apache.camel.spi.VariableRepositoryFactory;
 import org.apache.camel.support.ConstantExpressionAdapter;
 import org.apache.camel.support.ExchangeHelper;
 import org.apache.camel.support.ExpressionAdapter;
@@ -97,6 +99,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 headerName.init(context);
             }
 
@@ -166,6 +169,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 headerName.init(context);
                 typeName.init(context);
                 classResolver = context.getClassResolver();
@@ -174,6 +178,137 @@ public class ExpressionBuilder {
             @Override
             public String toString() {
                 return "headerAs(" + headerName + ", " + typeName + ")";
+            }
+        };
+    }
+
+    /**
+     * Returns an expression for the variable with the given name
+     *
+     * @param  variableName the name of the variable the expression will return
+     * @return              an expression object which will return the variable value
+     */
+    public static Expression variableExpression(final String variableName) {
+        return variableExpression(simpleExpression(variableName));
+    }
+
+    /**
+     * Returns an expression for the variable with the given name
+     *
+     * @param  variableName the name of the variable the expression will return
+     * @return              an expression object which will return the variable value
+     */
+    public static Expression variableExpression(final Expression variableName) {
+        return new ExpressionAdapter() {
+            private VariableRepositoryFactory factory;
+
+            @Override
+            public Object evaluate(Exchange exchange) {
+                String key = variableName.evaluate(exchange, String.class);
+                String id = StringHelper.before(key, ":");
+                if (id != null) {
+                    VariableRepository repo = factory.getVariableRepository(id);
+                    if (repo != null) {
+                        key = StringHelper.after(key, ":");
+                        return repo.getVariable(key);
+                    } else {
+                        throw new IllegalArgumentException("VariableRepository with id: " + id + " does not exist");
+                    }
+                } else {
+                    return exchange.getVariable(key);
+                }
+            }
+
+            @Override
+            public void init(CamelContext context) {
+                super.init(context);
+                variableName.init(context);
+                factory = context.getCamelContextExtension().getContextPlugin(VariableRepositoryFactory.class);
+            }
+
+            @Override
+            public String toString() {
+                return "variable(" + variableName + ")";
+            }
+        };
+    }
+
+    /**
+     * Returns an expression for the variable with the given name converted to the given type
+     *
+     * @param  variableName the name of the variable the expression will return
+     * @param  type         the type to convert to
+     * @return              an expression object which will return the variable value
+     */
+    public static <T> Expression variableExpression(final String variableName, final Class<T> type) {
+        return variableExpression(simpleExpression(variableName), constantExpression(type.getName()));
+    }
+
+    /**
+     * Returns an expression for the variable with the given name converted to the given type
+     *
+     * @param  variableName the name of the variable the expression will return
+     * @param  typeName     the type to convert to as a FQN class name
+     * @return              an expression object which will return the header value
+     */
+    public static Expression variableExpression(final String variableName, final String typeName) {
+        return variableExpression(simpleExpression(variableName), simpleExpression(typeName));
+    }
+
+    /**
+     * Returns an expression for the variable with the given name converted to the given type
+     *
+     * @param  variableName the name of the variable the expression will return
+     * @param  typeName     the type to convert to as a FQN class name
+     * @return              an expression object which will return the header value
+     */
+    public static Expression variableExpression(final Expression variableName, final Expression typeName) {
+        return new ExpressionAdapter() {
+            private ClassResolver classResolver;
+            private VariableRepositoryFactory factory;
+            private TypeConverter converter;
+
+            @Override
+            public Object evaluate(Exchange exchange) {
+                Class<?> type;
+                try {
+                    String text = typeName.evaluate(exchange, String.class);
+                    type = classResolver.resolveMandatoryClass(text);
+                } catch (ClassNotFoundException e) {
+                    throw CamelExecutionException.wrapCamelExecutionException(exchange, e);
+                }
+                String key = variableName.evaluate(exchange, String.class);
+                String id = StringHelper.before(key, ":");
+                if (id != null) {
+                    VariableRepository repo = factory.getVariableRepository(id);
+                    if (repo != null) {
+                        key = StringHelper.after(key, ":");
+                        Object value = repo.getVariable(key);
+                        if (value != null) {
+                            value = converter.convertTo(type, value);
+                        }
+                        return value;
+                    } else {
+                        throw new IllegalArgumentException("VariableRepository with id: " + id + " does not exist");
+                    }
+                } else {
+                    return exchange.getVariable(key, type);
+                }
+            }
+
+            @Override
+            public void init(CamelContext context) {
+                super.init(context);
+                variableName.init(context);
+                typeName.init(context);
+                classResolver = context.getClassResolver();
+                factory = context.getCamelContextExtension().getContextPlugin(VariableRepositoryFactory.class);
+                converter = context.getTypeConverter();
+            }
+
+            @Override
+            public String toString() {
+                return "variableAs(" + variableName + ", " + typeName + ")";
             }
         };
     }
@@ -193,6 +328,25 @@ public class ExpressionBuilder {
             @Override
             public String toString() {
                 return "headers";
+            }
+        };
+    }
+
+    /**
+     * Returns an expression for the {@link Exchange} variables
+     *
+     * @return an expression object which will return the variables
+     */
+    public static Expression variablesExpression() {
+        return new ExpressionAdapter() {
+            @Override
+            public Object evaluate(Exchange exchange) {
+                return exchange.getVariables();
+            }
+
+            @Override
+            public String toString() {
+                return "variables";
             }
         };
     }
@@ -285,6 +439,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 typeConverter = context.getTypeConverter();
             }
 
@@ -311,6 +466,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 registry = context.getRegistry();
             }
 
@@ -355,6 +511,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 ref.init(context);
                 registry = context.getRegistry();
             }
@@ -382,6 +539,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 this.context = context;
             }
 
@@ -408,6 +566,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 name = context.getName();
                 setValue(name);
             }
@@ -487,6 +646,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 propertyName.init(context);
             }
 
@@ -532,6 +692,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 globalOptions = context.getGlobalOptions();
             }
 
@@ -568,6 +729,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 propertyName.init(context);
             }
 
@@ -623,6 +785,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 exprName.init(context);
                 defaultValue.init(context);
             }
@@ -683,6 +846,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 propertyName.init(context);
                 defaultValue.init(context);
             }
@@ -709,6 +873,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 setValue(value);
             }
 
@@ -733,6 +898,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 exp = language.createExpression(expression);
                 exp.init(context);
             }
@@ -772,6 +938,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 Language lan = context.resolveLanguage(language);
                 if (lan != null) {
                     pred = lan.createPredicate(expression);
@@ -962,6 +1129,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 name.init(context);
                 classResolver = context.getClassResolver();
             }
@@ -1041,6 +1209,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 hostname = InetAddressUtil.getLocalHostNameSafe();
                 setValue(hostname);
             }
@@ -1196,6 +1365,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 name.init(context);
                 classResolver = context.getClassResolver();
             }
@@ -1264,6 +1434,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 expression.init(context);
             }
 
@@ -1291,6 +1462,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 expression.init(context);
                 type.init(context);
             }
@@ -1327,6 +1499,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 expression.init(context);
                 token.init(context);
             }
@@ -1360,6 +1533,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 expression.init(context);
                 typeConverter = context.getTypeConverter();
             }
@@ -1386,6 +1560,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 expression.init(context);
             }
 
@@ -1421,6 +1596,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 expression.init(context);
                 groupExp = context.resolveLanguage("simple").createExpression(group);
                 groupExp.init(context);
@@ -1462,6 +1638,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 expression.init(context);
                 groupExp = context.resolveLanguage("simple").createExpression(group);
                 groupExp.init(context);
@@ -1507,6 +1684,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 expression.init(context);
                 converter = context.getTypeConverter();
             }
@@ -1539,6 +1717,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 expression.init(context);
             }
 
@@ -1569,6 +1748,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 expression.init(context);
             }
 
@@ -1601,6 +1781,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 expression.init(context);
                 replacementExpression.init(context);
             }
@@ -1624,6 +1805,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 left.init(context);
                 right.init(context);
             }
@@ -1647,6 +1829,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 left.init(context);
                 right.init(context);
             }
@@ -1708,6 +1891,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 for (Expression expression : expressions) {
                     expression.init(context);
                 }
@@ -1758,6 +1942,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 if (optimized == null) {
                     Collection<Object> preprocessedExpression = new ArrayList<>(expressions.size());
                     boolean constantsOnly = true;
@@ -1866,6 +2051,23 @@ public class ExpressionBuilder {
         };
     }
 
+    /**
+     * Returns an Expression for the route group
+     */
+    public static Expression routeGroupExpression() {
+        return new ExpressionAdapter() {
+            @Override
+            public Object evaluate(Exchange exchange) {
+                return ExchangeHelper.getRouteGroup(exchange);
+            }
+
+            @Override
+            public String toString() {
+                return "routeGroup";
+            }
+        };
+    }
+
     public static Expression simpleExpression(final String expression) {
         if (LanguageSupport.hasSimpleFunction(expression)) {
             return new ExpressionAdapter() {
@@ -1878,6 +2080,7 @@ public class ExpressionBuilder {
 
                 @Override
                 public void init(CamelContext context) {
+                    super.init(context);
                     final Language language = context.resolveLanguage("simple");
                     this.exp = language.createExpression(expression);
                     this.exp.init(context);
@@ -1906,6 +2109,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 final Language language = context.resolveLanguage("bean");
                 this.exp = language.createExpression(expression);
                 this.exp.init(context);
@@ -1929,6 +2133,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 final Language language = context.resolveLanguage("bean");
                 this.exp = language.createExpression(null, new Object[] { bean, method });
                 this.exp.init(context);
@@ -1954,6 +2159,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 this.language = context.resolveLanguage("bean");
             }
 
@@ -1985,6 +2191,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 exp = simpleExpression(key);
                 exp.init(context);
                 pc = context.getPropertiesComponent();
@@ -2013,6 +2220,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 pc = context.getPropertiesComponent();
             }
 
@@ -2063,6 +2271,7 @@ public class ExpressionBuilder {
 
             @Override
             public void init(CamelContext context) {
+                super.init(context);
                 final Language language = context.resolveLanguage("xtokenize");
                 this.exp = language.createExpression(path, new Object[] { headerName, mode, group, namespaces });
                 this.exp.init(context);

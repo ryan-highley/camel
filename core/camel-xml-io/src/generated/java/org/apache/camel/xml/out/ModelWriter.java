@@ -88,6 +88,11 @@ public class ModelWriter extends BaseWriter {
             throws IOException {
         doWriteConvertHeaderDefinition("convertHeaderTo", def);
     }
+    public void writeConvertVariableDefinition(
+            ConvertVariableDefinition def)
+            throws IOException {
+        doWriteConvertVariableDefinition("convertVariableTo", def);
+    }
     public void writeDelayDefinition(DelayDefinition def) throws IOException {
         doWriteDelayDefinition("delay", def);
     }
@@ -276,6 +281,11 @@ public class ModelWriter extends BaseWriter {
             throws IOException {
         doWriteRemovePropertyDefinition("removeProperty", def);
     }
+    public void writeRemoveVariableDefinition(
+            RemoveVariableDefinition def)
+            throws IOException {
+        doWriteRemoveVariableDefinition("removeVariable", def);
+    }
     public void writeResequenceDefinition(
             ResequenceDefinition def)
             throws IOException {
@@ -395,6 +405,11 @@ public class ModelWriter extends BaseWriter {
             SetPropertyDefinition def)
             throws IOException {
         doWriteSetPropertyDefinition("setProperty", def);
+    }
+    public void writeSetVariableDefinition(
+            SetVariableDefinition def)
+            throws IOException {
+        doWriteSetVariableDefinition("setVariable", def);
     }
     public void writeSortDefinition(SortDefinition def) throws IOException {
         doWriteSortDefinition("sort", def);
@@ -597,12 +612,12 @@ public class ModelWriter extends BaseWriter {
     public void writeBatchResequencerConfig(
             BatchResequencerConfig def)
             throws IOException {
-        doWriteBatchResequencerConfig("batch-config", def);
+        doWriteBatchResequencerConfig("batchConfig", def);
     }
     public void writeStreamResequencerConfig(
             StreamResequencerConfig def)
             throws IOException {
-        doWriteStreamResequencerConfig("stream-config", def);
+        doWriteStreamResequencerConfig("streamConfig", def);
     }
     public void writeASN1DataFormat(ASN1DataFormat def) throws IOException {
         doWriteASN1DataFormat("asn1", def);
@@ -1173,6 +1188,20 @@ public class ModelWriter extends BaseWriter {
         startElement(name);
         doWriteProcessorDefinitionAttributes(def);
         doWriteAttribute("charset", def.getCharset());
+        doWriteAttribute("toName", def.getToName());
+        doWriteAttribute("name", def.getName());
+        doWriteAttribute("type", def.getType());
+        doWriteAttribute("mandatory", def.getMandatory());
+        endElement(name);
+    }
+    protected void doWriteConvertVariableDefinition(
+            String name,
+            ConvertVariableDefinition def)
+            throws IOException {
+        startElement(name);
+        doWriteProcessorDefinitionAttributes(def);
+        doWriteAttribute("charset", def.getCharset());
+        doWriteAttribute("toName", def.getToName());
         doWriteAttribute("name", def.getName());
         doWriteAttribute("type", def.getType());
         doWriteAttribute("mandatory", def.getMandatory());
@@ -1224,6 +1253,7 @@ public class ModelWriter extends BaseWriter {
         doWriteAttribute("cacheSize", def.getCacheSize());
         doWriteAttribute("aggregationStrategy", def.getAggregationStrategy());
         doWriteAttribute("ignoreInvalidEndpoint", def.getIgnoreInvalidEndpoint());
+        doWriteAttribute("autoStartComponents", def.getAutoStartComponents());
         doWriteAttribute("allowOptimisedComponents", def.getAllowOptimisedComponents());
         doWriteAttribute("aggregateOnException", def.getAggregateOnException());
         doWriteAttribute("aggregationStrategyMethodName", def.getAggregationStrategyMethodName());
@@ -1734,6 +1764,7 @@ public class ModelWriter extends BaseWriter {
         doWriteAttribute("cacheSize", def.getCacheSize());
         doWriteAttribute("aggregationStrategy", def.getAggregationStrategy());
         doWriteAttribute("ignoreInvalidEndpoint", def.getIgnoreInvalidEndpoint());
+        doWriteAttribute("autoStartComponents", def.getAutoStartComponents());
         doWriteAttribute("aggregateOnException", def.getAggregateOnException());
         doWriteAttribute("aggregationStrategyMethodName", def.getAggregationStrategyMethodName());
         doWriteAttribute("timeout", def.getTimeout());
@@ -1885,6 +1916,15 @@ public class ModelWriter extends BaseWriter {
         doWriteAttribute("name", def.getName());
         endElement(name);
     }
+    protected void doWriteRemoveVariableDefinition(
+            String name,
+            RemoveVariableDefinition def)
+            throws IOException {
+        startElement(name);
+        doWriteProcessorDefinitionAttributes(def);
+        doWriteAttribute("name", def.getName());
+        endElement(name);
+    }
     protected void doWriteResequenceDefinition(
             String name,
             ResequenceDefinition def)
@@ -1894,8 +1934,8 @@ public class ModelWriter extends BaseWriter {
         doWriteElement(null, def.getExpression(), this::doWriteExpressionDefinitionRef);
         doWriteElement(null, def.getResequencerConfig(), (n, v) -> {
             switch (v.getClass().getSimpleName()) {
-                case "BatchResequencerConfig" -> doWriteBatchResequencerConfig("batch-config", (BatchResequencerConfig) def.getResequencerConfig());
-                case "StreamResequencerConfig" -> doWriteStreamResequencerConfig("stream-config", (StreamResequencerConfig) def.getResequencerConfig());
+                case "BatchResequencerConfig" -> doWriteBatchResequencerConfig("batchConfig", (BatchResequencerConfig) def.getResequencerConfig());
+                case "StreamResequencerConfig" -> doWriteStreamResequencerConfig("streamConfig", (StreamResequencerConfig) def.getResequencerConfig());
             }
         });
         doWriteList(null, null, def.getOutputs(), this::doWriteProcessorDefinitionRef);
@@ -2217,6 +2257,16 @@ public class ModelWriter extends BaseWriter {
     protected void doWriteSetPropertyDefinition(
             String name,
             SetPropertyDefinition def)
+            throws IOException {
+        startElement(name);
+        doWriteProcessorDefinitionAttributes(def);
+        doWriteAttribute("name", def.getName());
+        doWriteExpressionNodeElements(def);
+        endElement(name);
+    }
+    protected void doWriteSetVariableDefinition(
+            String name,
+            SetVariableDefinition def)
             throws IOException {
         startElement(name);
         doWriteProcessorDefinitionAttributes(def);
@@ -3465,6 +3515,7 @@ public class ModelWriter extends BaseWriter {
         doWriteIdentifiedTypeAttributes(def);
         doWriteAttribute("compressionCodecName", def.getCompressionCodecName());
         doWriteAttribute("unmarshalType", def.getUnmarshalTypeName());
+        doWriteAttribute("lazyLoad", def.getLazyLoad());
         endElement(name);
     }
     protected void doWriteProtobufDataFormat(
@@ -4759,6 +4810,7 @@ public class ModelWriter extends BaseWriter {
                 case "ClaimCheckDefinition" -> doWriteClaimCheckDefinition("claimCheck", (ClaimCheckDefinition) v);
                 case "ConvertBodyDefinition" -> doWriteConvertBodyDefinition("convertBodyTo", (ConvertBodyDefinition) v);
                 case "ConvertHeaderDefinition" -> doWriteConvertHeaderDefinition("convertHeaderTo", (ConvertHeaderDefinition) v);
+                case "ConvertVariableDefinition" -> doWriteConvertVariableDefinition("convertVariableTo", (ConvertVariableDefinition) v);
                 case "DelayDefinition" -> doWriteDelayDefinition("delay", (DelayDefinition) v);
                 case "DynamicRouterDefinition" -> doWriteDynamicRouterDefinition("dynamicRouter", (DynamicRouterDefinition) v);
                 case "EnrichDefinition" -> doWriteEnrichDefinition("enrich", (EnrichDefinition) v);
@@ -4791,6 +4843,7 @@ public class ModelWriter extends BaseWriter {
                 case "RemoveHeadersDefinition" -> doWriteRemoveHeadersDefinition("removeHeaders", (RemoveHeadersDefinition) v);
                 case "RemovePropertiesDefinition" -> doWriteRemovePropertiesDefinition("removeProperties", (RemovePropertiesDefinition) v);
                 case "RemovePropertyDefinition" -> doWriteRemovePropertyDefinition("removeProperty", (RemovePropertyDefinition) v);
+                case "RemoveVariableDefinition" -> doWriteRemoveVariableDefinition("removeVariable", (RemoveVariableDefinition) v);
                 case "ResequenceDefinition" -> doWriteResequenceDefinition("resequence", (ResequenceDefinition) v);
                 case "ResumableDefinition" -> doWriteResumableDefinition("resumable", (ResumableDefinition) v);
                 case "RollbackDefinition" -> doWriteRollbackDefinition("rollback", (RollbackDefinition) v);
@@ -4809,6 +4862,7 @@ public class ModelWriter extends BaseWriter {
                 case "SetHeaderDefinition" -> doWriteSetHeaderDefinition("setHeader", (SetHeaderDefinition) v);
                 case "SetHeadersDefinition" -> doWriteSetHeadersDefinition("setHeaders", (SetHeadersDefinition) v);
                 case "SetPropertyDefinition" -> doWriteSetPropertyDefinition("setProperty", (SetPropertyDefinition) v);
+                case "SetVariableDefinition" -> doWriteSetVariableDefinition("setVariable", (SetVariableDefinition) v);
                 case "SortDefinition" -> doWriteSortDefinition("sort", (SortDefinition) v);
                 case "SplitDefinition" -> doWriteSplitDefinition("split", (SplitDefinition) v);
                 case "StepDefinition" -> doWriteStepDefinition("step", (StepDefinition) v);
@@ -4864,6 +4918,7 @@ public class ModelWriter extends BaseWriter {
                 case "ClaimCheckDefinition" -> doWriteClaimCheckDefinition("claimCheck", (ClaimCheckDefinition) v);
                 case "ConvertBodyDefinition" -> doWriteConvertBodyDefinition("convertBodyTo", (ConvertBodyDefinition) v);
                 case "ConvertHeaderDefinition" -> doWriteConvertHeaderDefinition("convertHeaderTo", (ConvertHeaderDefinition) v);
+                case "ConvertVariableDefinition" -> doWriteConvertVariableDefinition("convertVariableTo", (ConvertVariableDefinition) v);
                 case "DelayDefinition" -> doWriteDelayDefinition("delay", (DelayDefinition) v);
                 case "DynamicRouterDefinition" -> doWriteDynamicRouterDefinition("dynamicRouter", (DynamicRouterDefinition) v);
                 case "EnrichDefinition" -> doWriteEnrichDefinition("enrich", (EnrichDefinition) v);
@@ -4893,6 +4948,7 @@ public class ModelWriter extends BaseWriter {
                 case "RemoveHeadersDefinition" -> doWriteRemoveHeadersDefinition("removeHeaders", (RemoveHeadersDefinition) v);
                 case "RemovePropertiesDefinition" -> doWriteRemovePropertiesDefinition("removeProperties", (RemovePropertiesDefinition) v);
                 case "RemovePropertyDefinition" -> doWriteRemovePropertyDefinition("removeProperty", (RemovePropertyDefinition) v);
+                case "RemoveVariableDefinition" -> doWriteRemoveVariableDefinition("removeVariable", (RemoveVariableDefinition) v);
                 case "ResequenceDefinition" -> doWriteResequenceDefinition("resequence", (ResequenceDefinition) v);
                 case "ResumableDefinition" -> doWriteResumableDefinition("resumable", (ResumableDefinition) v);
                 case "RollbackDefinition" -> doWriteRollbackDefinition("rollback", (RollbackDefinition) v);
@@ -4906,6 +4962,7 @@ public class ModelWriter extends BaseWriter {
                 case "SetHeaderDefinition" -> doWriteSetHeaderDefinition("setHeader", (SetHeaderDefinition) v);
                 case "SetHeadersDefinition" -> doWriteSetHeadersDefinition("setHeaders", (SetHeadersDefinition) v);
                 case "SetPropertyDefinition" -> doWriteSetPropertyDefinition("setProperty", (SetPropertyDefinition) v);
+                case "SetVariableDefinition" -> doWriteSetVariableDefinition("setVariable", (SetVariableDefinition) v);
                 case "SortDefinition" -> doWriteSortDefinition("sort", (SortDefinition) v);
                 case "SplitDefinition" -> doWriteSplitDefinition("split", (SplitDefinition) v);
                 case "StepDefinition" -> doWriteStepDefinition("step", (StepDefinition) v);

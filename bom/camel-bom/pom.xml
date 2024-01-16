@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.camel</groupId>
     <artifactId>camel</artifactId>
-    <version>4.3.0-SNAPSHOT</version>
+    <version>4.4.0-SNAPSHOT</version>
     <relativePath>../../</relativePath>
   </parent>
   <artifactId>camel-bom</artifactId>
@@ -709,6 +709,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.camel</groupId>
+        <artifactId>camel-elasticsearch-rest-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
         <artifactId>camel-elytron</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -900,11 +905,6 @@
       <dependency>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-hazelcast</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.camel</groupId>
-        <artifactId>camel-hdfs</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -1224,6 +1224,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.camel</groupId>
+        <artifactId>camel-jte</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
         <artifactId>camel-kafka</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -1250,6 +1255,11 @@
       <dependency>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-knative-http</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-kotlin-dsl</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

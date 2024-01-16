@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>components</artifactId>
-        <version>4.3.0-SNAPSHOT</version>
+        <version>4.4.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-ignite</artifactId>
@@ -99,18 +99,5 @@
         </dependency>
 
     </dependencies>
-
-    <!-- Apache Ignite does not work with Java 21 yet -->
-    <profiles>
-        <profile>
-            <id>skip-test-java-21</id>
-            <activation>
-                <jdk>21</jdk>
-            </activation>
-            <properties>
-                <skipTests>true</skipTests>
-            </properties>
-        </profile>
-    </profiles>
 
 </project>

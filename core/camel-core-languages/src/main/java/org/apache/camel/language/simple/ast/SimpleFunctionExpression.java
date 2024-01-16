@@ -88,6 +88,11 @@ public class SimpleFunctionExpression extends LiteralExpression {
         if (answer != null) {
             return answer;
         }
+        // variables
+        answer = createSimpleExpressionVariables(function, strict);
+        if (answer != null) {
+            return answer;
+        }
         // custom languages
         answer = createSimpleCustomLanguage(function, strict);
         if (answer != null) {
@@ -451,6 +456,63 @@ public class SimpleFunctionExpression extends LiteralExpression {
         return null;
     }
 
+    private Expression createSimpleExpressionVariables(String function, boolean strict) {
+        // variableAs
+        String remainder = ifStartsWithReturnRemainder("variableAs(", function);
+        if (remainder != null) {
+            String keyAndType = StringHelper.before(remainder, ")");
+            if (keyAndType == null) {
+                throw new SimpleParserException("Valid syntax: ${variableAs(key, type)} was: " + function, token.getIndex());
+            }
+
+            String key = StringHelper.before(keyAndType, ",");
+            String type = StringHelper.after(keyAndType, ",");
+            remainder = StringHelper.after(remainder, ")");
+            if (ObjectHelper.isEmpty(key) || ObjectHelper.isEmpty(type) || ObjectHelper.isNotEmpty(remainder)) {
+                throw new SimpleParserException("Valid syntax: ${variableAs(key, type)} was: " + function, token.getIndex());
+            }
+            key = StringHelper.removeQuotes(key);
+            type = StringHelper.removeQuotes(type);
+            return ExpressionBuilder.variableExpression(key, type);
+        }
+
+        // variables function
+        if ("variables".equals(function)) {
+            return ExpressionBuilder.variablesExpression();
+        }
+
+        // variable function
+        remainder = parseVariable(function);
+        if (remainder != null) {
+            // remove leading character (dot, colon or ?)
+            if (remainder.startsWith(".") || remainder.startsWith(":") || remainder.startsWith("?")) {
+                remainder = remainder.substring(1);
+            }
+            // remove starting and ending brackets
+            if (remainder.startsWith("[") && remainder.endsWith("]")) {
+                remainder = remainder.substring(1, remainder.length() - 1);
+            }
+            // remove quotes from key
+            String key = StringHelper.removeLeadingAndEndingQuotes(remainder);
+
+            // validate syntax
+            boolean invalid = OgnlHelper.isInvalidValidOgnlExpression(key);
+            if (invalid) {
+                throw new SimpleParserException("Valid syntax: ${variable.name[key]} was: " + function, token.getIndex());
+            }
+
+            if (OgnlHelper.isValidOgnlExpression(key)) {
+                // ognl based variable
+                return SimpleExpressionBuilder.variablesOgnlExpression(key);
+            } else {
+                // regular variable
+                return ExpressionBuilder.variableExpression(key);
+            }
+        }
+
+        return null;
+    }
+
     private Expression createSimpleCustomLanguage(String function, boolean strict) {
         // jq
         String remainder = ifStartsWithReturnRemainder("jq(", function);
@@ -518,6 +580,8 @@ public class SimpleFunctionExpression extends LiteralExpression {
             return ExpressionBuilder.camelContextNameExpression();
         } else if (ObjectHelper.equal(expression, "routeId")) {
             return ExpressionBuilder.routeIdExpression();
+        } else if (ObjectHelper.equal(expression, "routeGroup")) {
+            return ExpressionBuilder.routeGroupExpression();
         } else if (ObjectHelper.equal(expression, "stepId")) {
             return ExpressionBuilder.stepIdExpression();
         } else if (ObjectHelper.equal(expression, "null")) {
@@ -659,6 +723,26 @@ public class SimpleFunctionExpression extends LiteralExpression {
             return SimpleExpressionBuilder.uuidExpression(values);
         } else if (ObjectHelper.equal(function, "uuid")) {
             return SimpleExpressionBuilder.uuidExpression(null);
+        }
+
+        // hash function
+        remainder = ifStartsWithReturnRemainder("hash(", function);
+        if (remainder != null) {
+            String values = StringHelper.before(remainder, ")");
+            if (values == null || ObjectHelper.isEmpty(values)) {
+                throw new SimpleParserException(
+                        "Valid syntax: ${hash(value,algorithm)} or ${hash(value)} was: " + function, token.getIndex());
+            }
+            if (values.contains(",")) {
+                String[] tokens = values.split(",", 2);
+                if (tokens.length > 2) {
+                    throw new SimpleParserException(
+                            "Valid syntax: ${hash(value,algorithm)} or ${hash(value)} was: " + function, token.getIndex());
+                }
+                return SimpleExpressionBuilder.hashExpression(tokens[0].trim(), tokens[1].trim());
+            } else {
+                return SimpleExpressionBuilder.hashExpression(values.trim(), "SHA-256");
+            }
         }
 
         // empty function
@@ -1245,6 +1329,15 @@ public class SimpleFunctionExpression extends LiteralExpression {
         }
         if (remainder == null) {
             remainder = ifStartsWithReturnRemainder("header", function);
+        }
+        return remainder;
+    }
+
+    private String parseVariable(String function) {
+        String remainder;
+        remainder = ifStartsWithReturnRemainder("variables", function);
+        if (remainder == null) {
+            remainder = ifStartsWithReturnRemainder("variable", function);
         }
         return remainder;
     }

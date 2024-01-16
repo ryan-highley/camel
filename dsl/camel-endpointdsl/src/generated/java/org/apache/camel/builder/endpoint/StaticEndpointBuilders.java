@@ -4192,15 +4192,12 @@ public class StaticEndpointBuilders {
      * 
      * Syntax: <code>dynamic-router:channel</code>
      * 
-     * Path parameter: channel (required)
-     * Channel of the Dynamic Router
-     * 
-     * Path parameter: controlAction
-     * Control channel action: subscribe or unsubscribe
-     * There are 2 enums and the value can be one of: subscribe, unsubscribe
-     * 
-     * Path parameter: subscribeChannel
-     * The channel to subscribe to
+     * Path parameter: channel
+     * Channel for the Dynamic Router. For example, if the Dynamic Router URI is
+     * dynamic-router://test, then the channel is test. Channels are a way of
+     * keeping routing participants, their rules, and exchanges logically
+     * separate from the participants, rules, and exchanges on other channels.
+     * This can be seen as analogous to VLANs in networking.
      * 
      * @param path channel
      * @return the dsl builder
@@ -4220,15 +4217,12 @@ public class StaticEndpointBuilders {
      * 
      * Syntax: <code>dynamic-router:channel</code>
      * 
-     * Path parameter: channel (required)
-     * Channel of the Dynamic Router
-     * 
-     * Path parameter: controlAction
-     * Control channel action: subscribe or unsubscribe
-     * There are 2 enums and the value can be one of: subscribe, unsubscribe
-     * 
-     * Path parameter: subscribeChannel
-     * The channel to subscribe to
+     * Path parameter: channel
+     * Channel for the Dynamic Router. For example, if the Dynamic Router URI is
+     * dynamic-router://test, then the channel is test. Channels are a way of
+     * keeping routing participants, their rules, and exchanges logically
+     * separate from the participants, rules, and exchanges on other channels.
+     * This can be seen as analogous to VLANs in networking.
      * 
      * @param componentName to use a custom component name for the endpoint
      * instead of the default name
@@ -4239,6 +4233,57 @@ public class StaticEndpointBuilders {
             String componentName,
             String path) {
         return org.apache.camel.builder.endpoint.dsl.DynamicRouterEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
+     * Dynamic Router Control (camel-dynamic-router)
+     * The Dynamic Router control endpoint for operations that allow routing
+     * participants to subscribe or unsubscribe to participate in dynamic
+     * message routing.
+     * 
+     * Category: messaging
+     * Since: 4.4
+     * Maven coordinates: org.apache.camel:camel-dynamic-router
+     * 
+     * Syntax: <code>dynamic-router-control:controlAction</code>
+     * 
+     * Path parameter: controlAction (required)
+     * Control action
+     * There are 5 enums and the value can be one of: subscribe, unsubscribe,
+     * update, list, statistics
+     * 
+     * @param path controlAction
+     * @return the dsl builder
+     */
+    public static org.apache.camel.builder.endpoint.dsl.DynamicRouterControlEndpointBuilderFactory.DynamicRouterControlEndpointBuilder dynamicRouterControl(
+            String path) {
+        return org.apache.camel.builder.endpoint.dsl.DynamicRouterControlEndpointBuilderFactory.endpointBuilder("dynamic-router-control", path);
+    }
+    /**
+     * Dynamic Router Control (camel-dynamic-router)
+     * The Dynamic Router control endpoint for operations that allow routing
+     * participants to subscribe or unsubscribe to participate in dynamic
+     * message routing.
+     * 
+     * Category: messaging
+     * Since: 4.4
+     * Maven coordinates: org.apache.camel:camel-dynamic-router
+     * 
+     * Syntax: <code>dynamic-router-control:controlAction</code>
+     * 
+     * Path parameter: controlAction (required)
+     * Control action
+     * There are 5 enums and the value can be one of: subscribe, unsubscribe,
+     * update, list, statistics
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path controlAction
+     * @return the dsl builder
+     */
+    public static org.apache.camel.builder.endpoint.dsl.DynamicRouterControlEndpointBuilderFactory.DynamicRouterControlEndpointBuilder dynamicRouterControl(
+            String componentName,
+            String path) {
+        return org.apache.camel.builder.endpoint.dsl.DynamicRouterControlEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
      * Ehcache (camel-ehcache)
@@ -4325,6 +4370,51 @@ public class StaticEndpointBuilders {
             String componentName,
             String path) {
         return org.apache.camel.builder.endpoint.dsl.ElasticsearchEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
+     * Elasticsearch Low level Rest Client (camel-elasticsearch-rest-client)
+     * Perform queries and other operations on Elasticsearch or OpenSearch (uses
+     * low-level client).
+     * 
+     * Category: search
+     * Since: 4.3
+     * Maven coordinates: org.apache.camel:camel-elasticsearch-rest-client
+     * 
+     * Syntax: <code>elasticsearch-rest-client:clusterName</code>
+     * 
+     * Path parameter: clusterName (required)
+     * Cluster Name
+     * 
+     * @param path clusterName
+     * @return the dsl builder
+     */
+    public static org.apache.camel.builder.endpoint.dsl.ElasticsearchRestClientEndpointBuilderFactory.ElasticsearchRestClientEndpointBuilder elasticsearchRestClient(
+            String path) {
+        return org.apache.camel.builder.endpoint.dsl.ElasticsearchRestClientEndpointBuilderFactory.endpointBuilder("elasticsearch-rest-client", path);
+    }
+    /**
+     * Elasticsearch Low level Rest Client (camel-elasticsearch-rest-client)
+     * Perform queries and other operations on Elasticsearch or OpenSearch (uses
+     * low-level client).
+     * 
+     * Category: search
+     * Since: 4.3
+     * Maven coordinates: org.apache.camel:camel-elasticsearch-rest-client
+     * 
+     * Syntax: <code>elasticsearch-rest-client:clusterName</code>
+     * 
+     * Path parameter: clusterName (required)
+     * Cluster Name
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path clusterName
+     * @return the dsl builder
+     */
+    public static org.apache.camel.builder.endpoint.dsl.ElasticsearchRestClientEndpointBuilderFactory.ElasticsearchRestClientEndpointBuilder elasticsearchRestClient(
+            String componentName,
+            String path) {
+        return org.apache.camel.builder.endpoint.dsl.ElasticsearchRestClientEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
      * Etcd v3 (camel-etcd3)
@@ -6439,63 +6529,6 @@ public class StaticEndpointBuilders {
         return org.apache.camel.builder.endpoint.dsl.HazelcastTopicEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
-     * HDFS (camel-hdfs)
-     * Read and write from/to an HDFS filesystem using Hadoop 2.x.
-     * 
-     * Category: bigdata,file
-     * Since: 2.14
-     * Maven coordinates: org.apache.camel:camel-hdfs
-     * 
-     * Syntax: <code>hdfs:hostName:port/path</code>
-     * 
-     * Path parameter: hostName (required)
-     * HDFS host to use
-     * 
-     * Path parameter: port
-     * HDFS port to use
-     * Default value: 8020
-     * 
-     * Path parameter: path (required)
-     * The directory path to use
-     * 
-     * @param path hostName:port/path
-     * @return the dsl builder
-     */
-    public static org.apache.camel.builder.endpoint.dsl.HdfsEndpointBuilderFactory.HdfsEndpointBuilder hdfs(
-            String path) {
-        return org.apache.camel.builder.endpoint.dsl.HdfsEndpointBuilderFactory.endpointBuilder("hdfs", path);
-    }
-    /**
-     * HDFS (camel-hdfs)
-     * Read and write from/to an HDFS filesystem using Hadoop 2.x.
-     * 
-     * Category: bigdata,file
-     * Since: 2.14
-     * Maven coordinates: org.apache.camel:camel-hdfs
-     * 
-     * Syntax: <code>hdfs:hostName:port/path</code>
-     * 
-     * Path parameter: hostName (required)
-     * HDFS host to use
-     * 
-     * Path parameter: port
-     * HDFS port to use
-     * Default value: 8020
-     * 
-     * Path parameter: path (required)
-     * The directory path to use
-     * 
-     * @param componentName to use a custom component name for the endpoint
-     * instead of the default name
-     * @param path hostName:port/path
-     * @return the dsl builder
-     */
-    public static org.apache.camel.builder.endpoint.dsl.HdfsEndpointBuilderFactory.HdfsEndpointBuilder hdfs(
-            String componentName,
-            String path) {
-        return org.apache.camel.builder.endpoint.dsl.HdfsEndpointBuilderFactory.endpointBuilder(componentName, path);
-    }
-    /**
      * HTTP (camel-http)
      * Send requests to external HTTP servers using Apache HTTP Client 5.x.
      * 
@@ -8488,6 +8521,61 @@ public class StaticEndpointBuilders {
         return org.apache.camel.builder.endpoint.dsl.Jt400EndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
+     * JTE (camel-jte)
+     * Transform messages using a Java based template engine (JTE).
+     * 
+     * Category: transformation
+     * Since: 4.4
+     * Maven coordinates: org.apache.camel:camel-jte
+     * 
+     * Syntax: <code>jte:resourceUri</code>
+     * 
+     * Path parameter: resourceUri (required)
+     * Path to the resource. You can prefix with: classpath, file, http, ref, or
+     * bean. classpath, file and http loads the resource using these protocols
+     * (classpath is default). ref will lookup the resource in the registry.
+     * bean will call a method on a bean to be used as the resource. For bean
+     * you can specify the method name after dot, eg bean:myBean.myMethod.
+     * This option can also be loaded from an existing file, by prefixing with
+     * file: or classpath: followed by the location of the file.
+     * 
+     * @param path resourceUri
+     * @return the dsl builder
+     */
+    public static org.apache.camel.builder.endpoint.dsl.JteEndpointBuilderFactory.JteEndpointBuilder jte(
+            String path) {
+        return org.apache.camel.builder.endpoint.dsl.JteEndpointBuilderFactory.endpointBuilder("jte", path);
+    }
+    /**
+     * JTE (camel-jte)
+     * Transform messages using a Java based template engine (JTE).
+     * 
+     * Category: transformation
+     * Since: 4.4
+     * Maven coordinates: org.apache.camel:camel-jte
+     * 
+     * Syntax: <code>jte:resourceUri</code>
+     * 
+     * Path parameter: resourceUri (required)
+     * Path to the resource. You can prefix with: classpath, file, http, ref, or
+     * bean. classpath, file and http loads the resource using these protocols
+     * (classpath is default). ref will lookup the resource in the registry.
+     * bean will call a method on a bean to be used as the resource. For bean
+     * you can specify the method name after dot, eg bean:myBean.myMethod.
+     * This option can also be loaded from an existing file, by prefixing with
+     * file: or classpath: followed by the location of the file.
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path resourceUri
+     * @return the dsl builder
+     */
+    public static org.apache.camel.builder.endpoint.dsl.JteEndpointBuilderFactory.JteEndpointBuilder jte(
+            String componentName,
+            String path) {
+        return org.apache.camel.builder.endpoint.dsl.JteEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
      * Kafka (camel-kafka)
      * Sent and receive messages to/from an Apache Kafka broker.
      * 
@@ -8678,6 +8766,49 @@ public class StaticEndpointBuilders {
             String componentName,
             String path) {
         return org.apache.camel.builder.endpoint.dsl.KubernetesConfigMapsEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
+     * Kubernetes Cronjob (camel-kubernetes)
+     * Perform operations on Kubernetes CronJob.
+     * 
+     * Category: container,cloud
+     * Since: 4.3
+     * Maven coordinates: org.apache.camel:camel-kubernetes
+     * 
+     * Syntax: <code>kubernetes-cronjob:masterUrl</code>
+     * 
+     * Path parameter: masterUrl (required)
+     * Kubernetes Master url
+     * 
+     * @param path masterUrl
+     * @return the dsl builder
+     */
+    public static org.apache.camel.builder.endpoint.dsl.KubernetesCronJobEndpointBuilderFactory.KubernetesCronJobEndpointBuilder kubernetesCronjob(
+            String path) {
+        return org.apache.camel.builder.endpoint.dsl.KubernetesCronJobEndpointBuilderFactory.endpointBuilder("kubernetes-cronjob", path);
+    }
+    /**
+     * Kubernetes Cronjob (camel-kubernetes)
+     * Perform operations on Kubernetes CronJob.
+     * 
+     * Category: container,cloud
+     * Since: 4.3
+     * Maven coordinates: org.apache.camel:camel-kubernetes
+     * 
+     * Syntax: <code>kubernetes-cronjob:masterUrl</code>
+     * 
+     * Path parameter: masterUrl (required)
+     * Kubernetes Master url
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path masterUrl
+     * @return the dsl builder
+     */
+    public static org.apache.camel.builder.endpoint.dsl.KubernetesCronJobEndpointBuilderFactory.KubernetesCronJobEndpointBuilder kubernetesCronjob(
+            String componentName,
+            String path) {
+        return org.apache.camel.builder.endpoint.dsl.KubernetesCronJobEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
      * Kubernetes Custom Resources (camel-kubernetes)
@@ -12216,7 +12347,7 @@ public class StaticEndpointBuilders {
     }
     /**
      * Robot Framework (camel-robotframework)
-     * Pass camel exchanges to acceptence test written in Robot DSL.
+     * Pass camel exchanges to acceptance test written in Robot DSL.
      * 
      * Category: testing
      * Since: 3.0
@@ -12242,7 +12373,7 @@ public class StaticEndpointBuilders {
     }
     /**
      * Robot Framework (camel-robotframework)
-     * Pass camel exchanges to acceptence test written in Robot DSL.
+     * Pass camel exchanges to acceptance test written in Robot DSL.
      * 
      * Category: testing
      * Since: 3.0
@@ -12412,16 +12543,16 @@ public class StaticEndpointBuilders {
      * 
      * Path parameter: operationName (required)
      * The operation to use
-     * There are 68 enums and the value can be one of: getVersions,
+     * There are 69 enums and the value can be one of: getVersions,
      * getResources, getGlobalObjects, getBasicInfo, getDescription, getSObject,
      * createSObject, updateSObject, deleteSObject, getSObjectWithId,
      * upsertSObject, deleteSObjectWithId, getBlobField, query, queryMore,
-     * queryAll, search, apexCall, recent, createJob, getJob, closeJob,
-     * abortJob, createBatch, getBatch, getAllBatches, getRequest, getResults,
-     * createBatchQuery, getQueryResultIds, getQueryResult, getRecentReports,
-     * getReportDescription, executeSyncReport, executeAsyncReport,
-     * getReportInstances, getReportResults, limits, approval, approvals,
-     * composite-tree, composite-batch, composite,
+     * queryAll, search, apexCall, recent, getEventSchema, createJob, getJob,
+     * closeJob, abortJob, createBatch, getBatch, getAllBatches, getRequest,
+     * getResults, createBatchQuery, getQueryResultIds, getQueryResult,
+     * getRecentReports, getReportDescription, executeSyncReport,
+     * executeAsyncReport, getReportInstances, getReportResults, limits,
+     * approval, approvals, composite-tree, composite-batch, composite,
      * compositeRetrieveSObjectCollections, compositeCreateSObjectCollections,
      * compositeUpdateSObjectCollections, compositeUpsertSObjectCollections,
      * compositeDeleteSObjectCollections, bulk2GetAllJobs, bulk2CreateJob,
@@ -12453,16 +12584,16 @@ public class StaticEndpointBuilders {
      * 
      * Path parameter: operationName (required)
      * The operation to use
-     * There are 68 enums and the value can be one of: getVersions,
+     * There are 69 enums and the value can be one of: getVersions,
      * getResources, getGlobalObjects, getBasicInfo, getDescription, getSObject,
      * createSObject, updateSObject, deleteSObject, getSObjectWithId,
      * upsertSObject, deleteSObjectWithId, getBlobField, query, queryMore,
-     * queryAll, search, apexCall, recent, createJob, getJob, closeJob,
-     * abortJob, createBatch, getBatch, getAllBatches, getRequest, getResults,
-     * createBatchQuery, getQueryResultIds, getQueryResult, getRecentReports,
-     * getReportDescription, executeSyncReport, executeAsyncReport,
-     * getReportInstances, getReportResults, limits, approval, approvals,
-     * composite-tree, composite-batch, composite,
+     * queryAll, search, apexCall, recent, getEventSchema, createJob, getJob,
+     * closeJob, abortJob, createBatch, getBatch, getAllBatches, getRequest,
+     * getResults, createBatchQuery, getQueryResultIds, getQueryResult,
+     * getRecentReports, getReportDescription, executeSyncReport,
+     * executeAsyncReport, getReportInstances, getReportResults, limits,
+     * approval, approvals, composite-tree, composite-batch, composite,
      * compositeRetrieveSObjectCollections, compositeCreateSObjectCollections,
      * compositeUpdateSObjectCollections, compositeUpsertSObjectCollections,
      * compositeDeleteSObjectCollections, bulk2GetAllJobs, bulk2CreateJob,

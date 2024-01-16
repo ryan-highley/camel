@@ -64,6 +64,12 @@
             <to uri="mock:result"/>
         </route>
 
+        <route>
+            <from uri="direct:bar"/>
+            <convertHeaderTo name="foo" toName="bar" type="java.lang.Integer"/>
+            <to uri="mock:result"/>
+        </route>
+
     </camelContext>
     <!-- END SNIPPET: example -->
 </beans>

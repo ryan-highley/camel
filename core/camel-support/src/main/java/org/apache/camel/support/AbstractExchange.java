@@ -18,7 +18,6 @@ package org.apache.camel.support;
 
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,7 +52,6 @@ abstract class AbstractExchange implements Exchange {
 
     protected final CamelContext context;
     protected Map<String, Object> properties; // create properties on-demand as we use internal properties mostly
-    protected long created;
     protected Message in;
     protected Message out;
     protected Exception exception;
@@ -63,34 +61,33 @@ abstract class AbstractExchange implements Exchange {
     protected boolean rollbackOnly;
     protected boolean rollbackOnlyLast;
     protected Map<String, SafeCopyProperty> safeCopyProperties;
+    protected ExchangeVariableRepository variableRepository;
     private final ExtendedExchangeExtension privateExtension;
     private RedeliveryTraitPayload externalRedelivered = RedeliveryTraitPayload.UNDEFINED_REDELIVERY;
 
-    AbstractExchange(CamelContext context, EnumMap<ExchangePropertyKey, Object> internalProperties,
-                     Map<String, Object> properties) {
+    protected AbstractExchange(CamelContext context, EnumMap<ExchangePropertyKey, Object> internalProperties,
+                               Map<String, Object> properties) {
         this.context = context;
         this.internalProperties = new EnumMap<>(internalProperties);
         this.privateExtension = new ExtendedExchangeExtension(this);
         this.properties = safeCopyProperties(properties);
     }
 
-    public AbstractExchange(CamelContext context) {
+    protected AbstractExchange(CamelContext context) {
         this(context, ExchangePattern.InOnly);
     }
 
-    public AbstractExchange(CamelContext context, ExchangePattern pattern) {
+    protected AbstractExchange(CamelContext context, ExchangePattern pattern) {
         this.context = context;
         this.pattern = pattern;
-        this.created = System.currentTimeMillis();
 
         internalProperties = new EnumMap<>(ExchangePropertyKey.class);
         privateExtension = new ExtendedExchangeExtension(this);
     }
 
-    public AbstractExchange(Exchange parent) {
+    protected AbstractExchange(Exchange parent) {
         this.context = parent.getContext();
         this.pattern = parent.getPattern();
-        this.created = parent.getCreated();
 
         internalProperties = new EnumMap<>(ExchangePropertyKey.class);
 
@@ -100,10 +97,9 @@ abstract class AbstractExchange implements Exchange {
         privateExtension.setUnitOfWork(parent.getUnitOfWork());
     }
 
-    AbstractExchange(AbstractExchange parent) {
+    protected AbstractExchange(AbstractExchange parent) {
         this.context = parent.getContext();
         this.pattern = parent.getPattern();
-        this.created = parent.getCreated();
 
         this.internalProperties = new EnumMap<>(parent.internalProperties);
 
@@ -128,38 +124,24 @@ abstract class AbstractExchange implements Exchange {
         privateExtension.setErrorHandlerHandled(parent.getExchangeExtension().getErrorHandlerHandled());
         privateExtension.setStreamCacheDisabled(parent.getExchangeExtension().isStreamCacheDisabled());
 
+        if (parent.hasVariables()) {
+            if (this.variableRepository == null) {
+                this.variableRepository = new ExchangeVariableRepository();
+            }
+            this.variableRepository.setVariables(parent.getVariables());
+
+        }
         if (parent.hasProperties()) {
             this.properties = safeCopyProperties(parent.properties);
         }
-
         if (parent.hasSafeCopyProperties()) {
             this.safeCopyProperties = parent.copySafeCopyProperties();
         }
     }
 
-    public AbstractExchange(Endpoint fromEndpoint) {
-        this.context = fromEndpoint.getCamelContext();
-        this.pattern = fromEndpoint.getExchangePattern();
-        this.created = System.currentTimeMillis();
-
-        internalProperties = new EnumMap<>(ExchangePropertyKey.class);
-        privateExtension = new ExtendedExchangeExtension(this);
-        privateExtension.setFromEndpoint(fromEndpoint);
-    }
-
-    public AbstractExchange(Endpoint fromEndpoint, ExchangePattern pattern) {
-        this.context = fromEndpoint.getCamelContext();
-        this.pattern = pattern;
-        this.created = System.currentTimeMillis();
-
-        internalProperties = new EnumMap<>(ExchangePropertyKey.class);
-        privateExtension = new ExtendedExchangeExtension(this);
-        privateExtension.setFromEndpoint(fromEndpoint);
-    }
-
     @Override
     public long getCreated() {
-        return created;
+        return getClock().getCreated();
     }
 
     abstract AbstractExchange newCopy();
@@ -344,21 +326,10 @@ abstract class AbstractExchange implements Exchange {
 
         // store keys to be removed as we cannot loop and remove at the same time in implementations such as HashMap
         if (properties != null) {
-            Set<String> toBeRemoved = null;
-            for (String key : properties.keySet()) {
-                if (PatternHelper.matchPattern(key, pattern)) {
-                    if (excludePatterns != null && PatternHelper.isExcludePatternMatch(key, excludePatterns)) {
-                        continue;
-                    }
-                    matches = true;
-                    if (toBeRemoved == null) {
-                        toBeRemoved = new HashSet<>();
-                    }
-                    toBeRemoved.add(key);
-                }
-            }
+            Set<String> toBeRemoved = PatternHelper.matchingSet(properties, pattern, excludePatterns);
 
-            if (matches && toBeRemoved != null) {
+            if (toBeRemoved != null) {
+                matches = true;
                 if (toBeRemoved.size() == properties.size()) {
                     // special optimization when all should be removed
                     properties.clear();
@@ -407,6 +378,63 @@ abstract class AbstractExchange implements Exchange {
 
     private boolean hasSafeCopyProperties() {
         return safeCopyProperties != null && !safeCopyProperties.isEmpty();
+    }
+
+    @Override
+    public Object getVariable(String name) {
+        if (variableRepository != null) {
+            return variableRepository.getVariable(name);
+        }
+        return null;
+    }
+
+    @Override
+    public <T> T getVariable(String name, Class<T> type) {
+        Object value = getVariable(name);
+        return evalPropertyValue(type, value);
+    }
+
+    @Override
+    public <T> T getVariable(String name, Object defaultValue, Class<T> type) {
+        Object value = getVariable(name);
+        return evalPropertyValue(defaultValue, type, value);
+    }
+
+    @Override
+    public void setVariable(String name, Object value) {
+        if (variableRepository == null) {
+            variableRepository = new ExchangeVariableRepository();
+        }
+        variableRepository.setVariable(name, value);
+    }
+
+    @Override
+    public Object removeVariable(String name) {
+        if (variableRepository != null) {
+            if ("*".equals(name)) {
+                variableRepository.clear();
+                return null;
+            }
+            return variableRepository.removeVariable(name);
+        }
+        return null;
+    }
+
+    @Override
+    public Map<String, Object> getVariables() {
+        if (variableRepository == null) {
+            // force creating variables
+            variableRepository = new ExchangeVariableRepository();
+        }
+        return variableRepository.getVariables();
+    }
+
+    @Override
+    public boolean hasVariables() {
+        if (variableRepository != null) {
+            return variableRepository.hasVariables();
+        }
+        return false;
     }
 
     @Override
@@ -657,7 +685,7 @@ abstract class AbstractExchange implements Exchange {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         // do not output information about the message as it may contain sensitive information
         if (exchangeId != null) {
             return "Exchange[" + exchangeId + "]";

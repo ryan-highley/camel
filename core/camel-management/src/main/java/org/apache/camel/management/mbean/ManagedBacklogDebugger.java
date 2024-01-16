@@ -37,7 +37,6 @@ import org.apache.camel.spi.Language;
 import org.apache.camel.spi.ManagementStrategy;
 import org.apache.camel.support.LoggerHelper;
 import org.apache.camel.util.StringHelper;
-import org.apache.camel.util.TimeUtils;
 import org.apache.camel.util.URISupport;
 
 @ManagedResource(description = "Managed BacklogDebugger")
@@ -394,7 +393,7 @@ public class ManagedBacklogDebugger implements ManagedBacklogDebuggerMBean {
                             + "]";
                 }
 
-                long elapsed = TimeUtils.elapsedMillisSince(suspendedExchange.getCreated());
+                long elapsed = suspendedExchange.getClock().elapsed();
 
                 messageHistoryBuilder
                         .append("    <messageHistoryEntry")

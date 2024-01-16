@@ -78,11 +78,11 @@ import org.apache.camel.spi.RuntimeEndpointRegistry;
 import org.apache.camel.spi.ShutdownStrategy;
 import org.apache.camel.spi.StartupStepRecorder;
 import org.apache.camel.spi.StreamCachingStrategy;
-import org.apache.camel.spi.SupervisingRouteController;
 import org.apache.camel.spi.ThreadPoolFactory;
 import org.apache.camel.spi.ThreadPoolProfile;
 import org.apache.camel.spi.UnitOfWorkFactory;
 import org.apache.camel.spi.UuidGenerator;
+import org.apache.camel.spi.VariableRepositoryFactory;
 import org.apache.camel.support.ClassicUuidGenerator;
 import org.apache.camel.support.DefaultContextReloadStrategy;
 import org.apache.camel.support.DefaultUuidGenerator;
@@ -292,6 +292,8 @@ public final class DefaultConfigurationConfigurer {
                     .setMBeansLevel(config.getJmxManagementMBeansLevel());
             camelContext.getManagementStrategy().getManagementAgent()
                     .setManagementNamePattern(config.getJmxManagementNamePattern());
+            camelContext.getManagementStrategy().getManagementAgent()
+                    .setUpdateRouteEnabled(config.isJmxUpdateRouteEnabled());
         }
         if (config.isCamelEventsTimestampEnabled()) {
             camelContext.getManagementStrategy().getEventFactory().setTimestampEnabled(true);
@@ -346,39 +348,6 @@ public final class DefaultConfigurationConfigurer {
                     config.getRouteFilterIncludePattern(),
                     config.getRouteFilterExcludePattern());
         }
-
-        // supervising route controller
-        if (config.isRouteControllerSuperviseEnabled()) {
-            SupervisingRouteController src = camelContext.getRouteController().supervising();
-            if (config.getRouteControllerIncludeRoutes() != null) {
-                src.setIncludeRoutes(config.getRouteControllerIncludeRoutes());
-            }
-            if (config.getRouteControllerExcludeRoutes() != null) {
-                src.setExcludeRoutes(config.getRouteControllerExcludeRoutes());
-            }
-            if (config.getRouteControllerThreadPoolSize() > 0) {
-                src.setThreadPoolSize(config.getRouteControllerThreadPoolSize());
-            }
-            if (config.getRouteControllerBackOffDelay() > 0) {
-                src.setBackOffDelay(config.getRouteControllerBackOffDelay());
-            }
-            if (config.getRouteControllerInitialDelay() > 0) {
-                src.setInitialDelay(config.getRouteControllerInitialDelay());
-            }
-            if (config.getRouteControllerBackOffMaxAttempts() > 0) {
-                src.setBackOffMaxAttempts(config.getRouteControllerBackOffMaxAttempts());
-            }
-            if (config.getRouteControllerBackOffMaxDelay() > 0) {
-                src.setBackOffMaxDelay(config.getRouteControllerBackOffDelay());
-            }
-            if (config.getRouteControllerBackOffMaxElapsedTime() > 0) {
-                src.setBackOffMaxElapsedTime(config.getRouteControllerBackOffMaxElapsedTime());
-            }
-            if (config.getRouteControllerBackOffMultiplier() > 0) {
-                src.setBackOffMultiplier(config.getRouteControllerBackOffMultiplier());
-            }
-            src.setUnhealthyOnExhausted(config.isRouteControllerUnhealthyOnExhausted());
-        }
     }
 
     /**
@@ -398,6 +367,10 @@ public final class DefaultConfigurationConfigurer {
         CliConnectorFactory ccf = getSingleBeanOfType(registry, CliConnectorFactory.class);
         if (ccf != null) {
             camelContext.getCamelContextExtension().addContextPlugin(CliConnectorFactory.class, ccf);
+        }
+        VariableRepositoryFactory vrf = getSingleBeanOfType(registry, VariableRepositoryFactory.class);
+        if (vrf != null) {
+            camelContext.getCamelContextExtension().addContextPlugin(VariableRepositoryFactory.class, vrf);
         }
         PropertiesComponent pc = getSingleBeanOfType(registry, PropertiesComponent.class);
         if (pc != null) {

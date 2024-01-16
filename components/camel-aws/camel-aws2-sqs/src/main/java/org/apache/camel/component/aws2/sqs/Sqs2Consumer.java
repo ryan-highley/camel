@@ -122,6 +122,9 @@ public class Sqs2Consumer extends ScheduledBatchPollingConsumer {
             LOG.trace("Received {} messages", messageResult.messages().size());
         }
 
+        // okay we have some response from aws so lets mark the consumer as ready
+        forceConsumerAsReady();
+
         Queue<Exchange> exchanges = createExchanges(messageResult.messages());
         return processBatch(CastUtils.cast(exchanges));
     }
@@ -136,6 +139,9 @@ public class Sqs2Consumer extends ScheduledBatchPollingConsumer {
             try {
                 Thread.sleep(30000);
                 getEndpoint().createQueue(getClient());
+            } catch (InterruptedException e) {
+                LOG.warn("Interrupted while retrying queue connection.", e);
+                Thread.currentThread().interrupt();
             } catch (Exception e) {
                 LOG.warn("failed to retry queue connection.", e);
             }

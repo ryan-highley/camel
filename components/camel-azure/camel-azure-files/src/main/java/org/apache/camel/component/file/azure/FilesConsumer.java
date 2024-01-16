@@ -102,6 +102,9 @@ public class FilesConsumer extends RemoteFileConsumer<ShareFileItem> {
 
         var listedFileItems = listFileItems(path);
 
+        // okay we have some response from azure so lets mark the consumer as ready
+        forceConsumerAsReady();
+
         if (listedFileItems == null || listedFileItems.length == 0) {
             LOG.trace("No files found in directory: {}", path);
             return true;
@@ -179,7 +182,7 @@ public class FilesConsumer extends RemoteFileConsumer<ShareFileItem> {
         } catch (GenericFileOperationFailedException e) {
             if (ignoreCannotRetrieveFile(null, null, e)) {
                 LOG.debug(
-                        "Cannot list files in directory {} due directory does not exists or file permission error.",
+                        "Cannot list files in directory {} due directory does not exist or file permission error.",
                         dir);
                 return null;
             } else {

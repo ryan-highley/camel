@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.camel.clock.EventClock;
 import org.apache.camel.spi.CamelContextNameStrategy;
 import org.apache.camel.spi.ClassResolver;
 import org.apache.camel.spi.DataFormat;
@@ -165,6 +166,7 @@ public interface CamelContext extends CamelContextLifecycle, RuntimeConfiguratio
      *
      * @return the uptime in days/hours/minutes
      */
+    @Deprecated
     String getUptime();
 
     /**
@@ -172,12 +174,21 @@ public interface CamelContext extends CamelContextLifecycle, RuntimeConfiguratio
      *
      * @return the uptime in millis seconds
      */
+    @Deprecated
     long getUptimeMillis();
 
     /**
      * Gets the date and time Camel was started up.
      */
+    @Deprecated
     Date getStartDate();
+
+    /**
+     * Gets a clock instance that keeps track of time for relevant CamelContext events
+     *
+     * @return A clock instance
+     */
+    EventClock<ContextEvents> getClock();
 
     // Service Methods
     //-----------------------------------------------------------------------
@@ -794,6 +805,34 @@ public interface CamelContext extends CamelContextLifecycle, RuntimeConfiguratio
      *                                  them
      */
     String resolvePropertyPlaceholders(String text);
+
+    /**
+     * To get a variable by name.
+     *
+     * @param  name the variable name. Can be prefixed with repo-id:name to lookup the variable from a specific
+     *              repository. If no repo-id is provided, then global repository will be used.
+     * @return      the variable, or <tt>null</tt> if not found.
+     */
+    Object getVariable(String name);
+
+    /**
+     * To get a variable by name and covert to the given type.
+     *
+     * @param  name the variable name. Can be prefixed with repo-id:name to lookup the variable from a specific
+     *              repository. If no repo-id is provided, then global repository will be used.
+     * @param  type the type to convert the variable to
+     * @return      the variable, or <tt>null</tt> if not found.
+     */
+    <T> T getVariable(String name, Class<T> type);
+
+    /**
+     * Sets a variable
+     *
+     * @param name  the variable name. Can be prefixed with repo-id:name to lookup the variable from a specific
+     *              repository. If no repo-id is provided, then global repository will be used.
+     * @param value the value of the variable
+     */
+    void setVariable(String name, Object value);
 
     /**
      * Returns the configured properties component or create one if none has been configured.

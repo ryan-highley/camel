@@ -32,6 +32,7 @@ public final class ModelDeserializersResolver implements YamlDeserializerResolve
             case "basicAuth": return new ModelDeserializers.BasicAuthDefinitionDeserializer();
             case "org.apache.camel.model.rest.BasicAuthDefinition": return new ModelDeserializers.BasicAuthDefinitionDeserializer();
             case "batch-config": return new ModelDeserializers.BatchResequencerConfigDeserializer();
+            case "batchConfig": return new ModelDeserializers.BatchResequencerConfigDeserializer();
             case "org.apache.camel.model.config.BatchResequencerConfig": return new ModelDeserializers.BatchResequencerConfigDeserializer();
             case "org.apache.camel.model.app.BeanConstructorDefinition": return new ModelDeserializers.BeanConstructorDefinitionDeserializer();
             case "org.apache.camel.model.app.BeanConstructorsDefinition": return new ModelDeserializers.BeanConstructorsDefinitionDeserializer();
@@ -86,6 +87,9 @@ public final class ModelDeserializersResolver implements YamlDeserializerResolve
             case "convert-header-to": return new ModelDeserializers.ConvertHeaderDefinitionDeserializer();
             case "convertHeaderTo": return new ModelDeserializers.ConvertHeaderDefinitionDeserializer();
             case "org.apache.camel.model.ConvertHeaderDefinition": return new ModelDeserializers.ConvertHeaderDefinitionDeserializer();
+            case "convert-variable-to": return new ModelDeserializers.ConvertVariableDefinitionDeserializer();
+            case "convertVariableTo": return new ModelDeserializers.ConvertVariableDefinitionDeserializer();
+            case "org.apache.camel.model.ConvertVariableDefinition": return new ModelDeserializers.ConvertVariableDefinitionDeserializer();
             case "crypto": return new ModelDeserializers.CryptoDataFormatDeserializer();
             case "org.apache.camel.model.dataformat.CryptoDataFormat": return new ModelDeserializers.CryptoDataFormatDeserializer();
             case "csv": return new ModelDeserializers.CsvDataFormatDeserializer();
@@ -342,6 +346,9 @@ public final class ModelDeserializersResolver implements YamlDeserializerResolve
             case "remove-property": return new ModelDeserializers.RemovePropertyDefinitionDeserializer();
             case "removeProperty": return new ModelDeserializers.RemovePropertyDefinitionDeserializer();
             case "org.apache.camel.model.RemovePropertyDefinition": return new ModelDeserializers.RemovePropertyDefinitionDeserializer();
+            case "remove-variable": return new ModelDeserializers.RemoveVariableDefinitionDeserializer();
+            case "removeVariable": return new ModelDeserializers.RemoveVariableDefinitionDeserializer();
+            case "org.apache.camel.model.RemoveVariableDefinition": return new ModelDeserializers.RemoveVariableDefinitionDeserializer();
             case "resequence": return new ModelDeserializers.ResequenceDefinitionDeserializer();
             case "org.apache.camel.model.ResequenceDefinition": return new ModelDeserializers.ResequenceDefinitionDeserializer();
             case "resilience4j-configuration": return new ModelDeserializers.Resilience4jConfigurationDefinitionDeserializer();
@@ -443,6 +450,9 @@ public final class ModelDeserializersResolver implements YamlDeserializerResolve
             case "set-property": return new ModelDeserializers.SetPropertyDefinitionDeserializer();
             case "setProperty": return new ModelDeserializers.SetPropertyDefinitionDeserializer();
             case "org.apache.camel.model.SetPropertyDefinition": return new ModelDeserializers.SetPropertyDefinitionDeserializer();
+            case "set-variable": return new ModelDeserializers.SetVariableDefinitionDeserializer();
+            case "setVariable": return new ModelDeserializers.SetVariableDefinitionDeserializer();
+            case "org.apache.camel.model.SetVariableDefinition": return new ModelDeserializers.SetVariableDefinitionDeserializer();
             case "simple": return new ModelDeserializers.SimpleExpressionDeserializer();
             case "org.apache.camel.model.language.SimpleExpression": return new ModelDeserializers.SimpleExpressionDeserializer();
             case "soap": return new ModelDeserializers.SoapDataFormatDeserializer();
@@ -466,6 +476,7 @@ public final class ModelDeserializersResolver implements YamlDeserializerResolve
             case "stop": return new ModelDeserializers.StopDefinitionDeserializer();
             case "org.apache.camel.model.StopDefinition": return new ModelDeserializers.StopDefinitionDeserializer();
             case "stream-config": return new ModelDeserializers.StreamResequencerConfigDeserializer();
+            case "streamConfig": return new ModelDeserializers.StreamResequencerConfigDeserializer();
             case "org.apache.camel.model.config.StreamResequencerConfig": return new ModelDeserializers.StreamResequencerConfigDeserializer();
             case "swift-mt": return new ModelDeserializers.SwiftMtDataFormatDeserializer();
             case "swiftMt": return new ModelDeserializers.SwiftMtDataFormatDeserializer();

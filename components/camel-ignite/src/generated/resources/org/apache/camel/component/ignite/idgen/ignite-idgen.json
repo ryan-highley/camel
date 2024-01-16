@@ -11,7 +11,7 @@
     "supportLevel": "Stable",
     "groupId": "org.apache.camel",
     "artifactId": "camel-ignite",
-    "version": "4.3.0-SNAPSHOT",
+    "version": "4.4.0-SNAPSHOT",
     "scheme": "ignite-idgen",
     "extendsScheme": "",
     "syntax": "ignite-idgen:name",
@@ -19,7 +19,8 @@
     "api": false,
     "consumerOnly": false,
     "producerOnly": true,
-    "lenientProperties": false
+    "lenientProperties": false,
+    "remote": true
   },
   "componentProperties": {
     "configurationResource": { "index": 0, "kind": "property", "displayName": "Configuration Resource", "group": "producer", "label": "", "required": false, "type": "object", "javaType": "java.lang.Object", "deprecated": false, "autowired": false, "secret": false, "description": "The resource from where to load the configuration. It can be a: URL, String or InputStream type." },

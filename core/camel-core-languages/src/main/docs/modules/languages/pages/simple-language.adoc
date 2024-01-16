@@ -127,6 +127,18 @@ classname
 
 |headers |Map |refer to the headers
 
+|variable.foo |Object |refer to the foo variable
+
+|variable[foo] |Object |refer to the foo variable
+
+|variable.foo.*OGNL* |Object |refer to the foo variable and invoke its
+value using a Camel OGNL expression.
+
+|variableAs(_key_,_type_) |Type |converts the variable to the given type determined by its
+classname
+
+|variables |Map |refer to the variables
+
 |exchangeProperty.foo |Object |refer to the foo property on the exchange
 
 |exchangeProperty[foo] |Object |refer to the foo property on the exchange
@@ -165,7 +177,8 @@ exceptions (`Exchange.EXCEPTION_CAUGHT`) if the Exchange has any.
 |date:_command_ |Date |evaluates to a Date object.
 Supported commands are: *now* for current timestamp,
 *exchangeCreated* for the timestamp when the current exchange was created,
-*header.xxx* to use the Long/Date object header with the key xxx.
+*header.xxx* to use the Long/Date object in the header with the key xxx.
+*variable.xxx* to use the Long/Date in the variable with the key xxx.
 *exchangeProperty.xxx* to use the Long/Date object in the exchange property with the key xxx.
 *file* for the last modified timestamp of the file (available with a File consumer).
 Command accepts offsets such as: *now-24h* or *header.xxx+1h* or even *now+1h30m-100*.
@@ -187,8 +200,11 @@ specified.
 |propertiesExist:key |String |Checks whether a property placeholder with the given key exists or not.
 The result can be negated by prefixing the key with `!`.
 
-|routeId |String |Returns the id of the current route the
+|routeId |String |Returns the route id of the current route the
 Exchange is being routed.
+
+|routeGroup |String |Returns the route group of the current route the
+Exchange is being routed. Not all routes has a group assigned, so this may be null.
 
 |stepId |String |Returns the id of the current step the
 Exchange is being routed.
@@ -251,6 +267,9 @@ You can choose between `default`, `classic`, `short` and `simple` as the type.
 If no type is given the default is used. It is also possible to use a custom `UuidGenerator`
 and bind the bean to the xref:manual::registry.adoc[Registry] with an id. For example `${uuid(myGenerator}`
 where the ID is _myGenerator_.
+
+|hash(exp,algorithm) |String |Returns a hashed value (string in hex decimal) using JDK MessageDigest.
+The algorithm can be SHA-256 (default) or SHA3-256.
 
 |jsonpath(exp) | Object | When working with JSon data, then this allows to use the JsonPath language
 for example to extract data from the message body (in JSon format). This requires having camel-jsonpath JAR on the classpath.

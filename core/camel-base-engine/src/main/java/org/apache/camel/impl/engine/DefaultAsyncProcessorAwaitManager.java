@@ -35,6 +35,7 @@ import org.apache.camel.support.ExchangeHelper;
 import org.apache.camel.support.MessageHelper;
 import org.apache.camel.support.processor.DefaultExchangeFormatter;
 import org.apache.camel.support.service.ServiceSupport;
+import org.apache.camel.util.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,6 +110,8 @@ public class DefaultAsyncProcessorAwaitManager extends ServiceSupport implements
             }
 
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+
             if (LOG.isTraceEnabled()) {
                 LOG.trace("Interrupted while waiting for callback, will continue routing exchangeId: {} -> {}",
                         exchange.getExchangeId(), exchange);
@@ -279,13 +282,12 @@ public class DefaultAsyncProcessorAwaitManager extends ServiceSupport implements
         private final Thread thread;
         private final Exchange exchange;
         private final CountDownLatch latch;
-        private final long start;
+        private final StopWatch watch = new StopWatch();
 
         private AwaitThreadEntry(Thread thread, Exchange exchange, CountDownLatch latch) {
             this.thread = thread;
             this.exchange = exchange;
             this.latch = latch;
-            this.start = System.currentTimeMillis();
         }
 
         @Override
@@ -300,7 +302,7 @@ public class DefaultAsyncProcessorAwaitManager extends ServiceSupport implements
 
         @Override
         public long getWaitDuration() {
-            return System.currentTimeMillis() - start;
+            return watch.taken();
         }
 
         @Override

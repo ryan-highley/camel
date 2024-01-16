@@ -183,6 +183,11 @@ public class VertxPlatformHttpServer extends ServiceSupport implements CamelCont
             subRouter.route().handler(createCorsHandler(configuration));
         }
 
+        if (configuration.getSessionConfig().isEnabled()) {
+            subRouter.route().handler(
+                    configuration.getSessionConfig().createSessionHandler(vertx));
+        }
+
         router.route(configuration.getPath() + "*").subRouter(subRouter);
 
         context.getRegistry().bind(
@@ -227,6 +232,7 @@ public class VertxPlatformHttpServer extends ServiceSupport implements CamelCont
                     try {
                         latch.await();
                     } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
                         throw new RuntimeException(e);
                     }
                 },
@@ -264,6 +270,7 @@ public class VertxPlatformHttpServer extends ServiceSupport implements CamelCont
                         try {
                             latch.await();
                         } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
                             throw new RuntimeException(e);
                         }
                     },
@@ -301,6 +308,7 @@ public class VertxPlatformHttpServer extends ServiceSupport implements CamelCont
                         try {
                             latch.await();
                         } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
                             throw new RuntimeException(e);
                         }
                     },

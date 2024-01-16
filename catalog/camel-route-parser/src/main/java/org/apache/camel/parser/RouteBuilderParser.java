@@ -47,6 +47,8 @@ import org.jboss.forge.roaster.model.source.MethodSource;
  */
 public final class RouteBuilderParser {
 
+    public static final String METHOD_NAME = "configure";
+
     private RouteBuilderParser() {
     }
 
@@ -286,7 +288,7 @@ public final class RouteBuilderParser {
                     CamelSimpleExpressionDetails detail = new CamelSimpleExpressionDetails();
                     detail.setFileName(fileName);
                     detail.setClassName(clazz.getQualifiedName());
-                    detail.setMethodName("configure");
+                    detail.setMethodName(METHOD_NAME);
                     int line = findLineNumber(clazz.toUnformattedString(), result.getPosition());
                     if (line > -1) {
                         detail.setLineNumber(Integer.toString(line));
@@ -329,36 +331,42 @@ public final class RouteBuilderParser {
             List<ParserResult> expressions = CamelJavaParserHelper.parseCamelLanguageExpressions(method, "csimple");
             for (ParserResult result : expressions) {
                 if (result.isParsed()) {
-                    String fileName = parseFileName(baseDir, fullyQualifiedFileName);
-
-                    CamelCSimpleExpressionDetails detail = new CamelCSimpleExpressionDetails();
-                    detail.setFileName(fileName);
-                    detail.setClassName(clazz.getQualifiedName());
-                    detail.setMethodName("configure");
-                    int line = findLineNumber(clazz.toUnformattedString(), result.getPosition());
-                    if (line > -1) {
-                        detail.setLineNumber(Integer.toString(line));
-                    }
-                    int endLine = findLineNumber(clazz.toUnformattedString(), result.getPosition() + result.getLength());
-                    if (endLine > -1) {
-                        detail.setLineNumberEnd(Integer.toString(endLine));
-                    }
-                    detail.setAbsolutePosition(result.getPosition());
-                    int linePos = findLinePosition(clazz.toUnformattedString(), result.getPosition());
-                    if (linePos > -1) {
-                        detail.setLinePosition(linePos);
-                    }
-                    detail.setCsimple(result.getElement());
-
-                    boolean predicate = result.getPredicate() != null ? result.getPredicate() : false;
-                    boolean expression = !predicate;
-                    detail.setPredicate(predicate);
-                    detail.setExpression(expression);
-
-                    csimpleExpressions.add(detail);
+                    checkParsedResult(clazz, baseDir, fullyQualifiedFileName, csimpleExpressions, result);
                 }
             }
         }
+    }
+
+    private static void checkParsedResult(
+            JavaClassSource clazz, String baseDir, String fullyQualifiedFileName,
+            List<CamelCSimpleExpressionDetails> csimpleExpressions, ParserResult result) {
+        String fileName = parseFileName(baseDir, fullyQualifiedFileName);
+
+        CamelCSimpleExpressionDetails detail = new CamelCSimpleExpressionDetails();
+        detail.setFileName(fileName);
+        detail.setClassName(clazz.getQualifiedName());
+        detail.setMethodName(METHOD_NAME);
+        int line = findLineNumber(clazz.toUnformattedString(), result.getPosition());
+        if (line > -1) {
+            detail.setLineNumber(Integer.toString(line));
+        }
+        int endLine = findLineNumber(clazz.toUnformattedString(), result.getPosition() + result.getLength());
+        if (endLine > -1) {
+            detail.setLineNumberEnd(Integer.toString(endLine));
+        }
+        detail.setAbsolutePosition(result.getPosition());
+        int linePos = findLinePosition(clazz.toUnformattedString(), result.getPosition());
+        if (linePos > -1) {
+            detail.setLinePosition(linePos);
+        }
+        detail.setCsimple(result.getElement());
+
+        boolean predicate = result.getPredicate() != null ? result.getPredicate() : false;
+        boolean expression = !predicate;
+        detail.setPredicate(predicate);
+        detail.setExpression(expression);
+
+        csimpleExpressions.add(detail);
     }
 
     /**
@@ -384,7 +392,7 @@ public final class RouteBuilderParser {
                     CamelRouteDetails detail = new CamelRouteDetails();
                     detail.setFileName(fileName);
                     detail.setClassName(clazz.getQualifiedName());
-                    detail.setMethodName("configure");
+                    detail.setMethodName(METHOD_NAME);
                     int line = findLineNumber(clazz.toUnformattedString(), result.getPosition());
                     if (line > -1) {
                         detail.setLineNumber(Integer.toString(line));

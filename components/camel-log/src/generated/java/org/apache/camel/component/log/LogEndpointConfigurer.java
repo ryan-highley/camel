@@ -67,10 +67,16 @@ public class LogEndpointConfigurer extends PropertyConfigurerSupport implements 
         case "showHeaders": target.setShowHeaders(property(camelContext, boolean.class, value)); return true;
         case "showproperties":
         case "showProperties": target.setShowProperties(property(camelContext, boolean.class, value)); return true;
+        case "showroutegroup":
+        case "showRouteGroup": target.setShowRouteGroup(property(camelContext, boolean.class, value)); return true;
+        case "showrouteid":
+        case "showRouteId": target.setShowRouteId(property(camelContext, boolean.class, value)); return true;
         case "showstacktrace":
         case "showStackTrace": target.setShowStackTrace(property(camelContext, boolean.class, value)); return true;
         case "showstreams":
         case "showStreams": target.setShowStreams(property(camelContext, boolean.class, value)); return true;
+        case "showvariables":
+        case "showVariables": target.setShowVariables(property(camelContext, boolean.class, value)); return true;
         case "skipbodylineseparator":
         case "skipBodyLineSeparator": target.setSkipBodyLineSeparator(property(camelContext, boolean.class, value)); return true;
         case "sourcelocationloggername":
@@ -129,10 +135,16 @@ public class LogEndpointConfigurer extends PropertyConfigurerSupport implements 
         case "showHeaders": return boolean.class;
         case "showproperties":
         case "showProperties": return boolean.class;
+        case "showroutegroup":
+        case "showRouteGroup": return boolean.class;
+        case "showrouteid":
+        case "showRouteId": return boolean.class;
         case "showstacktrace":
         case "showStackTrace": return boolean.class;
         case "showstreams":
         case "showStreams": return boolean.class;
+        case "showvariables":
+        case "showVariables": return boolean.class;
         case "skipbodylineseparator":
         case "skipBodyLineSeparator": return boolean.class;
         case "sourcelocationloggername":
@@ -192,10 +204,16 @@ public class LogEndpointConfigurer extends PropertyConfigurerSupport implements 
         case "showHeaders": return target.isShowHeaders();
         case "showproperties":
         case "showProperties": return target.isShowProperties();
+        case "showroutegroup":
+        case "showRouteGroup": return target.isShowRouteGroup();
+        case "showrouteid":
+        case "showRouteId": return target.isShowRouteId();
         case "showstacktrace":
         case "showStackTrace": return target.isShowStackTrace();
         case "showstreams":
         case "showStreams": return target.isShowStreams();
+        case "showvariables":
+        case "showVariables": return target.isShowVariables();
         case "skipbodylineseparator":
         case "skipBodyLineSeparator": return target.isSkipBodyLineSeparator();
         case "sourcelocationloggername":

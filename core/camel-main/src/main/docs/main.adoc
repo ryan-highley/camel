@@ -19,7 +19,7 @@ The following tables lists all the options:
 
 // main options: START
 === Camel Main configurations
-The camel.main supports 127 options, which are listed below.
+The camel.main supports 117 options, which are listed below.
 
 [width="100%",cols="2,5,^1,2",options="header"]
 |===
@@ -77,6 +77,7 @@ The camel.main supports 127 options, which are listed below.
 | *camel.main.jmxManagementMBeans{zwsp}Level* | Sets the mbeans registration level. The default value is Default. | Default | ManagementMBeansLevel
 | *camel.main.jmxManagementName{zwsp}Pattern* | The naming pattern for creating the CamelContext JMX management name. The default pattern is #name# | #name# | String
 | *camel.main.jmxManagement{zwsp}StatisticsLevel* | Sets the JMX statistics level, the level can be set to Extended to gather additional information The default value is Default. | Default | ManagementStatisticsLevel
+| *camel.main.jmxUpdateRoute{zwsp}Enabled* | Whether to allow updating routes at runtime via JMX using the ManagedRouteMBean. This is disabled by default, but can be enabled for development and troubleshooting purposes, such as updating routes in an existing running Camel via JMX and other tools. | false | boolean
 | *camel.main.lightweight* | Configure the context to be lightweight. This will trigger some optimizations and memory reduction options. Lightweight context have some limitations. At this moment, dynamic endpoint destinations are not supported. | false | boolean
 | *camel.main.loadHealthChecks* | Whether to load custom health checks by scanning classpath. | false | boolean
 | *camel.main.loadStatistics{zwsp}Enabled* | Sets whether context load statistics is enabled (something like the unix load average). The statistics requires to have camel-management on the classpath as JMX is required. The default value is false. | false | boolean
@@ -89,17 +90,6 @@ The camel.main supports 127 options, which are listed below.
 | *camel.main.modeline* | Whether camel-k style modeline is also enabled when not using camel-k. Enabling this allows to use a camel-k like experience by being able to configure various settings using modeline directly in your route source code. | false | boolean
 | *camel.main.name* | Sets the name of the CamelContext. |  | String
 | *camel.main.producerTemplate{zwsp}CacheSize* | Producer template endpoints cache size. | 1000 | int
-| *camel.main.routeControllerBack{zwsp}OffDelay* | Backoff delay in millis when restarting a route that failed to startup. |  | long
-| *camel.main.routeControllerBack{zwsp}OffMaxAttempts* | Backoff maximum number of attempts to restart a route that failed to startup. When this threshold has been exceeded then the controller will give up attempting to restart the route, and the route will remain as stopped. |  | long
-| *camel.main.routeControllerBack{zwsp}OffMaxDelay* | Backoff maximum delay in millis when restarting a route that failed to startup. |  | long
-| *camel.main.routeControllerBack{zwsp}OffMaxElapsedTime* | Backoff maximum elapsed time in millis, after which the backoff should be considered exhausted and no more attempts should be made. |  | long
-| *camel.main.routeControllerBack{zwsp}OffMultiplier* | Backoff multiplier to use for exponential backoff. This is used to extend the delay between restart attempts. |  | double
-| *camel.main.routeController{zwsp}ExcludeRoutes* | Pattern for filtering routes to be excluded as supervised. The pattern is matching on route id, and endpoint uri for the route. Multiple patterns can be separated by comma. For example to exclude all JMS routes, you can say jms:. And to exclude routes with specific route ids mySpecialRoute,myOtherSpecialRoute. The pattern supports wildcards and uses the matcher from org.apache.camel.support.PatternHelper#matchPattern. |  | String
-| *camel.main.routeController{zwsp}IncludeRoutes* | Pattern for filtering routes to be included as supervised. The pattern is matching on route id, and endpoint uri for the route. Multiple patterns can be separated by comma. For example to include all kafka routes, you can say kafka:. And to include routes with specific route ids myRoute,myOtherRoute. The pattern supports wildcards and uses the matcher from org.apache.camel.support.PatternHelper#matchPattern. |  | String
-| *camel.main.routeController{zwsp}InitialDelay* | Initial delay in milli seconds before the route controller starts, after CamelContext has been started. |  | long
-| *camel.main.routeController{zwsp}SuperviseEnabled* | To enable using supervising route controller which allows Camel to startup and then the controller takes care of starting the routes in a safe manner. This can be used when you want to startup Camel despite a route may otherwise fail fast during startup and cause Camel to fail to startup as well. By delegating the route startup to the supervising route controller then its manages the startup using a background thread. The controller allows to be configured with various settings to attempt to restart failing routes. | false | boolean
-| *camel.main.routeController{zwsp}ThreadPoolSize* | The number of threads used by the route controller scheduled thread pool that are used for restarting routes. The pool uses 1 thread by default, but you can increase this to allow the controller to concurrently attempt to restart multiple routes in case more than one route has problems starting. |  | int
-| *camel.main.routeController{zwsp}UnhealthyOnExhausted* | Whether to mark the route as unhealthy (down) when all restarting attempts (backoff) have failed and the route is not successfully started and the route manager is giving up. Setting this to true allows health checks to know about this and can report the Camel application as DOWN. The default is false. | false | boolean
 | *camel.main.routeFilterExclude{zwsp}Pattern* | Used for filtering routes routes matching the given pattern, which follows the following rules: - Match by route id - Match by route input endpoint uri The matching is using exact match, by wildcard and regular expression as documented by PatternHelper#matchPattern(String,String) . For example to only include routes which starts with foo in their route id's, use: include=foo&#42; And to exclude routes which starts from JMS endpoints, use: exclude=jms:&#42; Multiple patterns can be separated by comma, for example to exclude both foo and bar routes, use: exclude=foo&#42;,bar&#42; Exclude takes precedence over include. |  | String
 | *camel.main.routeFilterInclude{zwsp}Pattern* | Used for filtering routes matching the given pattern, which follows the following rules: - Match by route id - Match by route input endpoint uri The matching is using exact match, by wildcard and regular expression as documented by PatternHelper#matchPattern(String,String) . For example to only include routes which starts with foo in their route id's, use: include=foo&#42; And to exclude routes which starts from JMS endpoints, use: exclude=jms:&#42; Multiple patterns can be separated by comma, for example to exclude both foo and bar routes, use: exclude=foo&#42;,bar&#42; Exclude takes precedence over include. |  | String
 | *camel.main.routesBuilder{zwsp}Classes* | Sets classes names that implement RoutesBuilder . |  | String
@@ -151,6 +141,27 @@ The camel.main supports 127 options, which are listed below.
 | *camel.main.useDataType* | Whether to enable using data type on Camel messages. Data type are automatic turned on if one ore more routes has been explicit configured with input and output types. Otherwise data type is default off. | false | boolean
 | *camel.main.useMdcLogging* | To turn on MDC logging | false | boolean
 | *camel.main.uuidGenerator* | UUID generator to use. default (32 bytes), short (16 bytes), classic (32 bytes or longer), simple (long incrementing counter), off (turned off for exchanges - only intended for performance profiling) | default | String
+|===
+
+
+=== Camel Route Controller configurations
+The camel.routecontroller supports 12 options, which are listed below.
+
+[width="100%",cols="2,5,^1,2",options="header"]
+|===
+| Name | Description | Default | Type
+| *camel.routecontroller.backOff{zwsp}Delay* | Backoff delay in millis when restarting a route that failed to startup. | 2000 | long
+| *camel.routecontroller.backOff{zwsp}MaxAttempts* | Backoff maximum number of attempts to restart a route that failed to startup. When this threshold has been exceeded then the controller will give up attempting to restart the route, and the route will remain as stopped. |  | long
+| *camel.routecontroller.backOff{zwsp}MaxDelay* | Backoff maximum delay in millis when restarting a route that failed to startup. |  | long
+| *camel.routecontroller.backOff{zwsp}MaxElapsedTime* | Backoff maximum elapsed time in millis, after which the backoff should be considered exhausted and no more attempts should be made. |  | long
+| *camel.routecontroller.backOff{zwsp}Multiplier* | Backoff multiplier to use for exponential backoff. This is used to extend the delay between restart attempts. |  | double
+| *camel.routecontroller.enabled* | To enable using supervising route controller which allows Camel to startup and then the controller takes care of starting the routes in a safe manner. This can be used when you want to startup Camel despite a route may otherwise fail fast during startup and cause Camel to fail to startup as well. By delegating the route startup to the supervising route controller then its manages the startup using a background thread. The controller allows to be configured with various settings to attempt to restart failing routes. | false | boolean
+| *camel.routecontroller.exclude{zwsp}Routes* | Pattern for filtering routes to be excluded as supervised. The pattern is matching on route id, and endpoint uri for the route. Multiple patterns can be separated by comma. For example to exclude all JMS routes, you can say jms:. And to exclude routes with specific route ids mySpecialRoute,myOtherSpecialRoute. The pattern supports wildcards and uses the matcher from org.apache.camel.support.PatternHelper#matchPattern. |  | String
+| *camel.routecontroller.include{zwsp}Routes* | Pattern for filtering routes to be included as supervised. The pattern is matching on route id, and endpoint uri for the route. Multiple patterns can be separated by comma. For example to include all kafka routes, you can say kafka:. And to include routes with specific route ids myRoute,myOtherRoute. The pattern supports wildcards and uses the matcher from org.apache.camel.support.PatternHelper#matchPattern. |  | String
+| *camel.routecontroller.initial{zwsp}Delay* | Initial delay in milli seconds before the route controller starts, after CamelContext has been started. |  | long
+| *camel.routecontroller.thread{zwsp}PoolSize* | The number of threads used by the route controller scheduled thread pool that are used for restarting routes. The pool uses 1 thread by default, but you can increase this to allow the controller to concurrently attempt to restart multiple routes in case more than one route has problems starting. | 1 | int
+| *{zwsp}camel.routecontroller.unhealthy{zwsp}OnExhausted* | Whether to mark the route as unhealthy (down) when all restarting attempts (backoff) have failed and the route is not successfully started and the route manager is giving up. Setting this to true allows health checks to know about this and can report the Camel application as DOWN. The default is false. | false | boolean
+| *{zwsp}camel.routecontroller.unhealthy{zwsp}OnRestarting* | Whether to mark the route as unhealthy (down) when the route failed to initially start, and is being controlled for restarting (backoff). Setting this to true allows health checks to know about this and can report the Camel application as DOWN. The default is false. | false | boolean
 |===
 
 
@@ -316,11 +327,12 @@ The camel.vault.gcp supports 7 options, which are listed below.
 
 
 === Camel Azure Key Vault configurations
-The camel.vault.azure supports 11 options, which are listed below.
+The camel.vault.azure supports 12 options, which are listed below.
 
 [width="100%",cols="2,5,^1,2",options="header"]
 |===
 | Name | Description | Default | Type
+| *camel.vault.azure.azure{zwsp}IdentityEnabled* | Whether the Azure Identity Authentication should be used or not. | false | boolean
 | *camel.vault.azure.blobAccess{zwsp}Key* | The Eventhubs Blob Access Key for CheckpointStore purpose |  | String
 | *camel.vault.azure.blobAccount{zwsp}Name* | The Eventhubs Blob Account Name for CheckpointStore purpose |  | String
 | *camel.vault.azure.blob{zwsp}ContainerName* | The Eventhubs Blob Container Name for CheckpointStore purpose |  | String
@@ -349,12 +361,13 @@ The camel.opentelemetry supports 4 options, which are listed below.
 
 
 === Camel Micrometer Metrics configurations
-The camel.metrics supports 8 options, which are listed below.
+The camel.metrics supports 9 options, which are listed below.
 
 [width="100%",cols="2,5,^1,2",options="header"]
 |===
 | Name | Description | Default | Type
 | *camel.metrics.binders* | Additional Micrometer binders to include such as jvm-memory, processor, jvm-thread, and so forth. Multiple binders can be separated by comma. The following binders currently is available from Micrometer: class-loader, commons-object-pool2, file-descriptor, hystrix-metrics-binder, jvm-compilation, jvm-gc, jvm-heap-pressure, jvm-info, jvm-memory, jvm-thread, log4j2, logback, processor, uptime |  | String
+| *camel.metrics.clearOnReload* | Clear the captured metrics data when Camel is reloading routes such as when using Camel JBang. | true | boolean
 | *camel.metrics.enabled* | To enable Micrometer metrics. | false | boolean
 | *camel.metrics.enableExchange{zwsp}EventNotifier* | Set whether to enable the MicrometerExchangeEventNotifier for capturing metrics on exchange processing times. | true | boolean
 | *camel.metrics.enableMessage{zwsp}History* | Set whether to enable the MicrometerMessageHistoryFactory for capturing metrics on individual route node processing times. Depending on the number of configured route nodes, there is the potential to create a large volume of metrics. Therefore, this option is disabled by default. | false | boolean

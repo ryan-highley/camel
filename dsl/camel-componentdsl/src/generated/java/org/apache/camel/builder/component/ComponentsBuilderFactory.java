@@ -1234,6 +1234,21 @@ public interface ComponentsBuilderFactory {
         return org.apache.camel.builder.component.dsl.DynamicRouterComponentBuilderFactory.dynamicRouter();
     }
     /**
+     * Dynamic Router Control (camel-dynamic-router)
+     * The Dynamic Router control endpoint for operations that allow routing
+     * participants to subscribe or unsubscribe to participate in dynamic
+     * message routing.
+     * 
+     * Category: messaging
+     * Since: 4.3
+     * Maven coordinates: org.apache.camel:camel-dynamic-router
+     * 
+     * @return the dsl builder
+     */
+    static org.apache.camel.builder.component.dsl.DynamicRouterControlComponentBuilderFactory.DynamicRouterControlComponentBuilder dynamicRouterControl() {
+        return org.apache.camel.builder.component.dsl.DynamicRouterControlComponentBuilderFactory.dynamicRouterControl();
+    }
+    /**
      * Ehcache (camel-ehcache)
      * Perform caching operations using Ehcache.
      * 
@@ -1258,6 +1273,20 @@ public interface ComponentsBuilderFactory {
      */
     static org.apache.camel.builder.component.dsl.ElasticsearchComponentBuilderFactory.ElasticsearchComponentBuilder elasticsearch() {
         return org.apache.camel.builder.component.dsl.ElasticsearchComponentBuilderFactory.elasticsearch();
+    }
+    /**
+     * Elasticsearch Low level Rest Client (camel-elasticsearch-rest-client)
+     * Perform queries and other operations on Elasticsearch or OpenSearch (uses
+     * low-level client).
+     * 
+     * Category: search
+     * Since: 4.3
+     * Maven coordinates: org.apache.camel:camel-elasticsearch-rest-client
+     * 
+     * @return the dsl builder
+     */
+    static org.apache.camel.builder.component.dsl.ElasticsearchRestClientComponentBuilderFactory.ElasticsearchRestClientComponentBuilder elasticsearchRestClient() {
+        return org.apache.camel.builder.component.dsl.ElasticsearchRestClientComponentBuilderFactory.elasticsearchRestClient();
     }
     /**
      * Etcd v3 (camel-etcd3)
@@ -1842,19 +1871,6 @@ public interface ComponentsBuilderFactory {
         return org.apache.camel.builder.component.dsl.HazelcastTopicComponentBuilderFactory.hazelcastTopic();
     }
     /**
-     * HDFS (camel-hdfs)
-     * Read and write from/to an HDFS filesystem using Hadoop 2.x.
-     * 
-     * Category: bigdata,file
-     * Since: 2.14
-     * Maven coordinates: org.apache.camel:camel-hdfs
-     * 
-     * @return the dsl builder
-     */
-    static org.apache.camel.builder.component.dsl.HdfsComponentBuilderFactory.HdfsComponentBuilder hdfs() {
-        return org.apache.camel.builder.component.dsl.HdfsComponentBuilderFactory.hdfs();
-    }
-    /**
      * HTTP (camel-http)
      * Send requests to external HTTP servers using Apache HTTP Client 5.x.
      * 
@@ -2428,6 +2444,19 @@ public interface ComponentsBuilderFactory {
         return org.apache.camel.builder.component.dsl.Jt400ComponentBuilderFactory.jt400();
     }
     /**
+     * JTE (camel-jte)
+     * Transform messages using a Java based template engine (JTE).
+     * 
+     * Category: transformation
+     * Since: 4.4
+     * Maven coordinates: org.apache.camel:camel-jte
+     * 
+     * @return the dsl builder
+     */
+    static org.apache.camel.builder.component.dsl.JteComponentBuilderFactory.JteComponentBuilder jte() {
+        return org.apache.camel.builder.component.dsl.JteComponentBuilderFactory.jte();
+    }
+    /**
      * Kafka (camel-kafka)
      * Sent and receive messages to/from an Apache Kafka broker.
      * 
@@ -2479,6 +2508,19 @@ public interface ComponentsBuilderFactory {
      */
     static org.apache.camel.builder.component.dsl.KubernetesConfigMapsComponentBuilderFactory.KubernetesConfigMapsComponentBuilder kubernetesConfigMaps() {
         return org.apache.camel.builder.component.dsl.KubernetesConfigMapsComponentBuilderFactory.kubernetesConfigMaps();
+    }
+    /**
+     * Kubernetes Cronjob (camel-kubernetes)
+     * Perform operations on Kubernetes CronJob.
+     * 
+     * Category: container,cloud
+     * Since: 4.3
+     * Maven coordinates: org.apache.camel:camel-kubernetes
+     * 
+     * @return the dsl builder
+     */
+    static org.apache.camel.builder.component.dsl.KubernetesCronjobComponentBuilderFactory.KubernetesCronjobComponentBuilder kubernetesCronjob() {
+        return org.apache.camel.builder.component.dsl.KubernetesCronjobComponentBuilderFactory.kubernetesCronjob();
     }
     /**
      * Kubernetes Custom Resources (camel-kubernetes)

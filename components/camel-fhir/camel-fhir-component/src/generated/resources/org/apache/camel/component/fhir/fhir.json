@@ -11,7 +11,7 @@
     "supportLevel": "Stable",
     "groupId": "org.apache.camel",
     "artifactId": "camel-fhir",
-    "version": "4.3.0-SNAPSHOT",
+    "version": "4.4.0-SNAPSHOT",
     "scheme": "fhir",
     "extendsScheme": "",
     "syntax": "fhir:apiName\/methodName",
@@ -20,7 +20,8 @@
     "apiSyntax": "apiName\/methodName",
     "consumerOnly": false,
     "producerOnly": false,
-    "lenientProperties": false
+    "lenientProperties": false,
+    "remote": true
   },
   "componentProperties": {
     "encoding": { "index": 0, "kind": "property", "displayName": "Encoding", "group": "common", "label": "", "required": false, "type": "string", "javaType": "java.lang.String", "enum": [ "JSON", "XML" ], "deprecated": false, "autowired": false, "secret": false, "configurationClass": "org.apache.camel.component.fhir.FhirConfiguration", "configurationField": "configuration", "description": "Encoding to use for all request" },

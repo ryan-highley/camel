@@ -35,14 +35,15 @@ import org.apache.camel.spi.Metadata;
 public class ParquetAvroDataFormat extends DataFormatDefinition {
 
     @XmlAttribute
-    @Metadata(defaultValue = "GZIP")
+    @Metadata(defaultValue = "GZIP", enums = "UNCOMPRESSED,SNAPPY,GZIP,LZO,BROTLI,LZ4,ZSTD,LZ4_RAW")
     private String compressionCodecName;
-
     @XmlTransient
     private Class<?> unmarshalType;
-
     @XmlAttribute(name = "unmarshalType")
     private String unmarshalTypeName;
+    @XmlAttribute
+    @Metadata(javaType = "java.lang.Boolean")
+    private String lazyLoad;
 
     public ParquetAvroDataFormat() {
         super("parquetAvro");
@@ -58,11 +59,17 @@ public class ParquetAvroDataFormat extends DataFormatDefinition {
         this.unmarshalType = unmarshalType;
     }
 
+    public ParquetAvroDataFormat(boolean lazyLoad) {
+        this();
+        setLazyLoad(Boolean.toString(lazyLoad));
+    }
+
     private ParquetAvroDataFormat(Builder builder) {
         this();
         this.compressionCodecName = builder.compressionCodecName;
         this.unmarshalTypeName = builder.unmarshalTypeName;
         this.unmarshalType = builder.unmarshalType;
+        this.lazyLoad = builder.lazyLoad;
     }
 
     /**
@@ -99,6 +106,17 @@ public class ParquetAvroDataFormat extends DataFormatDefinition {
         return unmarshalTypeName;
     }
 
+    public String getLazyLoad() {
+        return lazyLoad;
+    }
+
+    /**
+     * Whether the unmarshalling should produce an iterator of records or read all the records at once.
+     */
+    public void setLazyLoad(String lazyLoad) {
+        this.lazyLoad = lazyLoad;
+    }
+
     /**
      * {@code Builder} is a specific builder for {@link ParquetAvroDataFormat}.
      */
@@ -108,6 +126,7 @@ public class ParquetAvroDataFormat extends DataFormatDefinition {
         private String compressionCodecName;
         private Class<?> unmarshalType;
         private String unmarshalTypeName;
+        private String lazyLoad;
 
         /**
          * Compression codec to use when marshalling.
@@ -130,6 +149,22 @@ public class ParquetAvroDataFormat extends DataFormatDefinition {
          */
         public Builder unmarshalType(Class<?> unmarshalType) {
             this.unmarshalType = unmarshalType;
+            return this;
+        }
+
+        /**
+         * Whether the unmarshalling should produce an iterator of records or read all the records at once.
+         */
+        public Builder lazyLoad(String lazyLoad) {
+            this.lazyLoad = lazyLoad;
+            return this;
+        }
+
+        /**
+         * Whether the unmarshalling should produce an iterator of records or read all the records at once.
+         */
+        public Builder lazyLoad(boolean lazyLoad) {
+            this.lazyLoad = Boolean.toString(lazyLoad);
             return this;
         }
 

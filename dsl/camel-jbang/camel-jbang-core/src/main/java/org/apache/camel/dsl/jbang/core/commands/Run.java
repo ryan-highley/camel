@@ -54,6 +54,7 @@ import io.apicurio.datamodels.models.openapi.OpenApiDocument;
 import org.apache.camel.CamelContext;
 import org.apache.camel.catalog.CamelCatalog;
 import org.apache.camel.catalog.DefaultCamelCatalog;
+import org.apache.camel.dsl.jbang.core.common.CommandLineHelper;
 import org.apache.camel.dsl.jbang.core.common.LoggingLevelCompletionCandidates;
 import org.apache.camel.dsl.jbang.core.common.RuntimeUtil;
 import org.apache.camel.dsl.jbang.core.common.VersionHelper;
@@ -83,7 +84,6 @@ import static org.apache.camel.dsl.jbang.core.common.GitHubHelper.fetchGithubUrl
 @Command(name = "run", description = "Run as local Camel integration")
 public class Run extends CamelCommand {
 
-    public static final String WORK_DIR = ".camel-jbang";
     public static final String RUN_SETTINGS_FILE = "camel-jbang-run.properties";
 
     private static final String[] ACCEPTED_FILE_EXT
@@ -101,8 +101,8 @@ public class Run extends CamelCommand {
     private static final Set<String> ACCEPTED_XML_ROOT_ELEMENTS
             = new HashSet<>(Arrays.asList(ACCEPTED_XML_ROOT_ELEMENT_NAMES));
 
-    private static final String OPENAPI_GENERATED_FILE = ".camel-jbang/generated-openapi.yaml";
-    private static final String CLIPBOARD_GENERATED_FILE = ".camel-jbang/generated-clipboard";
+    private static final String OPENAPI_GENERATED_FILE = CommandLineHelper.CAMEL_JBANG_WORK_DIR + "/generated-openapi.yaml";
+    private static final String CLIPBOARD_GENERATED_FILE = CommandLineHelper.CAMEL_JBANG_WORK_DIR + "/generated-clipboard";
 
     private static final Pattern PACKAGE_PATTERN = Pattern.compile(
             "^\\s*package\\s+([a-zA-Z][.\\w]*)\\s*;.*$", Pattern.MULTILINE);
@@ -268,6 +268,10 @@ public class Run extends CamelCommand {
             description = "Whether to ignore route loading and compilation errors (use this with care!)")
     protected boolean ignoreLoadingError;
 
+    @Option(names = { "--prompt" },
+            description = "Allow user to type in required parameters in prompt if not present in application")
+    boolean prompt;
+
     public Run(CamelJBangMain main) {
         super(main);
     }
@@ -379,7 +383,7 @@ public class Run extends CamelCommand {
             return 1;
         }
 
-        File work = new File(WORK_DIR);
+        File work = CommandLineHelper.getWorkDir();
         removeDir(work);
         work.mkdirs();
 
@@ -473,7 +477,11 @@ public class Run extends CamelCommand {
         if (ignoreLoadingError) {
             writeSetting(main, profileProperties, "camel.jbang.ignoreLoadingError", "true");
         }
-        writeSetting(main, profileProperties, "camel.jbang.compileWorkDir", WORK_DIR + File.separator + "compile");
+        if (prompt) {
+            writeSetting(main, profileProperties, "camel.jbang.prompt", "true");
+        }
+        writeSetting(main, profileProperties, "camel.jbang.compileWorkDir",
+                CommandLineHelper.CAMEL_JBANG_WORK_DIR + File.separator + "compile");
 
         if (gav != null) {
             writeSetting(main, profileProperties, "camel.jbang.gav", gav);
@@ -930,8 +938,8 @@ public class Run extends CamelCommand {
             Process p = pb.start();
             this.spawnPid = p.pid();
             if (!silentRun) {
-                System.out.println("Running Camel integration: " + name + " (version: " + camelVersion
-                                   + ") in background with PID: " + p.pid());
+                printer().println("Running Camel integration: " + name + " (version: " + camelVersion
+                                  + ") in background with PID: " + p.pid());
             }
             return 0;
         } else {
@@ -965,7 +973,7 @@ public class Run extends CamelCommand {
         Process p = pb.start();
         this.spawnPid = p.pid();
         if (!silentRun) {
-            System.out.println("Running Camel integration: " + name + " in background with PID: " + p.pid());
+            printer().println("Running Camel integration: " + name + " in background with PID: " + p.pid());
         }
         return 0;
     }
@@ -1012,7 +1020,7 @@ public class Run extends CamelCommand {
         sb.append(String.format("//DEPS org.apache.camel.kamelets:camel-kamelets:%s\n", kameletsVersion));
         content = content.replaceFirst("\\{\\{ \\.CamelKameletsDependencies }}", sb.toString());
 
-        String fn = WORK_DIR + "/CustomCamelJBang.java";
+        String fn = CommandLineHelper.CAMEL_JBANG_WORK_DIR + "/CustomCamelJBang.java";
         Files.write(Paths.get(fn), content.getBytes(StandardCharsets.UTF_8));
 
         List<String> cmds = new ArrayList<>(spec.commandLine().getParseResult().originalArgs());
@@ -1032,7 +1040,7 @@ public class Run extends CamelCommand {
         // need to use jbang command to specify camel version
         List<String> jbangArgs = new ArrayList<>();
         jbangArgs.add("jbang");
-        jbangArgs.add(WORK_DIR + "/CustomCamelJBang.java");
+        jbangArgs.add(CommandLineHelper.CAMEL_JBANG_WORK_DIR + "/CustomCamelJBang.java");
 
         jbangArgs.addAll(cmds);
 
@@ -1042,8 +1050,8 @@ public class Run extends CamelCommand {
             Process p = pb.start();
             this.spawnPid = p.pid();
             if (!silentRun) {
-                System.out.println("Running Camel integration: " + name + " (version: " + camelVersion
-                                   + ") in background with PID: " + p.pid());
+                printer().println("Running Camel integration: " + name + " (version: " + camelVersion
+                                  + ") in background with PID: " + p.pid());
             }
             return 0;
         } else {
@@ -1068,7 +1076,7 @@ public class Run extends CamelCommand {
     }
 
     private String loadFromCode(String code) throws IOException {
-        String fn = WORK_DIR + "/CodeRoute.java";
+        String fn = CommandLineHelper.CAMEL_JBANG_WORK_DIR + "/CodeRoute.java";
         InputStream is = Run.class.getClassLoader().getResourceAsStream("templates/code-java.tmpl");
         String content = IOHelper.loadText(is);
         IOHelper.close(is);
@@ -1207,9 +1215,8 @@ public class Run extends CamelCommand {
             writeSettings("loggingJson", loggingJson ? "true" : "false");
             if (!scriptRun) {
                 // remember log file
-                File dir = new File(System.getProperty("user.home"), ".camel");
                 String name = RuntimeUtil.getPid() + ".log";
-                logFile = new File(dir, name);
+                logFile = new File(CommandLineHelper.getCamelDir(), name);
                 logFile.deleteOnExit();
             }
         } else {
@@ -1367,7 +1374,8 @@ public class Run extends CamelCommand {
             StringWriter sw = new StringWriter();
             prop.store(sw, null);
 
-            fos = new FileOutputStream(WORK_DIR + "/" + RUN_SETTINGS_FILE, true);
+            File runSettings = new File(CommandLineHelper.getWorkDir(), RUN_SETTINGS_FILE);
+            fos = new FileOutputStream(runSettings, true);
 
             String[] lines = sw.toString().split(System.lineSeparator());
             for (String line : lines) {
@@ -1405,7 +1413,7 @@ public class Run extends CamelCommand {
             try {
                 Thread.sleep(10);
             } catch (InterruptedException ex) {
-                // Ignore Exception
+                Thread.currentThread().interrupt();
             }
             if (!f.delete()) {
                 f.deleteOnExit();

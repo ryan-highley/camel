@@ -59,6 +59,8 @@ import org.apache.camel.main.download.KnownDependenciesResolver;
 import org.apache.camel.main.download.KnownReposResolver;
 import org.apache.camel.main.download.MavenDependencyDownloader;
 import org.apache.camel.main.download.PackageNameSourceLoader;
+import org.apache.camel.main.download.PromptPropertyPlaceholderSource;
+import org.apache.camel.main.download.StubBeanRepository;
 import org.apache.camel.main.download.TypeConverterLoaderDownloadListener;
 import org.apache.camel.main.injection.AnnotationDependencyInjection;
 import org.apache.camel.main.util.ClipboardReloadStrategy;
@@ -356,6 +358,11 @@ public class KameletMain extends MainCommandLineSupport {
         // setup backlog recorder from very start
         answer.getCamelContextExtension().setStartupStepRecorder(new BacklogStartupStepRecorder());
 
+        boolean prompt = "true".equals(getInitialProperties().get("camel.jbang.prompt"));
+        if (prompt) {
+            answer.getPropertiesComponent().addPropertiesSource(new PromptPropertyPlaceholderSource());
+        }
+
         ClassLoader dynamicCL = createApplicationContextClassLoader(answer);
         answer.setApplicationContextClassLoader(dynamicCL);
         PluginHelper.getPackageScanClassResolver(answer).addClassLoader(dynamicCL);
@@ -403,6 +410,10 @@ public class KameletMain extends MainCommandLineSupport {
         }
 
         answer.getCamelContextExtension().setRegistry(registry);
+        if (silent || "*".equals(stubPattern)) {
+            registry.addBeanRepository(new StubBeanRepository(stubPattern));
+        }
+
         // load camel component and custom health-checks
         answer.setLoadHealthChecks(true);
         // annotation based dependency injection for camel/spring/quarkus annotations in DSLs and Java beans
@@ -543,12 +554,12 @@ public class KameletMain extends MainCommandLineSupport {
 
             answer.getCamelContextExtension().addContextPlugin(ComponentResolver.class,
                     new DependencyDownloaderComponentResolver(answer, stubPattern, silent));
+            answer.getCamelContextExtension().addContextPlugin(DataFormatResolver.class,
+                    new DependencyDownloaderDataFormatResolver(answer, stubPattern, silent));
+            answer.getCamelContextExtension().addContextPlugin(LanguageResolver.class,
+                    new DependencyDownloaderLanguageResolver(answer, stubPattern, silent));
             answer.getCamelContextExtension().addContextPlugin(UriFactoryResolver.class,
                     new DependencyDownloaderUriFactoryResolver(answer));
-            answer.getCamelContextExtension().addContextPlugin(DataFormatResolver.class,
-                    new DependencyDownloaderDataFormatResolver(answer));
-            answer.getCamelContextExtension().addContextPlugin(LanguageResolver.class,
-                    new DependencyDownloaderLanguageResolver(answer));
             answer.getCamelContextExtension().addContextPlugin(ResourceLoader.class,
                     new DependencyDownloaderResourceLoader(answer));
 
@@ -707,6 +718,7 @@ public class KameletMain extends MainCommandLineSupport {
         addInitialProperty("camel.component.kamelet.location", location);
         addInitialProperty("camel.component.rest.consumerComponentName", "platform-http");
         addInitialProperty("camel.component.rest.producerComponentName", "vertx-http");
+        addInitialProperty("came.main.jmxUpdateRouteEnabled", "true");
     }
 
     protected String startupInfo() {

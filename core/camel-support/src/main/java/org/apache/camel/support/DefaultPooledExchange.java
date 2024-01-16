@@ -24,12 +24,13 @@ import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.Message;
 import org.apache.camel.PooledExchange;
+import org.apache.camel.clock.Clock;
 
 /**
  * The default and only implementation of {@link PooledExchange}.
  */
 public final class DefaultPooledExchange extends AbstractExchange implements PooledExchange {
-
+    private final ResetableClock clock;
     private OnDoneTask onDone;
     private Class<?> originalInClassType;
     private Message originalOut;
@@ -40,30 +41,29 @@ public final class DefaultPooledExchange extends AbstractExchange implements Poo
         super(context);
         this.originalPattern = getPattern();
         this.properties = new ConcurrentHashMap<>(8);
-    }
-
-    public DefaultPooledExchange(CamelContext context, ExchangePattern pattern) {
-        super(context, pattern);
-        this.originalPattern = pattern;
-        this.properties = new ConcurrentHashMap<>(8);
+        this.clock = new ResetableClock();
     }
 
     public DefaultPooledExchange(Exchange parent) {
         super(parent);
         this.originalPattern = parent.getPattern();
         this.properties = new ConcurrentHashMap<>(8);
+
+        Clock parentClock = parent.getClock();
+
+        if (parentClock instanceof ResetableClock rs) {
+            this.clock = rs;
+        } else {
+            this.clock = new ResetableClock(parent.getClock());
+        }
     }
 
-    public DefaultPooledExchange(Endpoint fromEndpoint) {
-        super(fromEndpoint);
+    public DefaultPooledExchange(CamelContext context, ExchangePattern pattern) {
+        super(context, pattern);
         this.originalPattern = getPattern();
         this.properties = new ConcurrentHashMap<>(8);
-    }
 
-    public DefaultPooledExchange(Endpoint fromEndpoint, ExchangePattern pattern) {
-        super(fromEndpoint, pattern);
-        this.originalPattern = pattern;
-        this.properties = new ConcurrentHashMap<>(8);
+        this.clock = new ResetableClock();
     }
 
     @Override
@@ -86,8 +86,10 @@ public final class DefaultPooledExchange extends AbstractExchange implements Poo
     }
 
     public void done() {
-        if (created > 0) {
-            this.created = 0; // by setting to 0 we also flag that this exchange is done and needs to be reset to use again
+        if (clock.getCreated() > 0) {
+            // by unsetting (setting to 0) we also flag that this exchange is done and needs to be reset to use again
+            clock.unset();
+
             this.properties.clear();
             internalProperties.clear();
             if (this.safeCopyProperties != null) {
@@ -121,8 +123,9 @@ public final class DefaultPooledExchange extends AbstractExchange implements Poo
     }
 
     @Override
+    @Deprecated
     public void reset(long created) {
-        this.created = created;
+        clock.reset();
     }
 
     @Override
@@ -169,4 +172,18 @@ public final class DefaultPooledExchange extends AbstractExchange implements Poo
         }
     }
 
+    @Override
+    public Clock getClock() {
+        return clock;
+    }
+
+    public static DefaultPooledExchange newFromEndpoint(Endpoint fromEndpoint) {
+        return newFromEndpoint(fromEndpoint, fromEndpoint.getExchangePattern());
+    }
+
+    public static DefaultPooledExchange newFromEndpoint(Endpoint fromEndpoint, ExchangePattern exchangePattern) {
+        DefaultPooledExchange exchange = new DefaultPooledExchange(fromEndpoint.getCamelContext(), exchangePattern);
+        exchange.getExchangeExtension().setFromEndpoint(fromEndpoint);
+        return exchange;
+    }
 }

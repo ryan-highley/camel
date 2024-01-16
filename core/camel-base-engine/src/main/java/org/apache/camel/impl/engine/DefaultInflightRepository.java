@@ -207,7 +207,7 @@ public class DefaultInflightRepository extends ServiceSupport implements Infligh
     }
 
     private static long getExchangeDuration(Exchange exchange) {
-        return System.currentTimeMillis() - exchange.getCreated();
+        return exchange.getClock().elapsed();
     }
 
     private static final class InflightExchangeEntry implements InflightExchange {
@@ -241,9 +241,9 @@ public class DefaultInflightRepository extends ServiceSupport implements Infligh
             MessageHistory history = list.get(list.size() - 1);
             if (history != null) {
                 long elapsed = history.getElapsed();
-                if (elapsed == 0 && history.getTime() > 0) {
+                if (elapsed == 0) {
                     // still in progress, so lets compute it via the start time
-                    elapsed = System.currentTimeMillis() - history.getTime();
+                    elapsed = history.getElapsedSinceCreated();
                 }
                 return elapsed;
             } else {

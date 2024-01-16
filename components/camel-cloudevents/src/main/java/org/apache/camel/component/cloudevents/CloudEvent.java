@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.cloudevents;
 
-import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
@@ -42,6 +40,10 @@ public interface CloudEvent {
 
     String DEFAULT_CAMEL_CLOUD_EVENT_TYPE = "org.apache.camel.event";
     String DEFAULT_CAMEL_CLOUD_EVENT_SOURCE = "org.apache.camel";
+
+    // MIME type
+    String APPLICATION_OCTET_STREAM_MIME_TYPE = "application/octet-stream";
+    String TEXT_PLAIN_MIME_TYPE = "text/plain";
 
     /**
      * The CloudEvent spec version.
@@ -76,8 +78,7 @@ public interface CloudEvent {
      * Construct event time from given Camel exchange.
      */
     default String getEventTime(Exchange exchange) {
-        final ZonedDateTime created
-                = ZonedDateTime.ofInstant(Instant.ofEpochMilli(exchange.getCreated()), ZoneId.systemDefault());
+        final ZonedDateTime created = exchange.getClock().asZonedCreationDateTime();
         return DateTimeFormatter.ISO_INSTANT.format(created);
     }
 

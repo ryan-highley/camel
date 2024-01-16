@@ -45,6 +45,7 @@ import org.apache.camel.management.mbean.ManagedComponent;
 import org.apache.camel.management.mbean.ManagedConsumer;
 import org.apache.camel.management.mbean.ManagedConvertBody;
 import org.apache.camel.management.mbean.ManagedConvertHeader;
+import org.apache.camel.management.mbean.ManagedConvertVariable;
 import org.apache.camel.management.mbean.ManagedCustomLoadBalancer;
 import org.apache.camel.management.mbean.ManagedDataFormat;
 import org.apache.camel.management.mbean.ManagedDelayer;
@@ -73,6 +74,7 @@ import org.apache.camel.management.mbean.ManagedRemoveHeader;
 import org.apache.camel.management.mbean.ManagedRemoveHeaders;
 import org.apache.camel.management.mbean.ManagedRemoveProperties;
 import org.apache.camel.management.mbean.ManagedRemoveProperty;
+import org.apache.camel.management.mbean.ManagedRemoveVariable;
 import org.apache.camel.management.mbean.ManagedResequencer;
 import org.apache.camel.management.mbean.ManagedRollback;
 import org.apache.camel.management.mbean.ManagedRoundRobinLoadBalancer;
@@ -89,6 +91,7 @@ import org.apache.camel.management.mbean.ManagedSetBody;
 import org.apache.camel.management.mbean.ManagedSetExchangePattern;
 import org.apache.camel.management.mbean.ManagedSetHeader;
 import org.apache.camel.management.mbean.ManagedSetProperty;
+import org.apache.camel.management.mbean.ManagedSetVariable;
 import org.apache.camel.management.mbean.ManagedSplitter;
 import org.apache.camel.management.mbean.ManagedStep;
 import org.apache.camel.management.mbean.ManagedStickyLoadBalancer;
@@ -125,6 +128,7 @@ import org.apache.camel.model.ScriptDefinition;
 import org.apache.camel.model.SetBodyDefinition;
 import org.apache.camel.model.SetHeaderDefinition;
 import org.apache.camel.model.SetPropertyDefinition;
+import org.apache.camel.model.SetVariableDefinition;
 import org.apache.camel.model.SplitDefinition;
 import org.apache.camel.model.TransformDefinition;
 import org.apache.camel.model.TryDefinition;
@@ -151,6 +155,7 @@ import org.apache.camel.processor.RemoveHeaderProcessor;
 import org.apache.camel.processor.RemoveHeadersProcessor;
 import org.apache.camel.processor.RemovePropertiesProcessor;
 import org.apache.camel.processor.RemovePropertyProcessor;
+import org.apache.camel.processor.RemoveVariableProcessor;
 import org.apache.camel.processor.Resequencer;
 import org.apache.camel.processor.RollbackProcessor;
 import org.apache.camel.processor.RoutingSlip;
@@ -161,6 +166,7 @@ import org.apache.camel.processor.SendProcessor;
 import org.apache.camel.processor.SetBodyProcessor;
 import org.apache.camel.processor.SetHeaderProcessor;
 import org.apache.camel.processor.SetPropertyProcessor;
+import org.apache.camel.processor.SetVariableProcessor;
 import org.apache.camel.processor.Splitter;
 import org.apache.camel.processor.StepProcessor;
 import org.apache.camel.processor.StopProcessor;
@@ -191,6 +197,7 @@ import org.apache.camel.spi.SupervisingRouteController;
 import org.apache.camel.support.ScheduledPollConsumer;
 import org.apache.camel.support.processor.ConvertBodyProcessor;
 import org.apache.camel.support.processor.ConvertHeaderProcessor;
+import org.apache.camel.support.processor.ConvertVariableProcessor;
 import org.apache.camel.support.processor.MarshalProcessor;
 import org.apache.camel.support.processor.PredicateValidatingProcessor;
 import org.apache.camel.support.processor.ThroughputLogger;
@@ -354,6 +361,8 @@ public class DefaultManagementObjectStrategy implements ManagementObjectStrategy
                 answer = new ManagedConvertBody(context, (ConvertBodyProcessor) target, definition);
             } else if (target instanceof ConvertHeaderProcessor) {
                 answer = new ManagedConvertHeader(context, (ConvertHeaderProcessor) target, definition);
+            } else if (target instanceof ConvertVariableProcessor) {
+                answer = new ManagedConvertVariable(context, (ConvertVariableProcessor) target, definition);
             } else if (target instanceof ChoiceProcessor) {
                 answer = new ManagedChoice(context, (ChoiceProcessor) target, definition);
             } else if (target instanceof ClaimCheckProcessor) {
@@ -423,10 +432,14 @@ public class DefaultManagementObjectStrategy implements ManagementObjectStrategy
                 answer = new ManagedRemoveHeaders(context, (RemoveHeadersProcessor) target, definition);
             } else if (target instanceof SetHeaderProcessor) {
                 answer = new ManagedSetHeader(context, (SetHeaderProcessor) target, (SetHeaderDefinition) definition);
+            } else if (target instanceof SetVariableProcessor) {
+                answer = new ManagedSetVariable(context, (SetVariableProcessor) target, (SetVariableDefinition) definition);
             } else if (target instanceof RemovePropertyProcessor) {
                 answer = new ManagedRemoveProperty(context, (RemovePropertyProcessor) target, definition);
             } else if (target instanceof RemovePropertiesProcessor) {
                 answer = new ManagedRemoveProperties(context, (RemovePropertiesProcessor) target, definition);
+            } else if (target instanceof RemoveVariableProcessor) {
+                answer = new ManagedRemoveVariable(context, (RemoveVariableProcessor) target, definition);
             } else if (target instanceof SetPropertyProcessor) {
                 answer = new ManagedSetProperty(context, (SetPropertyProcessor) target, (SetPropertyDefinition) definition);
             } else if (target instanceof ExchangePatternProcessor) {

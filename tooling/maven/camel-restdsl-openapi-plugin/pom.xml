@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>maven-plugins</artifactId>
-        <version>4.3.0-SNAPSHOT</version>
+        <version>4.4.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-restdsl-openapi-plugin</artifactId>
@@ -198,7 +198,7 @@
                                 <phase>integration-test</phase>
                                 <goals>
                                     <goal>install</goal>
-                                    <goal>integration-test</goal>
+				    <!--<goal>integration-test</goal>-->
                                     <goal>verify</goal>
                                 </goals>
                             </execution>
