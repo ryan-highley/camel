@@ -39,6 +39,7 @@ import org.eclipse.tahu.message.model.DeviceDescriptor;
 import org.eclipse.tahu.message.model.EdgeNodeDescriptor;
 import org.eclipse.tahu.message.model.MessageType;
 import org.eclipse.tahu.message.model.Metric;
+import org.eclipse.tahu.message.model.Metric.MetricBuilder;
 import org.eclipse.tahu.message.model.MetricDataType;
 import org.eclipse.tahu.message.model.SparkplugBPayload;
 import org.eclipse.tahu.message.model.SparkplugBPayloadMap;
@@ -103,8 +104,7 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
 
         this.bdSeqManager = bdSeqManager;
 
-        currentDeathBdSeq = bdSeqManager.getNextDeathBdSeqNum();
-        currentBirthBdSeq = currentDeathBdSeq;
+        currentBirthBdSeq = currentDeathBdSeq = bdSeqManager.getNextDeathBdSeqNum();
 
         LOG.trace(loggingMarker, "TahuEdgeNodeHandler constructor complete");
     }
@@ -188,11 +188,11 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
         LOG.trace(loggingMarker, "Camel doStop called");
 
         EdgeClient edgeClient = client;
-        if (edgeClient != null) {
+        if (edgeClient != null && !edgeClient.isDisconnectedOrDisconnecting() && edgeClient.isConnected()) {
             edgeClient.shutdown();
-            client = null;
             edgeClientFuture.cancel(true);
         }
+        client = null;
 
         LOG.trace(loggingMarker, "Camel doStop complete");
     }
@@ -269,14 +269,16 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
         LOG.trace(loggingMarker, "MetricHandler getDeathPayloadBytes called");
 
         SparkplugBPayload deathPayload = new PayloadBuilder(edgeNodeDescriptor)
-                .addMetric(createMetric(edgeNodeDescriptor, SparkplugMeta.SPARKPLUG_BD_SEQUENCE_NUMBER_KEY,
-                        MetricDataType.Int64, currentDeathBdSeq, new Date()))
+                .addMetric(new MetricBuilder(
+                        SparkplugMeta.SPARKPLUG_BD_SEQUENCE_NUMBER_KEY,
+                        MetricDataType.Int64, currentDeathBdSeq).createMetric())
                 .createPayload();
 
         LOG.debug(loggingMarker, "Created death payload with bdSeq metric {}", currentDeathBdSeq);
 
-        currentBirthBdSeq = currentDeathBdSeq;
-        currentDeathBdSeq = bdSeqManager.getNextDeathBdSeqNum();
+        currentBirthBdSeq = currentDeathBdSeq++;
+        currentDeathBdSeq &= 0xFFL;
+        bdSeqManager.storeNextDeathBdSeqNum(currentDeathBdSeq);
 
         SparkplugBPayloadEncoder encoder = new SparkplugBPayloadEncoder();
 
@@ -314,22 +316,23 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
             // SparkplugBPayloadMap, not a SparkplugBPayload--can't use createPayload()
             SparkplugBPayloadMap nBirthPayload = new SparkplugBPayloadMap.SparkplugBPayloadMapBuilder()
                     .setTimestamp(timestamp)
-                    .addMetric(createMetric(edgeNodeDescriptor, SparkplugMeta.SPARKPLUG_BD_SEQUENCE_NUMBER_KEY,
-                            currentBirthBdSeq, timestamp))
+                    .addMetric(new MetricBuilder(
+                            SparkplugMeta.SPARKPLUG_BD_SEQUENCE_NUMBER_KEY,
+                            MetricDataType.Int64, currentBirthBdSeq).createMetric())
                     .addMetrics(getCachedMetrics(edgeNodeDescriptor, timestamp))
                     .createPayload();
 
             LOG.debug(loggingMarker, "Created birth payload with bdSeq metric {}", currentBirthBdSeq);
 
-            client.publishNodeBirth(nBirthPayload);
+            publishNodeBirth(nBirthPayload);
 
             deviceDescriptorMap.forEach((deviceId, deviceDescriptor) -> {
                 SparkplugBPayload dBirthPayload = new PayloadBuilder(deviceDescriptor)
-                        .setTimestamp(timestamp.getTime())
+                        .setTimestamp(timestamp)
                         .addMetrics(getCachedMetrics(deviceDescriptor, timestamp))
                         .createPayload();
 
-                client.publishDeviceBirth(deviceId, dBirthPayload);
+                publishDeviceBirth(deviceId, dBirthPayload);
             });
 
             nBirthPublished = true;
@@ -505,9 +508,34 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
         }
     }
 
+    private void ensureClientIsRunning() throws TahuException {
+        // EdgeClient edgeClient = client;
+        // if (edgeClient != null && !edgeClient.isDisconnectedOrDisconnecting()) {
+        //     edgeClientFuture = clientExecutorService.submit(edgeClient);
+        // } else {
+        //     throw new TahuException(
+        //             edgeNodeDescriptor, "Null EdgeClient found in doStart()",
+        //             new IllegalStateException());
+        // }
+    }
+
+    private void publishNodeBirth(SparkplugBPayloadMap nbirthPayload) {
+        LOG.trace(loggingMarker, "TahuMetricHandler publishNodeBirth called: nbirthPayload {}", nbirthPayload);
+        try {
+            ensureClientIsRunning();
+            client.publishNodeBirth(nbirthPayload);
+        } catch (Exception e) {
+            LOG.error(loggingMarker, "Error publishing NBIRTH message", e);
+            throw new TahuException(edgeNodeDescriptor, e);
+        } finally {
+            LOG.trace(loggingMarker, "TahuMetricHandler publishNodeBirth complete");
+        }
+    }
+
     private void publishNodeData(SparkplugBPayload ndataPayload) {
         LOG.trace(loggingMarker, "TahuMetricHandler publishNodeData called: ndataPayload {}", ndataPayload);
         try {
+            ensureClientIsRunning();
             client.publishNodeData(ndataPayload);
         } catch (Exception e) {
             LOG.error(loggingMarker, "Error publishing NDATA message", e);
@@ -517,10 +545,25 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
         }
     }
 
+    private void publishDeviceBirth(String deviceId, SparkplugBPayload dbirthPayload) {
+        LOG.trace(loggingMarker, "TahuMetricHandler publishDeviceBirth called: deviceId {} dbirthPayload {}", deviceId,
+                dbirthPayload);
+        try {
+            ensureClientIsRunning();
+            client.publishDeviceBirth(deviceId, dbirthPayload);
+        } catch (Exception e) {
+            LOG.error(loggingMarker, "Error publishing DBIRTH message", e);
+            throw new TahuException(edgeNodeDescriptor, e);
+        } finally {
+            LOG.trace(loggingMarker, "TahuMetricHandler publishDeviceBirth complete");
+        }
+    }
+
     private void publishDeviceData(String deviceId, SparkplugBPayload ddataPayload) {
         LOG.trace(loggingMarker, "TahuMetricHandler publishDeviceData called: deviceId {} ddataPayload {}", deviceId,
                 ddataPayload);
         try {
+            ensureClientIsRunning();
             client.publishDeviceData(deviceId, ddataPayload);
         } catch (Exception e) {
             LOG.error(loggingMarker, "Error publishing DDATA message for {}", deviceDescriptorMap.get(deviceId), e);
@@ -535,18 +578,19 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
         private final SparkplugBPayload.SparkplugBPayloadBuilder sparkplugBuilder;
         private final EdgeNodeDescriptor payloadDescriptor;
 
-        private long timestamp;
+        private Date timestamp;
 
         PayloadBuilder(EdgeNodeDescriptor payloadDescriptor) {
             sparkplugBuilder = new SparkplugBPayload.SparkplugBPayloadBuilder();
 
-            setTimestamp(Instant.now().toEpochMilli());
+            setTimestamp(Date.from(Instant.now()));
+
             this.payloadDescriptor = payloadDescriptor;
         }
 
-        PayloadBuilder setTimestamp(long timestamp) {
+        PayloadBuilder setTimestamp(Date timestamp) {
             this.timestamp = timestamp;
-            sparkplugBuilder.setTimestamp(new Date(timestamp));
+            sparkplugBuilder.setTimestamp(timestamp);
             return this;
         }
 
@@ -566,7 +610,7 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
         }
 
         PayloadBuilder addMetric(String metricName, Object metricValue) {
-            return addMetric(createMetric(payloadDescriptor, metricName, metricValue, new Date(timestamp)));
+            return addMetric(createMetric(payloadDescriptor, metricName, metricValue, timestamp));
         }
 
         PayloadBuilder addMetric(Metric metric) {

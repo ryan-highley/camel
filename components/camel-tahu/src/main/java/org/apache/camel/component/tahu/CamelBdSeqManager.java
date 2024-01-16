@@ -50,6 +50,7 @@ public final class CamelBdSeqManager implements BdSeqManager {
         LOG.trace(loggingMarker, "CamelBdSeqManager constructor complete");
     }
 
+    // This method is NOT intended to increment the stored value, only to retrieve it
     @Override
     public long getNextDeathBdSeqNum() {
         LOG.trace(loggingMarker, "BdSeqManager getNextDeathBdSeqNum called");
@@ -58,12 +59,10 @@ public final class CamelBdSeqManager implements BdSeqManager {
             if (bdSeqNumFile.exists() && FileUtils.sizeOf(bdSeqNumFile) > 0L) {
                 String bdSeqFileContents = FileUtils.readFileToString(bdSeqNumFile, bdSeqNumFileCharset);
 
-                // Add one to the previously stored value
-                bdSeqNum = normalizeBdSeq(Long.parseLong(bdSeqFileContents) + 1);
+                bdSeqNum = normalizeBdSeq(Long.parseLong(bdSeqFileContents));
 
                 LOG.debug(loggingMarker, "Next Death bdSeq number: {}", bdSeqNum);
             }
-            storeNextDeathBdSeqNum(bdSeqNum);
             return bdSeqNum;
         } catch (Exception e) {
             LOG.debug(loggingMarker, "Failed to get the bdSeq number from the persistent directory", e);

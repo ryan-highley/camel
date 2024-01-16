@@ -19,10 +19,6 @@ package org.apache.camel.component.tahu;
 public class RemoteHiveMQService implements HiveMQService {
 
     @Override
-    public void registerProperties() {
-    }
-
-    @Override
     public void initialize() {
     }
 

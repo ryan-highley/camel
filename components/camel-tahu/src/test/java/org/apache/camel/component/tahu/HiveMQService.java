@@ -20,12 +20,23 @@ import org.apache.camel.test.infra.common.services.TestService;
 
 public interface HiveMQService extends TestService {
 
+    public static final String HIVEMQ_SERVICE_MQTT_HOST = "hivemq.service.mqtt.host";
+    public static final String HIVEMQ_SERVICE_MQTT_PORT = "hivemq.service.mqtt.port";
+    public static final String HIVEMQ_SERVICE_MQTT_HOST_ADDRESS = "hivemq.service.mqtt.hostaddress";
+
     int getMqttPort();
 
     String getMqttHost();
 
     default String getMqttHostAddress() {
         return String.format("tcp://%s:%d", getMqttHost(), getMqttPort());
+    }
+
+    @Override
+    default void registerProperties() {
+        System.setProperty(HIVEMQ_SERVICE_MQTT_HOST, getMqttHost());
+        System.setProperty(HIVEMQ_SERVICE_MQTT_PORT, String.valueOf(getMqttPort()));
+        System.setProperty(HIVEMQ_SERVICE_MQTT_HOST_ADDRESS, getMqttHostAddress());
     }
 
 }

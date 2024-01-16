@@ -48,10 +48,6 @@ public class LocalHiveMQService implements HiveMQService, ContainerService<HiveM
     }
 
     @Override
-    public void registerProperties() {
-    }
-
-    @Override
     public void initialize() {
         LOG.info("Starting the HiveMQ container");
         container.start();

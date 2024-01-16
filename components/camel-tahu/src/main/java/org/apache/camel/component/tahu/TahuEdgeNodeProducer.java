@@ -16,6 +16,7 @@
  */
 package org.apache.camel.component.tahu;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,7 +25,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.CamelContextAware;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.component.tahu.TahuEdgeNodeHandler.PayloadBuilder;
@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-public class TahuEdgeNodeProducer extends DefaultProducer implements CamelContextAware {
+public class TahuEdgeNodeProducer extends DefaultProducer {  // implements CamelContextAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(TahuEdgeNodeProducer.class);
 
@@ -87,6 +87,8 @@ public class TahuEdgeNodeProducer extends DefaultProducer implements CamelContex
         }
 
         tahuEdgeNodeHandler = descriptorHandlers.computeIfAbsent(handlerDescriptor, end -> {
+            LOG.debug(loggingMarker, "Creating new TahuEdgeNodeHandler for Edge Node {}", end);
+
             List<MqttServerDefinition> serverDefinitions = configuration.getServerDefinitionList();
             long rebirthDebounceDelay = configuration.getRebirthDebounceDelay();
 
@@ -118,6 +120,11 @@ public class TahuEdgeNodeProducer extends DefaultProducer implements CamelContex
 
         LOG.trace(loggingMarker, "Camel doStart called");
 
+        if (!ServiceHelper.isStarted(tahuEdgeNodeHandler)) {
+            ServiceHelper.startService(tahuEdgeNodeHandler);
+            camelContext.addService(tahuEdgeNodeHandler);
+        }
+
         LOG.trace(loggingMarker, "Camel doStart complete");
     }
 
@@ -129,6 +136,7 @@ public class TahuEdgeNodeProducer extends DefaultProducer implements CamelContex
 
         if (!edgeNodeDescriptor.isDeviceDescriptor() && tahuEdgeNodeHandler.isStartingOrStarted()) {
             ServiceHelper.stopAndShutdownService(tahuEdgeNodeHandler);
+            camelContext.removeService(tahuEdgeNodeHandler);
         }
 
         if (clientExecutorService != null) {
@@ -142,11 +150,6 @@ public class TahuEdgeNodeProducer extends DefaultProducer implements CamelContex
     public void process(Exchange exchange) throws Exception {
         LOG.trace(loggingMarker, "Camel process called: exchange {}", exchange);
 
-        if (!tahuEdgeNodeHandler.isStarted()) {
-            ServiceHelper.startService(tahuEdgeNodeHandler);
-            camelContext.addService(tahuEdgeNodeHandler);
-        }
-
         try {
             Message message = exchange.getMessage();
             long messageTimestamp = message.getMessageTimestamp();
@@ -154,7 +157,7 @@ public class TahuEdgeNodeProducer extends DefaultProducer implements CamelContex
             PayloadBuilder dataPayloadBuilder = tahuEdgeNodeHandler.new PayloadBuilder(edgeNodeDescriptor);
 
             if (messageTimestamp != 0L) {
-                dataPayloadBuilder.setTimestamp(messageTimestamp);
+                dataPayloadBuilder.setTimestamp(new Date(messageTimestamp));
             }
 
             Object body = message.getBody();
@@ -194,14 +197,14 @@ public class TahuEdgeNodeProducer extends DefaultProducer implements CamelContex
 
     private CamelContext camelContext;
 
-    @Override
-    public CamelContext getCamelContext() {
-        return camelContext;
-    }
+    // @Override
+    // public CamelContext getCamelContext() {
+    //     return camelContext;
+    // }
 
-    @Override
-    public void setCamelContext(CamelContext camelContext) {
-        this.camelContext = camelContext;
-    }
+    // @Override
+    // public void setCamelContext(CamelContext camelContext) {
+    //     this.camelContext = camelContext;
+    // }
 
 }
