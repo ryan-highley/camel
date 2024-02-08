@@ -55,9 +55,6 @@ public final class SensitiveUtils {
                     "httpproxypassword",
                     "keystore",
                     "login",
-                    "oauthaccesstoken",
-                    "oauthappid",
-                    "oauthappsecret",
                     "oauthclientid",
                     "oauthclientsecret",
                     "oauthtoken",
@@ -66,6 +63,7 @@ public final class SensitiveUtils {
                     "passcode",
                     "passphrase",
                     "password",
+                    "personalaccesstoken",
                     "privatekey",
                     "privatekeyfile",
                     "privatekeyname",
@@ -84,6 +82,7 @@ public final class SensitiveUtils {
                     "secret",
                     "secretkey",
                     "securerandom",
+                    "sessiontoken",
                     "sharedaccesskey",
                     "sourceblobaccesskey",
                     "sslkeypassword",
@@ -134,9 +133,6 @@ public final class SensitiveUtils {
                                                     + "|\\Qhttpproxypassword\\E"
                                                     + "|\\Qkeystore\\E"
                                                     + "|\\Qlogin\\E"
-                                                    + "|\\Qoauthaccesstoken\\E"
-                                                    + "|\\Qoauthappid\\E"
-                                                    + "|\\Qoauthappsecret\\E"
                                                     + "|\\Qoauthclientid\\E"
                                                     + "|\\Qoauthclientsecret\\E"
                                                     + "|\\Qoauthtoken\\E"
@@ -145,6 +141,7 @@ public final class SensitiveUtils {
                                                     + "|\\Qpasscode\\E"
                                                     + "|\\Qpassphrase\\E"
                                                     + "|\\Qpassword\\E"
+                                                    + "|\\Qpersonalaccesstoken\\E"
                                                     + "|\\Qprivatekey\\E"
                                                     + "|\\Qprivatekeyfile\\E"
                                                     + "|\\Qprivatekeyname\\E"
@@ -163,6 +160,7 @@ public final class SensitiveUtils {
                                                     + "|\\Qsecret\\E"
                                                     + "|\\Qsecretkey\\E"
                                                     + "|\\Qsecurerandom\\E"
+                                                    + "|\\Qsessiontoken\\E"
                                                     + "|\\Qsharedaccesskey\\E"
                                                     + "|\\Qsourceblobaccesskey\\E"
                                                     + "|\\Qsslkeypassword\\E"

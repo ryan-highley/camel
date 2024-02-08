@@ -631,6 +631,9 @@ public class ModelWriter extends BaseWriter {
     public void writeBase64DataFormat(Base64DataFormat def) throws IOException {
         doWriteBase64DataFormat("base64", def);
     }
+    public void writeBeanioDataFormat(BeanioDataFormat def) throws IOException {
+        doWriteBeanioDataFormat("beanio", def);
+    }
     public void writeBindyDataFormat(BindyDataFormat def) throws IOException {
         doWriteBindyDataFormat("bindy", def);
     }
@@ -893,6 +896,14 @@ public class ModelWriter extends BaseWriter {
             TokenizerExpression def)
             throws IOException {
         doWriteTokenizerExpression("tokenize", def);
+    }
+    public void writeVariableExpression(
+            VariableExpression def)
+            throws IOException {
+        doWriteVariableExpression("variable", def);
+    }
+    public void writeWasmExpression(WasmExpression def) throws IOException {
+        doWriteWasmExpression("wasm", def);
     }
     public void writeXMLTokenizerExpression(
             XMLTokenizerExpression def)
@@ -1250,6 +1261,8 @@ public class ModelWriter extends BaseWriter {
             throws IOException {
         startElement(name);
         doWriteProcessorDefinitionAttributes(def);
+        doWriteAttribute("variableReceive", def.getVariableReceive());
+        doWriteAttribute("variableSend", def.getVariableSend());
         doWriteAttribute("cacheSize", def.getCacheSize());
         doWriteAttribute("aggregationStrategy", def.getAggregationStrategy());
         doWriteAttribute("ignoreInvalidEndpoint", def.getIgnoreInvalidEndpoint());
@@ -1365,6 +1378,7 @@ public class ModelWriter extends BaseWriter {
             throws IOException {
         startElement(name);
         doWriteOptionalIdentifiedDefinitionAttributes(def);
+        doWriteAttribute("variableReceive", def.getVariableReceive());
         doWriteAttribute("uri", def.getUri());
         endElement(name);
     }
@@ -1537,12 +1551,15 @@ public class ModelWriter extends BaseWriter {
             throws IOException {
         startElement(name);
         doWriteProcessorDefinitionAttributes(def);
+        doWriteAttribute("variableReceive", def.getVariableReceive());
+        doWriteAttribute("variableSend", def.getVariableSend());
         doWriteElement(null, def.getDataFormatType(), (n, v) -> {
             switch (v.getClass().getSimpleName()) {
                 case "ASN1DataFormat" -> doWriteASN1DataFormat("asn1", (ASN1DataFormat) def.getDataFormatType());
                 case "AvroDataFormat" -> doWriteAvroDataFormat("avro", (AvroDataFormat) def.getDataFormatType());
                 case "BarcodeDataFormat" -> doWriteBarcodeDataFormat("barcode", (BarcodeDataFormat) def.getDataFormatType());
                 case "Base64DataFormat" -> doWriteBase64DataFormat("base64", (Base64DataFormat) def.getDataFormatType());
+                case "BeanioDataFormat" -> doWriteBeanioDataFormat("beanio", (BeanioDataFormat) def.getDataFormatType());
                 case "BindyDataFormat" -> doWriteBindyDataFormat("bindy", (BindyDataFormat) def.getDataFormatType());
                 case "CBORDataFormat" -> doWriteCBORDataFormat("cbor", (CBORDataFormat) def.getDataFormatType());
                 case "CryptoDataFormat" -> doWriteCryptoDataFormat("crypto", (CryptoDataFormat) def.getDataFormatType());
@@ -1761,6 +1778,7 @@ public class ModelWriter extends BaseWriter {
             throws IOException {
         startElement(name);
         doWriteProcessorDefinitionAttributes(def);
+        doWriteAttribute("variableReceive", def.getVariableReceive());
         doWriteAttribute("cacheSize", def.getCacheSize());
         doWriteAttribute("aggregationStrategy", def.getAggregationStrategy());
         doWriteAttribute("ignoreInvalidEndpoint", def.getIgnoreInvalidEndpoint());
@@ -2427,6 +2445,8 @@ public class ModelWriter extends BaseWriter {
             throws IOException {
         startElement(name);
         doWriteSendDefinitionAttributes(def);
+        doWriteAttribute("variableReceive", def.getVariableReceive());
+        doWriteAttribute("variableSend", def.getVariableSend());
         doWriteAttribute("pattern", def.getPattern());
         endElement(name);
     }
@@ -2434,6 +2454,8 @@ public class ModelWriter extends BaseWriter {
             ToDynamicDefinition def)
             throws IOException {
         doWriteProcessorDefinitionAttributes(def);
+        doWriteAttribute("variableReceive", def.getVariableReceive());
+        doWriteAttribute("variableSend", def.getVariableSend());
         doWriteAttribute("cacheSize", def.getCacheSize());
         doWriteAttribute("ignoreInvalidEndpoint", def.getIgnoreInvalidEndpoint());
         doWriteAttribute("autoStartComponents", def.getAutoStartComponents());
@@ -2485,6 +2507,8 @@ public class ModelWriter extends BaseWriter {
             throws IOException {
         startElement(name);
         doWriteProcessorDefinitionAttributes(def);
+        doWriteAttribute("variableReceive", def.getVariableReceive());
+        doWriteAttribute("variableSend", def.getVariableSend());
         doWriteAttribute("allowNullBody", def.getAllowNullBody());
         doWriteElement(null, def.getDataFormatType(), (n, v) -> {
             switch (v.getClass().getSimpleName()) {
@@ -2492,6 +2516,7 @@ public class ModelWriter extends BaseWriter {
                 case "AvroDataFormat" -> doWriteAvroDataFormat("avro", (AvroDataFormat) def.getDataFormatType());
                 case "BarcodeDataFormat" -> doWriteBarcodeDataFormat("barcode", (BarcodeDataFormat) def.getDataFormatType());
                 case "Base64DataFormat" -> doWriteBase64DataFormat("base64", (Base64DataFormat) def.getDataFormatType());
+                case "BeanioDataFormat" -> doWriteBeanioDataFormat("beanio", (BeanioDataFormat) def.getDataFormatType());
                 case "BindyDataFormat" -> doWriteBindyDataFormat("bindy", (BindyDataFormat) def.getDataFormatType());
                 case "CBORDataFormat" -> doWriteCBORDataFormat("cbor", (CBORDataFormat) def.getDataFormatType());
                 case "CryptoDataFormat" -> doWriteCryptoDataFormat("crypto", (CryptoDataFormat) def.getDataFormatType());
@@ -3125,6 +3150,22 @@ public class ModelWriter extends BaseWriter {
         doWriteAttribute("lineLength", def.getLineLength());
         endElement(name);
     }
+    protected void doWriteBeanioDataFormat(
+            String name,
+            BeanioDataFormat def)
+            throws IOException {
+        startElement(name);
+        doWriteIdentifiedTypeAttributes(def);
+        doWriteAttribute("mapping", def.getMapping());
+        doWriteAttribute("ignoreUnexpectedRecords", def.getIgnoreUnexpectedRecords());
+        doWriteAttribute("ignoreUnidentifiedRecords", def.getIgnoreUnidentifiedRecords());
+        doWriteAttribute("beanReaderErrorHandlerType", def.getBeanReaderErrorHandlerType());
+        doWriteAttribute("unmarshalSingleObject", def.getUnmarshalSingleObject());
+        doWriteAttribute("encoding", def.getEncoding());
+        doWriteAttribute("streamName", def.getStreamName());
+        doWriteAttribute("ignoreInvalidRecords", def.getIgnoreInvalidRecords());
+        endElement(name);
+    }
     protected void doWriteBindyDataFormat(
             String name,
             BindyDataFormat def)
@@ -3230,6 +3271,7 @@ public class ModelWriter extends BaseWriter {
                 case "AvroDataFormat" -> doWriteAvroDataFormat("avro", (AvroDataFormat) v);
                 case "BarcodeDataFormat" -> doWriteBarcodeDataFormat("barcode", (BarcodeDataFormat) v);
                 case "Base64DataFormat" -> doWriteBase64DataFormat("base64", (Base64DataFormat) v);
+                case "BeanioDataFormat" -> doWriteBeanioDataFormat("beanio", (BeanioDataFormat) v);
                 case "BindyDataFormat" -> doWriteBindyDataFormat("bindy", (BindyDataFormat) v);
                 case "CBORDataFormat" -> doWriteCBORDataFormat("cbor", (CBORDataFormat) v);
                 case "CryptoDataFormat" -> doWriteCryptoDataFormat("crypto", (CryptoDataFormat) v);
@@ -3897,7 +3939,7 @@ public class ModelWriter extends BaseWriter {
             DatasonnetExpression def)
             throws IOException {
         startElement(name);
-        doWriteTypedExpressionDefinitionAttributes(def);
+        doWriteSingleInputTypedExpressionDefinitionAttributes(def);
         doWriteAttribute("outputMediaType", def.getOutputMediaType());
         doWriteAttribute("bodyMediaType", def.getBodyMediaType());
         doWriteValue(def.getExpression());
@@ -4045,7 +4087,7 @@ public class ModelWriter extends BaseWriter {
     protected void doWriteNamespaceAwareExpressionAttributes(
             NamespaceAwareExpression def)
             throws IOException {
-        doWriteSingleInputExpressionDefinitionAttributes(def);
+        doWriteSingleInputTypedExpressionDefinitionAttributes(def);
     }
     protected void doWriteNamespaceAwareExpressionElements(
             NamespaceAwareExpression def)
@@ -4098,27 +4140,12 @@ public class ModelWriter extends BaseWriter {
         doWriteValue(def.getExpression());
         endElement(name);
     }
-    protected void doWriteSingleInputExpressionDefinitionAttributes(
-            SingleInputExpressionDefinition def)
-            throws IOException {
-        doWriteExpressionDefinitionAttributes(def);
-        doWriteAttribute("headerName", def.getHeaderName());
-        doWriteAttribute("propertyName", def.getPropertyName());
-    }
-    protected void doWriteSingleInputExpressionDefinition(
-            String name,
-            SingleInputExpressionDefinition def)
-            throws IOException {
-        startElement(name);
-        doWriteSingleInputExpressionDefinitionAttributes(def);
-        doWriteValue(def.getExpression());
-        endElement(name);
-    }
     protected void doWriteSingleInputTypedExpressionDefinitionAttributes(
             SingleInputTypedExpressionDefinition def)
             throws IOException {
         doWriteTypedExpressionDefinitionAttributes(def);
         doWriteAttribute("headerName", def.getHeaderName());
+        doWriteAttribute("variableName", def.getVariableName());
         doWriteAttribute("propertyName", def.getPropertyName());
     }
     protected void doWriteSingleInputTypedExpressionDefinition(
@@ -4144,7 +4171,7 @@ public class ModelWriter extends BaseWriter {
             TokenizerExpression def)
             throws IOException {
         startElement(name);
-        doWriteSingleInputExpressionDefinitionAttributes(def);
+        doWriteSingleInputTypedExpressionDefinitionAttributes(def);
         doWriteAttribute("regex", def.getRegex());
         doWriteAttribute("endToken", def.getEndToken());
         doWriteAttribute("includeTokens", def.getIncludeTokens());
@@ -4172,12 +4199,31 @@ public class ModelWriter extends BaseWriter {
         doWriteValue(def.getExpression());
         endElement(name);
     }
+    protected void doWriteVariableExpression(
+            String name,
+            VariableExpression def)
+            throws IOException {
+        startElement(name);
+        doWriteExpressionDefinitionAttributes(def);
+        doWriteValue(def.getExpression());
+        endElement(name);
+    }
+    protected void doWriteWasmExpression(
+            String name,
+            WasmExpression def)
+            throws IOException {
+        startElement(name);
+        doWriteTypedExpressionDefinitionAttributes(def);
+        doWriteAttribute("module", def.getModule());
+        doWriteValue(def.getExpression());
+        endElement(name);
+    }
     protected void doWriteXMLTokenizerExpression(
             String name,
             XMLTokenizerExpression def)
             throws IOException {
         startElement(name);
-        doWriteSingleInputExpressionDefinitionAttributes(def);
+        doWriteSingleInputTypedExpressionDefinitionAttributes(def);
         doWriteAttribute("mode", def.getMode());
         doWriteAttribute("group", def.getGroup());
         doWriteNamespaces(def);
@@ -4189,15 +4235,15 @@ public class ModelWriter extends BaseWriter {
             XPathExpression def)
             throws IOException {
         startElement(name);
-        doWriteSingleInputExpressionDefinitionAttributes(def);
+        doWriteSingleInputTypedExpressionDefinitionAttributes(def);
         doWriteAttribute("preCompile", def.getPreCompile());
         doWriteAttribute("objectModel", def.getObjectModel());
         doWriteAttribute("logNamespaces", def.getLogNamespaces());
         doWriteAttribute("threadSafety", def.getThreadSafety());
         doWriteAttribute("factoryRef", def.getFactoryRef());
+        doWriteAttribute("resultQName", def.getResultQName());
         doWriteAttribute("saxon", def.getSaxon());
         doWriteAttribute("documentType", def.getDocumentTypeName());
-        doWriteAttribute("resultType", def.getResultTypeName());
         doWriteNamespaces(def);
         doWriteValue(def.getExpression());
         endElement(name);
@@ -4207,10 +4253,8 @@ public class ModelWriter extends BaseWriter {
             XQueryExpression def)
             throws IOException {
         startElement(name);
-        doWriteSingleInputExpressionDefinitionAttributes(def);
+        doWriteSingleInputTypedExpressionDefinitionAttributes(def);
         doWriteAttribute("configurationRef", def.getConfigurationRef());
-        doWriteAttribute("type", def.getType());
-        doWriteAttribute("resultType", def.getResultTypeName());
         doWriteNamespaces(def);
         doWriteValue(def.getExpression());
         endElement(name);
@@ -4629,6 +4673,7 @@ public class ModelWriter extends BaseWriter {
                 case "AvroDataFormat" -> doWriteAvroDataFormat("avro", (AvroDataFormat) def.getDataFormatType());
                 case "BarcodeDataFormat" -> doWriteBarcodeDataFormat("barcode", (BarcodeDataFormat) def.getDataFormatType());
                 case "Base64DataFormat" -> doWriteBase64DataFormat("base64", (Base64DataFormat) def.getDataFormatType());
+                case "BeanioDataFormat" -> doWriteBeanioDataFormat("beanio", (BeanioDataFormat) def.getDataFormatType());
                 case "BindyDataFormat" -> doWriteBindyDataFormat("bindy", (BindyDataFormat) def.getDataFormatType());
                 case "CBORDataFormat" -> doWriteCBORDataFormat("cbor", (CBORDataFormat) def.getDataFormatType());
                 case "CryptoDataFormat" -> doWriteCryptoDataFormat("crypto", (CryptoDataFormat) def.getDataFormatType());
@@ -5081,6 +5126,8 @@ public class ModelWriter extends BaseWriter {
                 case "SimpleExpression" -> doWriteSimpleExpression("simple", (SimpleExpression) v);
                 case "SpELExpression" -> doWriteSpELExpression("spel", (SpELExpression) v);
                 case "TokenizerExpression" -> doWriteTokenizerExpression("tokenize", (TokenizerExpression) v);
+                case "VariableExpression" -> doWriteVariableExpression("variable", (VariableExpression) v);
+                case "WasmExpression" -> doWriteWasmExpression("wasm", (WasmExpression) v);
                 case "XMLTokenizerExpression" -> doWriteXMLTokenizerExpression("xtokenize", (XMLTokenizerExpression) v);
                 case "XPathExpression" -> doWriteXPathExpression("xpath", (XPathExpression) v);
                 case "XQueryExpression" -> doWriteXQueryExpression("xquery", (XQueryExpression) v);

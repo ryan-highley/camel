@@ -198,6 +198,9 @@ public class Run extends CamelCommand {
     @Option(names = { "--logging-json" }, description = "Use JSON logging (ECS Layout)")
     boolean loggingJson;
 
+    @Option(names = { "--logging-config-path" }, description = "Path to file with custom logging configuration")
+    String loggingConfigPath;
+
     @Option(names = { "--max-messages" }, defaultValue = "0", description = "Max number of messages to process before stopping")
     int maxMessages;
 
@@ -308,6 +311,7 @@ public class Run extends CamelCommand {
         // just boot silently and exit
         this.transformRun = true;
         this.ignoreLoadingError = ignoreLoadingError;
+        this.name = "transform";
         return run();
     }
 
@@ -937,7 +941,7 @@ public class Run extends CamelCommand {
         if (background) {
             Process p = pb.start();
             this.spawnPid = p.pid();
-            if (!silentRun) {
+            if (!silentRun && !transformRun && !transformMessageRun) {
                 printer().println("Running Camel integration: " + name + " (version: " + camelVersion
                                   + ") in background with PID: " + p.pid());
             }
@@ -972,7 +976,7 @@ public class Run extends CamelCommand {
         pb.command(cmds);
         Process p = pb.start();
         this.spawnPid = p.pid();
-        if (!silentRun) {
+        if (!silentRun && !transformRun && !transformMessageRun) {
             printer().println("Running Camel integration: " + name + " in background with PID: " + p.pid());
         }
         return 0;
@@ -997,27 +1001,27 @@ public class Run extends CamelCommand {
 
         // use custom distribution of camel
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("//DEPS org.apache.camel:camel-bom:%s@pom\n", camelVersion));
-        sb.append(String.format("//DEPS org.apache.camel:camel-core:%s\n", camelVersion));
-        sb.append(String.format("//DEPS org.apache.camel:camel-core-engine:%s\n", camelVersion));
-        sb.append(String.format("//DEPS org.apache.camel:camel-main:%s\n", camelVersion));
-        sb.append(String.format("//DEPS org.apache.camel:camel-java-joor-dsl:%s\n", camelVersion));
-        sb.append(String.format("//DEPS org.apache.camel:camel-kamelet:%s\n", camelVersion));
+        sb.append(String.format("//DEPS org.apache.camel:camel-bom:%s@pom%n", camelVersion));
+        sb.append(String.format("//DEPS org.apache.camel:camel-core:%s%n", camelVersion));
+        sb.append(String.format("//DEPS org.apache.camel:camel-core-engine:%s%n", camelVersion));
+        sb.append(String.format("//DEPS org.apache.camel:camel-main:%s%n", camelVersion));
+        sb.append(String.format("//DEPS org.apache.camel:camel-java-joor-dsl:%s%n", camelVersion));
+        sb.append(String.format("//DEPS org.apache.camel:camel-kamelet:%s%n", camelVersion));
         content = content.replaceFirst("\\{\\{ \\.CamelDependencies }}", sb.toString());
 
         // use apache distribution of camel-jbang
         String v = camelVersion.substring(0, camelVersion.lastIndexOf('.'));
         sb = new StringBuilder();
-        sb.append(String.format("//DEPS org.apache.camel:camel-jbang-core:%s\n", v));
-        sb.append(String.format("//DEPS org.apache.camel:camel-kamelet-main:%s\n", v));
-        sb.append(String.format("//DEPS org.apache.camel:camel-resourceresolver-github:%s\n", v));
+        sb.append(String.format("//DEPS org.apache.camel:camel-jbang-core:%s%n", v));
+        sb.append(String.format("//DEPS org.apache.camel:camel-kamelet-main:%s%n", v));
+        sb.append(String.format("//DEPS org.apache.camel:camel-resourceresolver-github:%s%n", v));
         if (VersionHelper.isGE(v, "3.19.0")) {
-            sb.append(String.format("//DEPS org.apache.camel:camel-cli-connector:%s\n", v));
+            sb.append(String.format("//DEPS org.apache.camel:camel-cli-connector:%s%n", v));
         }
         content = content.replaceFirst("\\{\\{ \\.CamelJBangDependencies }}", sb.toString());
 
         sb = new StringBuilder();
-        sb.append(String.format("//DEPS org.apache.camel.kamelets:camel-kamelets:%s\n", kameletsVersion));
+        sb.append(String.format("//DEPS org.apache.camel.kamelets:camel-kamelets:%s%n", kameletsVersion));
         content = content.replaceFirst("\\{\\{ \\.CamelKameletsDependencies }}", sb.toString());
 
         String fn = CommandLineHelper.CAMEL_JBANG_WORK_DIR + "/CustomCamelJBang.java";
@@ -1049,7 +1053,7 @@ public class Run extends CamelCommand {
         if (background) {
             Process p = pb.start();
             this.spawnPid = p.pid();
-            if (!silentRun) {
+            if (!silentRun && !transformRun && !transformMessageRun) {
                 printer().println("Running Camel integration: " + name + " (version: " + camelVersion
                                   + ") in background with PID: " + p.pid());
             }
@@ -1209,7 +1213,7 @@ public class Run extends CamelCommand {
         if (silentRun) {
             // do not configure logging
         } else if (logging) {
-            RuntimeUtil.configureLog(loggingLevel, loggingColor, loggingJson, scriptRun, false);
+            RuntimeUtil.configureLog(loggingLevel, loggingColor, loggingJson, scriptRun, false, loggingConfigPath);
             writeSettings("loggingLevel", loggingLevel);
             writeSettings("loggingColor", loggingColor ? "true" : "false");
             writeSettings("loggingJson", loggingJson ? "true" : "false");
@@ -1220,7 +1224,7 @@ public class Run extends CamelCommand {
                 logFile.deleteOnExit();
             }
         } else {
-            RuntimeUtil.configureLog("off", false, false, false, false);
+            RuntimeUtil.configureLog("off", false, false, false, false, null);
             writeSettings("loggingLevel", "off");
         }
     }
@@ -1294,6 +1298,11 @@ public class Run extends CamelCommand {
     }
 
     private boolean skipFile(String name) {
+        if (name.startsWith("github:") || name.startsWith("https://github.com/")
+                || name.startsWith("https://gist.github.com/")) {
+            return false;
+        }
+
         // flatten file
         name = FileUtil.stripPath(name);
 

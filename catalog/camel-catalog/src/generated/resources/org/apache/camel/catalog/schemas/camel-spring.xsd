@@ -89,6 +89,15 @@ Spring specific DefaultCamelBeanPostProcessor which uses Spring BeanPostProcesso
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:element name="beanio" type="tns:beanioDataFormat">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+<![CDATA[
+Marshal and unmarshal Java beans to and from flat files (such as CSV, delimited, or fixed length formats).
+]]>
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
   <xs:element name="bearerToken" type="tns:bearerTokenDefinition">
     <xs:annotation>
       <xs:documentation xml:lang="en">
@@ -2157,6 +2166,24 @@ A single value
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:element name="variable" type="tns:variableExpression">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+<![CDATA[
+Gets a variable
+]]>
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="wasm" type="tns:wasmExpression">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+<![CDATA[
+Call a wasm (web assembly) function.
+]]>
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
   <xs:element name="weighted" type="tns:weightedLoadBalancerDefinition">
     <xs:annotation>
       <xs:documentation xml:lang="en">
@@ -3833,6 +3860,8 @@ complete all those exchanges before its stopped, when stopping CamelContext or t
       <xs:element ref="tns:simple"/>
       <xs:element ref="tns:spel"/>
       <xs:element ref="tns:tokenize"/>
+      <xs:element ref="tns:variable"/>
+      <xs:element ref="tns:wasm"/>
       <xs:element ref="tns:xtokenize"/>
       <xs:element ref="tns:xpath"/>
       <xs:element ref="tns:xquery"/>
@@ -4159,6 +4188,8 @@ controlling whether a thrown exception should be intercepted by this exception t
             <xs:element ref="tns:simple"/>
             <xs:element ref="tns:spel"/>
             <xs:element ref="tns:tokenize"/>
+            <xs:element ref="tns:variable"/>
+            <xs:element ref="tns:wasm"/>
             <xs:element ref="tns:xtokenize"/>
             <xs:element ref="tns:xpath"/>
             <xs:element ref="tns:xquery"/>
@@ -5167,6 +5198,8 @@ To use a specific charset when converting.
           <xs:element ref="tns:simple"/>
           <xs:element ref="tns:spel"/>
           <xs:element ref="tns:tokenize"/>
+          <xs:element ref="tns:variable"/>
+          <xs:element ref="tns:wasm"/>
           <xs:element ref="tns:xtokenize"/>
           <xs:element ref="tns:xpath"/>
           <xs:element ref="tns:xquery"/>
@@ -5228,6 +5261,8 @@ To use a custom Thread Pool if asyncDelay has been enabled.
           <xs:element ref="tns:simple"/>
           <xs:element ref="tns:spel"/>
           <xs:element ref="tns:tokenize"/>
+          <xs:element ref="tns:variable"/>
+          <xs:element ref="tns:wasm"/>
           <xs:element ref="tns:xtokenize"/>
           <xs:element ref="tns:xpath"/>
           <xs:element ref="tns:xquery"/>
@@ -5296,10 +5331,34 @@ reduce memory usage to avoid storing too many non frequent used producers.
           <xs:element ref="tns:simple"/>
           <xs:element ref="tns:spel"/>
           <xs:element ref="tns:tokenize"/>
+          <xs:element ref="tns:variable"/>
+          <xs:element ref="tns:wasm"/>
           <xs:element ref="tns:xtokenize"/>
           <xs:element ref="tns:xpath"/>
           <xs:element ref="tns:xquery"/>
         </xs:choice>
+        <xs:attribute name="variableSend" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+To use a variable to store the received message body (only body, not headers). This is handy for easy access to the
+received message body via variables. Important: When using receive variable then the received body is stored only in
+this variable and not on the current org.apache.camel.Message .
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="variableReceive" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+To use a variable to store the received message body (only body, not headers). This is handy for easy access to the
+received message body via variables. Important: When using receive variable then the received body is stored only in
+this variable and not on the current org.apache.camel.Message .
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
         <xs:attribute name="aggregationStrategy" type="xs:string">
           <xs:annotation>
             <xs:documentation xml:lang="en">
@@ -5913,6 +5972,8 @@ Sets the logging level to use for logging transactional rollback. This option is
             <xs:element ref="tns:simple"/>
             <xs:element ref="tns:spel"/>
             <xs:element ref="tns:tokenize"/>
+            <xs:element ref="tns:variable"/>
+            <xs:element ref="tns:wasm"/>
             <xs:element ref="tns:xtokenize"/>
             <xs:element ref="tns:xpath"/>
             <xs:element ref="tns:xquery"/>
@@ -6096,6 +6157,16 @@ Sets the URI of the endpoint to use.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="variableReceive" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+To use a variable to store a copy of the received message body (only body, not headers). This is handy for easy access
+to the received message body via variables.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -6152,6 +6223,8 @@ Global option value.
             <xs:element ref="tns:simple"/>
             <xs:element ref="tns:spel"/>
             <xs:element ref="tns:tokenize"/>
+            <xs:element ref="tns:variable"/>
+            <xs:element ref="tns:wasm"/>
             <xs:element ref="tns:xtokenize"/>
             <xs:element ref="tns:xpath"/>
             <xs:element ref="tns:xquery"/>
@@ -6927,6 +7000,8 @@ To refer to a custom logger instance to lookup from the registry.
             <xs:element ref="tns:simple"/>
             <xs:element ref="tns:spel"/>
             <xs:element ref="tns:tokenize"/>
+            <xs:element ref="tns:variable"/>
+            <xs:element ref="tns:wasm"/>
             <xs:element ref="tns:xtokenize"/>
             <xs:element ref="tns:xpath"/>
             <xs:element ref="tns:xquery"/>
@@ -7046,6 +7121,7 @@ down. Default value: false
             <xs:element ref="tns:avro"/>
             <xs:element ref="tns:barcode"/>
             <xs:element ref="tns:base64"/>
+            <xs:element ref="tns:beanio"/>
             <xs:element ref="tns:bindy"/>
             <xs:element ref="tns:cbor"/>
             <xs:element ref="tns:crypto"/>
@@ -7084,6 +7160,28 @@ down. Default value: false
             <xs:element ref="tns:zipFile"/>
           </xs:choice>
         </xs:sequence>
+        <xs:attribute name="variableSend" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+To use a variable to store the received message body (only body, not headers). This is handy for easy access to the
+received message body via variables. Important: When using receive variable then the received body is stored only in
+this variable and not on the current org.apache.camel.Message .
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="variableReceive" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+To use a variable to store the received message body (only body, not headers). This is handy for easy access to the
+received message body via variables. Important: When using receive variable then the received body is stored only in
+this variable and not on the current org.apache.camel.Message .
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -7385,6 +7483,90 @@ The line separators to use. Uses new line characters (CRLF) by default.
 <![CDATA[
 Instead of emitting '' and '/' we emit '-' and '_' respectively. urlSafe is only applied to encode operations. Decoding
 seamlessly handles both modes. Is by default false. Default value: false
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="beanioDataFormat">
+    <xs:complexContent>
+      <xs:extension base="tns:dataFormat">
+        <xs:sequence/>
+        <xs:attribute name="mapping" type="xs:string" use="required">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+The BeanIO mapping file. Is by default loaded from the classpath. You can prefix with file:, http:, or classpath: to
+denote from where to load the mapping file.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="streamName" type="xs:string" use="required">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+The name of the stream to use.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ignoreUnidentifiedRecords" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Whether to ignore unidentified records. Default value: false
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ignoreUnexpectedRecords" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Whether to ignore unexpected records. Default value: false
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ignoreInvalidRecords" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Whether to ignore invalid records. Default value: false
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="encoding" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+The charset to use. Is by default the JVM platform default charset.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="beanReaderErrorHandlerType" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+To use a custom org.apache.camel.dataformat.beanio.BeanIOErrorHandler as error handler while parsing. Configure the
+fully qualified class name of the error handler. Notice the options ignoreUnidentifiedRecords, ignoreUnexpectedRecords,
+and ignoreInvalidRecords may not be in use when you use a custom error handler.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="unmarshalSingleObject" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+This options controls whether to unmarshal as a list of objects or as a single object only. The former is the default
+mode, and the latter is only intended in special use-cases where beanio maps the Camel message to a single POJO bean.
+Default value: false
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -11101,10 +11283,23 @@ Sets a reference to use for lookup the policy in the registry.
           <xs:element ref="tns:simple"/>
           <xs:element ref="tns:spel"/>
           <xs:element ref="tns:tokenize"/>
+          <xs:element ref="tns:variable"/>
+          <xs:element ref="tns:wasm"/>
           <xs:element ref="tns:xtokenize"/>
           <xs:element ref="tns:xpath"/>
           <xs:element ref="tns:xquery"/>
         </xs:choice>
+        <xs:attribute name="variableReceive" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+To use a variable to store the received message body (only body, not headers). This is handy for easy access to the
+received message body via variables. Important: When using receive variable then the received body is stored only in
+this variable and not on the current org.apache.camel.Message .
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
         <xs:attribute name="aggregationStrategy" type="xs:string">
           <xs:annotation>
             <xs:documentation xml:lang="en">
@@ -11246,6 +11441,8 @@ type in the registry by prefixing with #type: syntax, eg #type:com.foo.MyClassTy
       <xs:element ref="tns:simple"/>
       <xs:element ref="tns:spel"/>
       <xs:element ref="tns:tokenize"/>
+      <xs:element ref="tns:variable"/>
+      <xs:element ref="tns:wasm"/>
       <xs:element ref="tns:xtokenize"/>
       <xs:element ref="tns:xpath"/>
       <xs:element ref="tns:xquery"/>
@@ -11286,6 +11483,8 @@ Property key.
           <xs:element ref="tns:simple"/>
           <xs:element ref="tns:spel"/>
           <xs:element ref="tns:tokenize"/>
+          <xs:element ref="tns:variable"/>
+          <xs:element ref="tns:wasm"/>
           <xs:element ref="tns:xtokenize"/>
           <xs:element ref="tns:xpath"/>
           <xs:element ref="tns:xquery"/>
@@ -11595,6 +11794,8 @@ Name of variable to remove.
             <xs:element ref="tns:simple"/>
             <xs:element ref="tns:spel"/>
             <xs:element ref="tns:tokenize"/>
+            <xs:element ref="tns:variable"/>
+            <xs:element ref="tns:wasm"/>
             <xs:element ref="tns:xtokenize"/>
             <xs:element ref="tns:xpath"/>
             <xs:element ref="tns:xquery"/>
@@ -12278,6 +12479,8 @@ Description of the parameter.
           <xs:element ref="tns:simple"/>
           <xs:element ref="tns:spel"/>
           <xs:element ref="tns:tokenize"/>
+          <xs:element ref="tns:variable"/>
+          <xs:element ref="tns:wasm"/>
           <xs:element ref="tns:xtokenize"/>
           <xs:element ref="tns:xpath"/>
           <xs:element ref="tns:xquery"/>
@@ -12547,6 +12750,8 @@ Sets the sample message count which only a single Exchange will pass through aft
           <xs:element ref="tns:simple"/>
           <xs:element ref="tns:spel"/>
           <xs:element ref="tns:tokenize"/>
+          <xs:element ref="tns:variable"/>
+          <xs:element ref="tns:wasm"/>
           <xs:element ref="tns:xtokenize"/>
           <xs:element ref="tns:xpath"/>
           <xs:element ref="tns:xquery"/>
@@ -12580,6 +12785,8 @@ Sets the sample message count which only a single Exchange will pass through aft
           <xs:element ref="tns:simple"/>
           <xs:element ref="tns:spel"/>
           <xs:element ref="tns:tokenize"/>
+          <xs:element ref="tns:variable"/>
+          <xs:element ref="tns:wasm"/>
           <xs:element ref="tns:xtokenize"/>
           <xs:element ref="tns:xpath"/>
           <xs:element ref="tns:xquery"/>
@@ -12629,6 +12836,8 @@ Sets the new exchange pattern of the Exchange to be used from this point forward
           <xs:element ref="tns:simple"/>
           <xs:element ref="tns:spel"/>
           <xs:element ref="tns:tokenize"/>
+          <xs:element ref="tns:variable"/>
+          <xs:element ref="tns:wasm"/>
           <xs:element ref="tns:xtokenize"/>
           <xs:element ref="tns:xpath"/>
           <xs:element ref="tns:xquery"/>
@@ -12681,6 +12890,8 @@ be used. Otherwise a constant name will be used.
           <xs:element ref="tns:simple"/>
           <xs:element ref="tns:spel"/>
           <xs:element ref="tns:tokenize"/>
+          <xs:element ref="tns:variable"/>
+          <xs:element ref="tns:wasm"/>
           <xs:element ref="tns:xtokenize"/>
           <xs:element ref="tns:xpath"/>
           <xs:element ref="tns:xquery"/>
@@ -12724,6 +12935,8 @@ property name to be used. Otherwise a constant name will be used.
           <xs:element ref="tns:simple"/>
           <xs:element ref="tns:spel"/>
           <xs:element ref="tns:tokenize"/>
+          <xs:element ref="tns:variable"/>
+          <xs:element ref="tns:wasm"/>
           <xs:element ref="tns:xtokenize"/>
           <xs:element ref="tns:xpath"/>
           <xs:element ref="tns:xquery"/>
@@ -12767,6 +12980,8 @@ used. Otherwise a constant name will be used.
           <xs:element ref="tns:simple"/>
           <xs:element ref="tns:spel"/>
           <xs:element ref="tns:tokenize"/>
+          <xs:element ref="tns:variable"/>
+          <xs:element ref="tns:wasm"/>
           <xs:element ref="tns:xtokenize"/>
           <xs:element ref="tns:xpath"/>
           <xs:element ref="tns:xquery"/>
@@ -12810,6 +13025,8 @@ Sets the comparator to use for sorting.
             <xs:element ref="tns:simple"/>
             <xs:element ref="tns:spel"/>
             <xs:element ref="tns:tokenize"/>
+            <xs:element ref="tns:variable"/>
+            <xs:element ref="tns:wasm"/>
             <xs:element ref="tns:xtokenize"/>
             <xs:element ref="tns:xpath"/>
             <xs:element ref="tns:xquery"/>
@@ -13420,6 +13637,8 @@ handler. Is by default true. Default value: true
             <xs:element ref="tns:simple"/>
             <xs:element ref="tns:spel"/>
             <xs:element ref="tns:tokenize"/>
+            <xs:element ref="tns:variable"/>
+            <xs:element ref="tns:wasm"/>
             <xs:element ref="tns:xtokenize"/>
             <xs:element ref="tns:xpath"/>
             <xs:element ref="tns:xquery"/>
@@ -13514,6 +13733,29 @@ Reference to the exception instance to lookup from the registry to throw.
     <xs:complexContent>
       <xs:extension base="tns:sendDefinition">
         <xs:sequence/>
+        <xs:attribute name="variableSend" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to
+easily control what data to use for sending and receiving. Important: When using send variable then the message body is
+taken from this variable instead of the current Message , however the headers from the Message will still be used as
+well. In other words, the variable is used instead of the message body, but everything else is as usual.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="variableReceive" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+To use a variable to store the received message body (only body, not headers). This is handy for easy access to the
+received message body via variables. Important: When using receive variable then the received body is stored only in
+this variable and not on the current org.apache.camel.Message .
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
         <xs:attribute name="pattern" type="xs:string">
           <xs:annotation>
             <xs:documentation xml:lang="en">
@@ -13536,6 +13778,29 @@ Sets the optional ExchangePattern used to invoke this endpoint.
 <![CDATA[
 The uri of the endpoint to send to. The uri can be dynamic computed using the
 org.apache.camel.language.simple.SimpleLanguage expression.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="variableSend" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+To use a variable to store the received message body (only body, not headers). This is handy for easy access to the
+received message body via variables. Important: When using receive variable then the received body is stored only in
+this variable and not on the current org.apache.camel.Message .
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="variableReceive" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to
+easily control what data to use for sending and receiving. Important: When using send variable then the message body is
+taken from this variable instead of the current Message , however the headers from the Message will still be used as
+well. In other words, the variable is used instead of the message body, but everything else is as usual.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -13711,6 +13976,8 @@ Sets a reference to use for lookup the policy in the registry.
           <xs:element ref="tns:simple"/>
           <xs:element ref="tns:spel"/>
           <xs:element ref="tns:tokenize"/>
+          <xs:element ref="tns:variable"/>
+          <xs:element ref="tns:wasm"/>
           <xs:element ref="tns:xtokenize"/>
           <xs:element ref="tns:xpath"/>
           <xs:element ref="tns:xquery"/>
@@ -13825,6 +14092,7 @@ To type used as a target data type in the transformation.
             <xs:element ref="tns:avro"/>
             <xs:element ref="tns:barcode"/>
             <xs:element ref="tns:base64"/>
+            <xs:element ref="tns:beanio"/>
             <xs:element ref="tns:bindy"/>
             <xs:element ref="tns:cbor"/>
             <xs:element ref="tns:crypto"/>
@@ -13863,6 +14131,28 @@ To type used as a target data type in the transformation.
             <xs:element ref="tns:zipFile"/>
           </xs:choice>
         </xs:sequence>
+        <xs:attribute name="variableSend" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+To use a variable to store the received message body (only body, not headers). This is handy for easy access to the
+received message body via variables. Important: When using receive variable then the received body is stored only in
+this variable and not on the current org.apache.camel.Message .
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="variableReceive" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+To use a variable to store the received message body (only body, not headers). This is handy for easy access to the
+received message body via variables. Important: When using receive variable then the received body is stored only in
+this variable and not on the current org.apache.camel.Message .
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
         <xs:attribute name="allowNullBody" type="xs:string">
           <xs:annotation>
             <xs:documentation xml:lang="en">
@@ -13901,6 +14191,8 @@ Indicates whether null is allowed as value of a body to unmarshall. Default valu
           <xs:element ref="tns:simple"/>
           <xs:element ref="tns:spel"/>
           <xs:element ref="tns:tokenize"/>
+          <xs:element ref="tns:variable"/>
+          <xs:element ref="tns:wasm"/>
           <xs:element ref="tns:xtokenize"/>
           <xs:element ref="tns:xpath"/>
           <xs:element ref="tns:xquery"/>
@@ -14650,6 +14942,8 @@ Set the base path to store in ZK.
             <xs:element ref="tns:simple"/>
             <xs:element ref="tns:spel"/>
             <xs:element ref="tns:tokenize"/>
+            <xs:element ref="tns:variable"/>
+            <xs:element ref="tns:wasm"/>
             <xs:element ref="tns:xtokenize"/>
             <xs:element ref="tns:xpath"/>
             <xs:element ref="tns:xquery"/>
@@ -14820,6 +15114,7 @@ Set a reference to a custom Expression to use.
         <xs:element ref="tns:avro"/>
         <xs:element ref="tns:barcode"/>
         <xs:element ref="tns:base64"/>
+        <xs:element ref="tns:beanio"/>
         <xs:element ref="tns:bindy"/>
         <xs:element ref="tns:cbor"/>
         <xs:element ref="tns:crypto"/>
@@ -14902,7 +15197,7 @@ Sets the class of the result type (type from output).
   </xs:complexType>
   <xs:complexType name="datasonnetExpression">
     <xs:simpleContent>
-      <xs:extension base="tns:typedExpressionDefinition">
+      <xs:extension base="tns:singleInputTypedExpressionDefinition">
         <xs:attribute name="bodyMediaType" type="xs:string">
           <xs:annotation>
             <xs:documentation xml:lang="en">
@@ -14917,6 +15212,39 @@ The String representation of the message's body MediaType.
             <xs:documentation xml:lang="en">
 <![CDATA[
 The String representation of the MediaType to output.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType abstract="true" name="singleInputTypedExpressionDefinition">
+    <xs:simpleContent>
+      <xs:extension base="tns:typedExpressionDefinition">
+        <xs:attribute name="variableName" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Name of variable to use as input, instead of the message body.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="headerName" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Name of header to use as input, instead of the message body.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="propertyName" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Name of property to use as input, instead of the message body.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -14942,32 +15270,6 @@ The String representation of the MediaType to output.
   <xs:complexType name="hl7TerserExpression">
     <xs:simpleContent>
       <xs:extension base="tns:singleInputTypedExpressionDefinition"/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:complexType abstract="true" name="singleInputTypedExpressionDefinition">
-    <xs:simpleContent>
-      <xs:extension base="tns:typedExpressionDefinition">
-        <xs:attribute name="headerName" type="xs:string">
-          <xs:annotation>
-            <xs:documentation xml:lang="en">
-<![CDATA[
-Name of header to use as input, instead of the message body It has as higher precedent than the propertyName if both are
-set.
-]]>
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="propertyName" type="xs:string">
-          <xs:annotation>
-            <xs:documentation xml:lang="en">
-<![CDATA[
-Name of property to use as input, instead of the message body. It has a lower precedent than the headerName if both are
-set.
-]]>
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-      </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
   <xs:complexType name="javaExpression">
@@ -15174,33 +15476,7 @@ Whether to validate the bean has the configured method. Default value: true
   </xs:complexType>
   <xs:complexType abstract="true" name="namespaceAwareExpression">
     <xs:simpleContent>
-      <xs:extension base="tns:singleInputExpressionDefinition"/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:complexType abstract="true" name="singleInputExpressionDefinition">
-    <xs:simpleContent>
-      <xs:extension base="tns:expression">
-        <xs:attribute name="headerName" type="xs:string">
-          <xs:annotation>
-            <xs:documentation xml:lang="en">
-<![CDATA[
-Name of header to use as input, instead of the message body It has as higher precedent than the propertyName if both are
-set.
-]]>
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="propertyName" type="xs:string">
-          <xs:annotation>
-            <xs:documentation xml:lang="en">
-<![CDATA[
-Name of property to use as input, instead of the message body. It has a lower precedent than the headerName if both are
-set.
-]]>
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-      </xs:extension>
+      <xs:extension base="tns:singleInputTypedExpressionDefinition"/>
     </xs:simpleContent>
   </xs:complexType>
   <xs:complexType name="ognlExpression">
@@ -15223,6 +15499,15 @@ set.
       <xs:extension base="tns:typedExpressionDefinition"/>
     </xs:simpleContent>
   </xs:complexType>
+  <xs:complexType abstract="true" name="singleInputExpressionDefinition">
+    <xs:simpleContent>
+      <xs:extension base="tns:expression">
+        <xs:attribute name="variableName" type="xs:string"/>
+        <xs:attribute name="headerName" type="xs:string"/>
+        <xs:attribute name="propertyName" type="xs:string"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
   <xs:complexType name="spELExpression">
     <xs:simpleContent>
       <xs:extension base="tns:typedExpressionDefinition"/>
@@ -15230,7 +15515,7 @@ set.
   </xs:complexType>
   <xs:complexType name="tokenizerExpression">
     <xs:simpleContent>
-      <xs:extension base="tns:singleInputExpressionDefinition">
+      <xs:extension base="tns:singleInputTypedExpressionDefinition">
         <xs:attribute name="token" type="xs:string" use="required">
           <xs:annotation>
             <xs:documentation xml:lang="en">
@@ -15320,6 +15605,27 @@ To skip the very first element. Default value: false
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
+  <xs:complexType name="variableExpression">
+    <xs:simpleContent>
+      <xs:extension base="tns:expression"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="wasmExpression">
+    <xs:simpleContent>
+      <xs:extension base="tns:typedExpressionDefinition">
+        <xs:attribute name="module" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Set the module (the distributable, loadable, and executable unit of code in WebAssembly) resource that provides the
+expression function.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
   <xs:complexType name="xmlTokenizerExpression">
     <xs:simpleContent>
       <xs:extension base="tns:namespaceAwareExpression">
@@ -15358,11 +15664,11 @@ Name of class for document type The default value is org.w3c.dom.Document.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="resultType" type="xs:string">
+        <xs:attribute name="resultQName" type="xs:string">
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-Sets the class name of the result type (type from output) The default result type is NodeSet. Default value: NODESET
+Sets the output type supported by XPath. Default value: NODESET
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -15435,24 +15741,6 @@ the built operating system, and not a JVM runtime. Default value: true
   <xs:complexType name="xQueryExpression">
     <xs:simpleContent>
       <xs:extension base="tns:namespaceAwareExpression">
-        <xs:attribute name="resultType" type="xs:string">
-          <xs:annotation>
-            <xs:documentation xml:lang="en">
-<![CDATA[
-Sets the class of the result type (type from output).
-]]>
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="type" type="xs:string">
-          <xs:annotation>
-            <xs:documentation xml:lang="en">
-<![CDATA[
-Sets the class name of the result type (type from output) The default result type is NodeSet.
-]]>
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
         <xs:attribute name="configurationRef" type="xs:string">
           <xs:annotation>
             <xs:documentation xml:lang="en">
@@ -16692,6 +16980,7 @@ To configure a special tag for the operations within this rest definition.
             <xs:element ref="tns:avro"/>
             <xs:element ref="tns:barcode"/>
             <xs:element ref="tns:base64"/>
+            <xs:element ref="tns:beanio"/>
             <xs:element ref="tns:bindy"/>
             <xs:element ref="tns:cbor"/>
             <xs:element ref="tns:crypto"/>
@@ -16809,6 +17098,8 @@ To configure a special tag for the operations within this rest definition.
           <xs:element ref="tns:simple"/>
           <xs:element ref="tns:spel"/>
           <xs:element ref="tns:tokenize"/>
+          <xs:element ref="tns:variable"/>
+          <xs:element ref="tns:wasm"/>
           <xs:element ref="tns:xtokenize"/>
           <xs:element ref="tns:xpath"/>
           <xs:element ref="tns:xquery"/>

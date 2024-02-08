@@ -122,8 +122,8 @@ public class SimpleFunctionExpression extends LiteralExpression {
         // exchange property
         remainder = ifStartsWithReturnRemainder("exchangeProperty", function);
         if (remainder != null) {
-            // remove leading character (dot or ?)
-            if (remainder.startsWith(".") || remainder.startsWith("?")) {
+            // remove leading character (dot, colon or ?)
+            if (remainder.startsWith(".") || remainder.startsWith(":") || remainder.startsWith("?")) {
                 remainder = remainder.substring(1);
             }
             // remove starting and ending brackets
@@ -173,6 +173,18 @@ public class SimpleFunctionExpression extends LiteralExpression {
                 throw new SimpleParserException("Valid syntax: ${exchange.OGNL} was: " + function, token.getIndex());
             }
             return SimpleExpressionBuilder.exchangeOgnlExpression(remainder);
+        }
+
+        // pretty
+        remainder = ifStartsWithReturnRemainder("pretty(", function);
+        if (remainder != null) {
+            String exp = StringHelper.beforeLast(remainder, ")");
+            if (exp == null) {
+                throw new SimpleParserException("Valid syntax: ${pretty(exp)} was: " + function, token.getIndex());
+            }
+            exp = StringHelper.removeLeadingAndEndingQuotes(exp);
+            Expression inlined = camelContext.resolveLanguage("simple").createExpression(exp);
+            return ExpressionBuilder.prettyExpression(inlined);
         }
 
         // file: prefix
@@ -253,11 +265,11 @@ public class SimpleFunctionExpression extends LiteralExpression {
             }
 
             // there are parameters then map them into properties
-            Object[] properties = new Object[5];
-            properties[2] = type;
-            properties[3] = ref;
-            properties[1] = method;
-            properties[4] = scope;
+            Object[] properties = new Object[7];
+            properties[3] = type;
+            properties[4] = ref;
+            properties[2] = method;
+            properties[5] = scope;
             return bean.createExpression(null, properties);
         }
 
@@ -521,7 +533,13 @@ public class SimpleFunctionExpression extends LiteralExpression {
             if (exp == null) {
                 throw new SimpleParserException("Valid syntax: ${jq(exp)} was: " + function, token.getIndex());
             }
-            exp = StringHelper.removeQuotes(exp);
+            exp = StringHelper.removeLeadingAndEndingQuotes(exp);
+            if (exp.startsWith("header:") || exp.startsWith("property:") || exp.startsWith("exchangeProperty:")
+                    || exp.startsWith("variable:")) {
+                String input = StringHelper.before(exp, ",");
+                exp = StringHelper.after(exp, ",");
+                return ExpressionBuilder.singleInputLanguageExpression("jq", exp, input);
+            }
             return ExpressionBuilder.languageExpression("jq", exp);
         }
         // jsonpath
@@ -531,7 +549,13 @@ public class SimpleFunctionExpression extends LiteralExpression {
             if (exp == null) {
                 throw new SimpleParserException("Valid syntax: ${jsonpath(exp)} was: " + function, token.getIndex());
             }
-            exp = StringHelper.removeQuotes(exp);
+            exp = StringHelper.removeLeadingAndEndingQuotes(exp);
+            if (exp.startsWith("header:") || exp.startsWith("property:") || exp.startsWith("exchangeProperty:")
+                    || exp.startsWith("variable:")) {
+                String input = StringHelper.before(exp, ",");
+                exp = StringHelper.after(exp, ",");
+                return ExpressionBuilder.singleInputLanguageExpression("jq", exp, input);
+            }
             return ExpressionBuilder.languageExpression("jsonpath", exp);
         }
         remainder = ifStartsWithReturnRemainder("xpath(", function);
@@ -540,7 +564,13 @@ public class SimpleFunctionExpression extends LiteralExpression {
             if (exp == null) {
                 throw new SimpleParserException("Valid syntax: ${xpath(exp)} was: " + function, token.getIndex());
             }
-            exp = StringHelper.removeQuotes(exp);
+            exp = StringHelper.removeLeadingAndEndingQuotes(exp);
+            if (exp.startsWith("header:") || exp.startsWith("property:") || exp.startsWith("exchangeProperty:")
+                    || exp.startsWith("variable:")) {
+                String input = StringHelper.before(exp, ",");
+                exp = StringHelper.after(exp, ",");
+                return ExpressionBuilder.singleInputLanguageExpression("jq", exp, input);
+            }
             return ExpressionBuilder.languageExpression("xpath", exp);
         }
 

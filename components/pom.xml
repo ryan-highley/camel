@@ -89,6 +89,7 @@
         <module>camel-barcode</module>
         <module>camel-base64</module>
         <module>camel-bean-validator</module>
+        <module>camel-beanio</module>
         <module>camel-bindy</module>
         <module>camel-bonita</module>
         <module>camel-box</module>
@@ -126,7 +127,6 @@
         <module>camel-elytron</module>
         <module>camel-etcd3</module>
         <module>camel-exec</module>
-        <module>camel-facebook</module>
         <module>camel-fastjson</module>
         <module>camel-fhir</module>
         <module>camel-file-watch</module>
@@ -307,6 +307,7 @@
         <module>camel-velocity</module>
         <module>camel-vertx</module>
         <module>camel-wal</module>
+        <module>camel-wasm</module>
         <module>camel-weather</module>
         <module>camel-web3j</module>
         <module>camel-webhook</module>

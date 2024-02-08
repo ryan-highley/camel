@@ -16,6 +16,8 @@
  */
 package org.apache.camel.processor;
 
+import java.util.Map;
+
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
@@ -29,6 +31,7 @@ import org.apache.camel.NoTypeConversionAvailableException;
 import org.apache.camel.Processor;
 import org.apache.camel.ResolveEndpointFailedException;
 import org.apache.camel.spi.EndpointUtilizationStatistics;
+import org.apache.camel.spi.HeadersMapFactory;
 import org.apache.camel.spi.IdAware;
 import org.apache.camel.spi.NormalizedEndpointUri;
 import org.apache.camel.spi.ProducerCache;
@@ -58,8 +61,11 @@ public class SendDynamicProcessor extends AsyncProcessorSupport implements IdAwa
     protected CamelContext camelContext;
     protected final String uri;
     protected final Expression expression;
+    protected String variableSend;
+    protected String variableReceive;
     protected ExchangePattern pattern;
     protected ProducerCache producerCache;
+    protected HeadersMapFactory headersMapFactory;
     protected String id;
     protected String routeId;
     protected boolean ignoreInvalidEndpoint;
@@ -172,6 +178,24 @@ public class SendDynamicProcessor extends AsyncProcessorSupport implements IdAwa
             return true;
         }
 
+        // if we should store the received message body in a variable,
+        // then we need to preserve the original message body
+        Object body = null;
+        Map<String, Object> headers = null;
+        if (variableReceive != null) {
+            try {
+                body = exchange.getMessage().getBody();
+                // do a defensive copy of the headers
+                headers = headersMapFactory.newMap(exchange.getMessage().getHeaders());
+            } catch (Exception throwable) {
+                exchange.setException(throwable);
+                callback.done(true);
+                return true;
+            }
+        }
+        final Object originalBody = body;
+        final Map<String, Object> originalHeaders = headers;
+
         // send the exchange to the destination using the producer cache
         final Processor preProcessor = preAwareProcessor;
         final Processor postProcessor = postAwareProcessor;
@@ -184,6 +208,11 @@ public class SendDynamicProcessor extends AsyncProcessorSupport implements IdAwa
                 if (preProcessor != null) {
                     preProcessor.process(target);
                 }
+                // replace message body with variable
+                if (variableSend != null) {
+                    Object value = ExchangeHelper.getVariable(exchange, variableSend);
+                    exchange.getMessage().setBody(value);
+                }
             } catch (Exception t) {
                 e.setException(t);
                 // restore previous MEP
@@ -193,24 +222,28 @@ public class SendDynamicProcessor extends AsyncProcessorSupport implements IdAwa
             }
 
             LOG.debug(">>>> {} {}", endpoint, e);
-            return p.process(target, new AsyncCallback() {
-                public void done(boolean doneSync) {
-                    // restore previous MEP
-                    target.setPattern(existingPattern);
-                    try {
-                        if (postProcessor != null) {
-                            postProcessor.process(target);
-                        }
-                    } catch (Exception e) {
-                        target.setException(e);
+            return p.process(target, doneSync -> {
+                // restore previous MEP
+                target.setPattern(existingPattern);
+                try {
+                    if (postProcessor != null) {
+                        postProcessor.process(target);
                     }
-                    // stop endpoint if prototype as it was only used once
-                    if (stopEndpoint) {
-                        ServiceHelper.stopAndShutdownService(endpoint);
-                    }
-                    // signal we are done
-                    c.done(doneSync);
+                } catch (Exception e1) {
+                    target.setException(e1);
                 }
+                // stop endpoint if prototype as it was only used once
+                if (stopEndpoint) {
+                    ServiceHelper.stopAndShutdownService(endpoint);
+                }
+                // result should be stored in variable instead of message body
+                if (variableReceive != null) {
+                    ExchangeHelper.setVariableFromMessageBodyAndHeaders(exchange, variableReceive, exchange.getMessage());
+                    exchange.getMessage().setBody(originalBody);
+                    exchange.getMessage().setHeaders(originalHeaders);
+                }
+                // signal we are done
+                c.done(doneSync);
             });
         });
     }
@@ -349,6 +382,8 @@ public class SendDynamicProcessor extends AsyncProcessorSupport implements IdAwa
             }
         }
         ServiceHelper.initService(dynamicAware);
+
+        headersMapFactory = camelContext.getCamelContextExtension().getHeadersMapFactory();
     }
 
     @Override
@@ -408,6 +443,22 @@ public class SendDynamicProcessor extends AsyncProcessorSupport implements IdAwa
 
     public void setPattern(ExchangePattern pattern) {
         this.pattern = pattern;
+    }
+
+    public String getVariableSend() {
+        return variableSend;
+    }
+
+    public void setVariableSend(String variableSend) {
+        this.variableSend = variableSend;
+    }
+
+    public String getVariableReceive() {
+        return variableReceive;
+    }
+
+    public void setVariableReceive(String variableReceive) {
+        this.variableReceive = variableReceive;
     }
 
     public boolean isIgnoreInvalidEndpoint() {

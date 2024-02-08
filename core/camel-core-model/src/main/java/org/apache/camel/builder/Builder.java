@@ -28,6 +28,8 @@ import org.apache.camel.model.language.JsonPathExpression;
 import org.apache.camel.model.language.LanguageExpression;
 import org.apache.camel.model.language.MethodCallExpression;
 import org.apache.camel.model.language.SimpleExpression;
+import org.apache.camel.model.language.VariableExpression;
+import org.apache.camel.model.language.WasmExpression;
 import org.apache.camel.util.ObjectHelper;
 
 /**
@@ -276,6 +278,14 @@ public final class Builder {
     }
 
     /**
+     * Returns a predicate and value builder for variable
+     */
+    public static ValueBuilder variable(String name) {
+        Expression exp = new VariableExpression(name);
+        return new ValueBuilder(exp);
+    }
+
+    /**
      * Returns an expression for the given system property
      */
     public static ValueBuilder systemProperty(final String name) {
@@ -322,4 +332,20 @@ public final class Builder {
         return new ValueBuilder(newExp);
     }
 
+    /**
+     * Wasm TODO.
+     */
+    public static ValueBuilder wasm(String value) {
+        WasmExpression exp = new WasmExpression(value);
+        return new ValueBuilder(exp);
+    }
+
+    /**
+     * Wasm TODO.
+     */
+    public static ValueBuilder wasm(String value, Class<?> resultType) {
+        WasmExpression exp = new WasmExpression(value);
+        exp.setResultType(resultType);
+        return new ValueBuilder(exp);
+    }
 }

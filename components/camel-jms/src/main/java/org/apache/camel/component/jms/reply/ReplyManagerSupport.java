@@ -35,6 +35,7 @@ import org.apache.camel.component.jms.JmsConstants;
 import org.apache.camel.component.jms.JmsEndpoint;
 import org.apache.camel.component.jms.JmsMessage;
 import org.apache.camel.component.jms.JmsMessageHelper;
+import org.apache.camel.component.jms.MessageListenerContainerFactory;
 import org.apache.camel.support.ExchangeHelper;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.support.service.ServiceSupport;
@@ -145,11 +146,11 @@ public abstract class ReplyManagerSupport extends ServiceSupport implements Repl
 
         try {
             if (correlationProperty == null) {
-                correlationID = message.getJMSCorrelationID();
+                correlationID = JmsMessageHelper.getJMSCorrelationID(message);
             } else {
                 correlationID = message.getStringProperty(correlationProperty);
             }
-        } catch (JMSException e) {
+        } catch (Exception e) {
             // ignore
         }
 
@@ -169,6 +170,7 @@ public abstract class ReplyManagerSupport extends ServiceSupport implements Repl
         if (holder != null && isRunAllowed()) {
             try {
                 Exchange exchange = holder.getExchange();
+                Object to = exchange.getIn().getHeader(JmsConstants.JMS_DESTINATION_NAME_PRODUCED);
 
                 boolean timeout = holder.isTimeout();
                 if (timeout) {
@@ -194,6 +196,10 @@ public abstract class ReplyManagerSupport extends ServiceSupport implements Repl
                     // to everything it may need, and can populate headers, properties, etc. accordingly (solves CAMEL-6218).
                     exchange.setOut(response);
                     Object body = response.getBody();
+                    // store where the request message was sent to, so we know that also
+                    if (to != null) {
+                        response.setHeader(JmsConstants.JMS_DESTINATION_NAME_PRODUCED, to);
+                    }
 
                     if (endpoint.isTransferException() && body instanceof Exception) {
                         log.debug("Reply was an Exception. Setting the Exception on the Exchange: {}", body);
@@ -307,5 +313,14 @@ public abstract class ReplyManagerSupport extends ServiceSupport implements Repl
             clientId += ".CamelReplyManager";
             answer.setClientId(clientId);
         }
+    }
+
+    protected static AbstractMessageListenerContainer getAbstractMessageListenerContainer(JmsEndpoint endpoint) {
+        MessageListenerContainerFactory factory = endpoint.getConfiguration().getMessageListenerContainerFactory();
+        if (factory != null) {
+            return factory.createMessageListenerContainer(endpoint);
+        }
+        throw new IllegalArgumentException(
+                "ReplyToConsumerType.Custom requires that a MessageListenerContainerFactory has been configured");
     }
 }

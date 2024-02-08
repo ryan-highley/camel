@@ -1240,7 +1240,7 @@ public interface ComponentsBuilderFactory {
      * message routing.
      * 
      * Category: messaging
-     * Since: 4.3
+     * Since: 4.4
      * Maven coordinates: org.apache.camel:camel-dynamic-router
      * 
      * @return the dsl builder
@@ -1313,19 +1313,6 @@ public interface ComponentsBuilderFactory {
      */
     static org.apache.camel.builder.component.dsl.ExecComponentBuilderFactory.ExecComponentBuilder exec() {
         return org.apache.camel.builder.component.dsl.ExecComponentBuilderFactory.exec();
-    }
-    /**
-     * Facebook (camel-facebook)
-     * Send requests to Facebook APIs supported by Facebook4J.
-     * 
-     * Category: social
-     * Since: 2.14
-     * Maven coordinates: org.apache.camel:camel-facebook
-     * 
-     * @return the dsl builder
-     */
-    static org.apache.camel.builder.component.dsl.FacebookComponentBuilderFactory.FacebookComponentBuilder facebook() {
-        return org.apache.camel.builder.component.dsl.FacebookComponentBuilderFactory.facebook();
     }
     /**
      * FHIR (camel-fhir)
@@ -3498,7 +3485,7 @@ public interface ComponentsBuilderFactory {
     }
     /**
      * Robot Framework (camel-robotframework)
-     * Pass camel exchanges to acceptence test written in Robot DSL.
+     * Pass camel exchanges to acceptance test written in Robot DSL.
      * 
      * Category: testing
      * Since: 3.0
@@ -4251,6 +4238,19 @@ public interface ComponentsBuilderFactory {
      */
     static org.apache.camel.builder.component.dsl.VertxWebsocketComponentBuilderFactory.VertxWebsocketComponentBuilder vertxWebsocket() {
         return org.apache.camel.builder.component.dsl.VertxWebsocketComponentBuilderFactory.vertxWebsocket();
+    }
+    /**
+     * Wasm (camel-wasm)
+     * Invoke Wasm functions.
+     * 
+     * Category: core,script
+     * Since: 4.4
+     * Maven coordinates: org.apache.camel:camel-wasm
+     * 
+     * @return the dsl builder
+     */
+    static org.apache.camel.builder.component.dsl.WasmComponentBuilderFactory.WasmComponentBuilder wasm() {
+        return org.apache.camel.builder.component.dsl.WasmComponentBuilderFactory.wasm();
     }
     /**
      * Weather (camel-weather)

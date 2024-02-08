@@ -280,6 +280,7 @@ public class SimpleTest extends LanguageTestSupport {
     public void testSimpleExchangePropertyExpressions() throws Exception {
         exchange.setProperty("medal", "gold");
         assertExpression("${exchangeProperty.medal}", "gold");
+        assertExpression("${exchangeProperty:medal}", "gold");
     }
 
     @Test
@@ -2325,6 +2326,15 @@ public class SimpleTest extends LanguageTestSupport {
         assertThrows(SimpleIllegalSyntaxException.class, () -> evaluateExpression("${empty(}", null));
         assertThrows(SimpleIllegalSyntaxException.class, () -> evaluateExpression("${empty}", null));
         assertThrows(IllegalArgumentException.class, () -> evaluateExpression("${empty(unknownType)}", null));
+    }
+
+    @Test
+    public void testPretty() {
+        assertExpression(exchange, "${pretty('Hello')}", "Hello");
+        assertExpression(exchange, "${pretty(${body})}", "<hello id=\"m123\">\n</hello>");
+
+        exchange.getMessage().setBody("{\"name\": \"Jack\", \"id\": 123}");
+        assertExpression(exchange, "${pretty(${body})}", "{\n\t\"name\": \"Jack\",\n\t\"id\": 123\n}\n");
     }
 
     private void assertExpressionCreateNewEmpty(

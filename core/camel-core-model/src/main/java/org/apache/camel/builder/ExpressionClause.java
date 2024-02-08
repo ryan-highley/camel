@@ -882,7 +882,7 @@ public class ExpressionClause<T> implements Expression, Predicate {
      * @return         the builder to continue processing the DSL
      */
     public T tokenizeXML(String tagName) {
-        return tokenizeXML(tagName, null);
+        return delegate.tokenizeXMLPair(tagName, null, null);
     }
 
     /**
@@ -904,7 +904,7 @@ public class ExpressionClause<T> implements Expression, Predicate {
      * @return                         the builder to continue processing the DSL
      */
     public T tokenizeXML(String tagName, String inheritNamespaceTagName) {
-        return tokenizeXML(tagName, inheritNamespaceTagName, 0);
+        return delegate.tokenizeXMLPair(tagName, inheritNamespaceTagName, null);
     }
 
     /**
@@ -1147,6 +1147,29 @@ public class ExpressionClause<T> implements Expression, Predicate {
      */
     public T xquery(String text, Map<String, String> namespaces) {
         return delegate.xquery(text, namespaces);
+    }
+
+    /**
+     * Evaluates a <a href="http://camel.apache.org/wasm.html">Wasm expression</a>
+     *
+     * @param  functionName the name of the Wasm function to be evaluated
+     * @param  module       the Wasm module providing the expression function
+     * @return              the builder to continue processing the DSL
+     */
+    public T wasm(String functionName, String module) {
+        return delegate.wasm(functionName, module);
+    }
+
+    /**
+     * Evaluates a <a href="http://camel.apache.org/wasm.html">Wasm expression</a>
+     *
+     * @param  functionName the name of the Wasm function to be evaluated
+     * @param  module       the Wasm module providing the expression function
+     * @param  resultType   the return type expected by the expression
+     * @return              the builder to continue processing the DSL
+     */
+    public T wasm(String functionName, String module, Class<?> resultType) {
+        return delegate.wasm(functionName, module, resultType);
     }
 
     /**

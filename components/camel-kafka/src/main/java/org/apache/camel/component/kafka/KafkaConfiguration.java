@@ -349,6 +349,9 @@ public class KafkaConfiguration implements Cloneable, HeaderFilterStrategyAware 
     @UriParam(label = "common,security")
     private String kerberosConfigLocation;
 
+    @UriParam(label = "consumer", defaultValue = "false")
+    private boolean batching;
+
     public KafkaConfiguration() {
     }
 
@@ -737,7 +740,11 @@ public class KafkaConfiguration implements Cloneable, HeaderFilterStrategyAware 
     }
 
     public boolean getAutoCommitEnable() {
-        return autoCommitEnable;
+        if (!batching) {
+            return autoCommitEnable;
+        }
+
+        return false;
     }
 
     /**
@@ -1926,5 +1933,16 @@ public class KafkaConfiguration implements Cloneable, HeaderFilterStrategyAware 
      */
     public void setKerberosConfigLocation(String kerberosConfigLocation) {
         this.kerberosConfigLocation = kerberosConfigLocation;
+    }
+
+    public boolean isBatching() {
+        return batching;
+    }
+
+    /**
+     * Whether to use batching for processing or streaming. The default is false, which uses streaming
+     */
+    public void setBatching(boolean batching) {
+        this.batching = batching;
     }
 }

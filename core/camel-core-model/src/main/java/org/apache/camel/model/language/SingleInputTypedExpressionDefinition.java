@@ -28,6 +28,8 @@ import org.apache.camel.spi.Metadata;
 public abstract class SingleInputTypedExpressionDefinition extends TypedExpressionDefinition {
 
     @XmlAttribute
+    private String variableName;
+    @XmlAttribute
     @Metadata(label = "advanced")
     private String headerName;
     @XmlAttribute
@@ -47,8 +49,20 @@ public abstract class SingleInputTypedExpressionDefinition extends TypedExpressi
 
     protected SingleInputTypedExpressionDefinition(AbstractBuilder<?, ?> builder) {
         super(builder);
+        this.variableName = builder.variableName;
         this.headerName = builder.headerName;
         this.propertyName = builder.propertyName;
+    }
+
+    public String getVariableName() {
+        return variableName;
+    }
+
+    /**
+     * Name of variable to use as input, instead of the message body
+     */
+    public void setVariableName(String variableName) {
+        this.variableName = variableName;
     }
 
     public String getHeaderName() {
@@ -57,8 +71,6 @@ public abstract class SingleInputTypedExpressionDefinition extends TypedExpressi
 
     /**
      * Name of header to use as input, instead of the message body
-     * </p>
-     * It has as higher precedent than the propertyName if both are set.
      */
     public void setHeaderName(String headerName) {
         this.headerName = headerName;
@@ -70,8 +82,6 @@ public abstract class SingleInputTypedExpressionDefinition extends TypedExpressi
 
     /**
      * Name of property to use as input, instead of the message body.
-     * </p>
-     * It has a lower precedent than the headerName if both are set.
      */
     public void setPropertyName(String propertyName) {
         this.propertyName = propertyName;
@@ -86,13 +96,20 @@ public abstract class SingleInputTypedExpressionDefinition extends TypedExpressi
             T extends AbstractBuilder<T, E>, E extends SingleInputTypedExpressionDefinition>
             extends TypedExpressionDefinition.AbstractBuilder<T, E> {
 
+        private String variableName;
         private String headerName;
         private String propertyName;
 
         /**
+         * Name of variable to use as input, instead of the message body
+         */
+        public T variableName(String variableName) {
+            this.variableName = variableName;
+            return (T) this;
+        }
+
+        /**
          * Name of header to use as input, instead of the message body
-         * </p>
-         * It has as higher precedent than the propertyName if both are set.
          */
         public T headerName(String headerName) {
             this.headerName = headerName;
@@ -101,8 +118,6 @@ public abstract class SingleInputTypedExpressionDefinition extends TypedExpressi
 
         /**
          * Name of property to use as input, instead of the message body.
-         * </p>
-         * It has a lower precedent than the headerName if both are set.
          */
         public T propertyName(String propertyName) {
             this.propertyName = propertyName;

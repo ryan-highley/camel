@@ -313,6 +313,9 @@
           },
           "uri" : {
             "type" : "string"
+          },
+          "variableReceive" : {
+            "type" : "string"
           }
         },
         "required" : [ "steps", "uri" ]
@@ -338,6 +341,9 @@
             }
           },
           "uri" : {
+            "type" : "string"
+          },
+          "variableReceive" : {
             "type" : "string"
           }
         },
@@ -973,6 +979,10 @@
               }, {
                 "required" : [ "tokenize" ]
               }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
+              }, {
                 "required" : [ "xpath" ]
               }, {
                 "required" : [ "xquery" ]
@@ -1044,6 +1054,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -1104,6 +1116,10 @@
                 "required" : [ "spel" ]
               }, {
                 "required" : [ "tokenize" ]
+              }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
               }, {
                 "required" : [ "xpath" ]
               }, {
@@ -1177,6 +1193,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -1237,6 +1255,10 @@
                 "required" : [ "spel" ]
               }, {
                 "required" : [ "tokenize" ]
+              }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
               }, {
                 "required" : [ "xpath" ]
               }, {
@@ -1318,6 +1340,16 @@
             "title" : "Share Unit Of Work",
             "description" : "Shares the org.apache.camel.spi.UnitOfWork with the parent and the resource exchange. Enrich will by default not share unit of work between the parent exchange and the resource exchange. This means the resource exchange has its own individual unit of work."
           },
+          "variableReceive" : {
+            "type" : "string",
+            "title" : "Variable Receive",
+            "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
+          },
+          "variableSend" : {
+            "type" : "string",
+            "title" : "Variable Send",
+            "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
+          },
           "constant" : { },
           "csimple" : { },
           "datasonnet" : { },
@@ -1339,6 +1371,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -1476,6 +1510,10 @@
                 "required" : [ "spel" ]
               }, {
                 "required" : [ "tokenize" ]
+              }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
               }, {
                 "required" : [ "xpath" ]
               }, {
@@ -1646,6 +1684,22 @@
             }
           }, {
             "type" : "object",
+            "required" : [ "variable" ],
+            "properties" : {
+              "variable" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.language.VariableExpression"
+              }
+            }
+          }, {
+            "type" : "object",
+            "required" : [ "wasm" ],
+            "properties" : {
+              "wasm" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.language.WasmExpression"
+              }
+            }
+          }, {
+            "type" : "object",
             "required" : [ "xpath" ],
             "properties" : {
               "xpath" : {
@@ -1692,6 +1746,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { }
@@ -1838,6 +1894,10 @@
               }, {
                 "required" : [ "tokenize" ]
               }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
+              }, {
                 "required" : [ "xpath" ]
               }, {
                 "required" : [ "xquery" ]
@@ -1905,6 +1965,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -1960,6 +2022,9 @@
             }
           },
           "uri" : {
+            "type" : "string"
+          },
+          "variableReceive" : {
             "type" : "string"
           }
         },
@@ -2055,6 +2120,10 @@
               }, {
                 "required" : [ "tokenize" ]
               }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
+              }, {
                 "required" : [ "xpath" ]
               }, {
                 "required" : [ "xquery" ]
@@ -2142,6 +2211,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -2545,6 +2616,10 @@
               }, {
                 "required" : [ "tokenize" ]
               }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
+              }, {
                 "required" : [ "xpath" ]
               }, {
                 "required" : [ "xquery" ]
@@ -2622,6 +2697,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -2652,6 +2729,8 @@
                 "required" : [ "barcode" ]
               }, {
                 "required" : [ "base64" ]
+              }, {
+                "required" : [ "beanio" ]
               }, {
                 "required" : [ "bindy" ]
               }, {
@@ -2748,6 +2827,14 @@
             "properties" : {
               "base64" : {
                 "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.Base64DataFormat"
+              }
+            }
+          }, {
+            "type" : "object",
+            "required" : [ "beanio" ],
+            "properties" : {
+              "beanio" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.BeanioDataFormat"
               }
             }
           }, {
@@ -3056,10 +3143,21 @@
             "title" : "Id",
             "description" : "Sets the id of this node"
           },
+          "variableReceive" : {
+            "type" : "string",
+            "title" : "Variable Receive",
+            "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
+          },
+          "variableSend" : {
+            "type" : "string",
+            "title" : "Variable Send",
+            "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
+          },
           "asn1" : { },
           "avro" : { },
           "barcode" : { },
           "base64" : { },
+          "beanio" : { },
           "bindy" : { },
           "cbor" : { },
           "crypto" : { },
@@ -3674,6 +3772,10 @@
               }, {
                 "required" : [ "tokenize" ]
               }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
+              }, {
                 "required" : [ "xpath" ]
               }, {
                 "required" : [ "xquery" ]
@@ -3750,6 +3852,11 @@
             "description" : "Timeout in millis when polling from the external service. The timeout has influence about the poll enrich behavior. It basically operations in three different modes: negative value - Waits until a message is available and then returns it. Warning that this method could block indefinitely if no messages are available. 0 - Attempts to receive a message exchange immediately without waiting and returning null if a message exchange is not available yet. positive value - Attempts to receive a message exchange, waiting up to the given timeout to expire if a message is not yet available. Returns null if timed out The default value is -1 and therefore the method could block indefinitely, and therefore its recommended to use a timeout value",
             "default" : "-1"
           },
+          "variableReceive" : {
+            "type" : "string",
+            "title" : "Variable Receive",
+            "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
+          },
           "constant" : { },
           "csimple" : { },
           "datasonnet" : { },
@@ -3771,6 +3878,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -3832,6 +3941,66 @@
         "additionalProperties" : false,
         "anyOf" : [ {
           "oneOf" : [ {
+            "$ref" : "#/items/definitions/org.apache.camel.model.language.ExpressionDefinition"
+          }, {
+            "not" : {
+              "anyOf" : [ {
+                "required" : [ "expression" ]
+              }, {
+                "required" : [ "constant" ]
+              }, {
+                "required" : [ "csimple" ]
+              }, {
+                "required" : [ "datasonnet" ]
+              }, {
+                "required" : [ "exchangeProperty" ]
+              }, {
+                "required" : [ "groovy" ]
+              }, {
+                "required" : [ "header" ]
+              }, {
+                "required" : [ "hl7terser" ]
+              }, {
+                "required" : [ "java" ]
+              }, {
+                "required" : [ "joor" ]
+              }, {
+                "required" : [ "jq" ]
+              }, {
+                "required" : [ "js" ]
+              }, {
+                "required" : [ "jsonpath" ]
+              }, {
+                "required" : [ "language" ]
+              }, {
+                "required" : [ "method" ]
+              }, {
+                "required" : [ "mvel" ]
+              }, {
+                "required" : [ "ognl" ]
+              }, {
+                "required" : [ "python" ]
+              }, {
+                "required" : [ "ref" ]
+              }, {
+                "required" : [ "simple" ]
+              }, {
+                "required" : [ "spel" ]
+              }, {
+                "required" : [ "tokenize" ]
+              }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
+              }, {
+                "required" : [ "xpath" ]
+              }, {
+                "required" : [ "xquery" ]
+              }, {
+                "required" : [ "xtokenize" ]
+              } ]
+            }
+          }, {
             "type" : "object",
             "required" : [ "expression" ],
             "properties" : {
@@ -3841,12 +4010,6 @@
                 "$ref" : "#/items/definitions/org.apache.camel.model.language.ExpressionDefinition"
               }
             }
-          }, {
-            "not" : {
-              "anyOf" : [ {
-                "required" : [ "expression" ]
-              } ]
-            }
           } ]
         } ],
         "properties" : {
@@ -3855,6 +4018,32 @@
             "title" : "Key",
             "description" : "Property key"
           },
+          "constant" : { },
+          "csimple" : { },
+          "datasonnet" : { },
+          "exchangeProperty" : { },
+          "groovy" : { },
+          "header" : { },
+          "hl7terser" : { },
+          "java" : { },
+          "joor" : { },
+          "jq" : { },
+          "js" : { },
+          "jsonpath" : { },
+          "language" : { },
+          "method" : { },
+          "mvel" : { },
+          "ognl" : { },
+          "python" : { },
+          "ref" : { },
+          "simple" : { },
+          "spel" : { },
+          "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
+          "xpath" : { },
+          "xquery" : { },
+          "xtokenize" : { },
           "expression" : { }
         },
         "required" : [ "key" ]
@@ -3913,6 +4102,10 @@
                 "required" : [ "spel" ]
               }, {
                 "required" : [ "tokenize" ]
+              }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
               }, {
                 "required" : [ "xpath" ]
               }, {
@@ -4047,6 +4240,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -4423,6 +4618,10 @@
               }, {
                 "required" : [ "tokenize" ]
               }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
+              }, {
                 "required" : [ "xpath" ]
               }, {
                 "required" : [ "xquery" ]
@@ -4511,6 +4710,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -5094,6 +5295,10 @@
                 }, {
                   "required" : [ "tokenize" ]
                 }, {
+                  "required" : [ "variable" ]
+                }, {
+                  "required" : [ "wasm" ]
+                }, {
                   "required" : [ "xpath" ]
                 }, {
                   "required" : [ "xquery" ]
@@ -5166,6 +5371,8 @@
             "simple" : { },
             "spel" : { },
             "tokenize" : { },
+            "variable" : { },
+            "wasm" : { },
             "xpath" : { },
             "xquery" : { },
             "xtokenize" : { },
@@ -5363,6 +5570,10 @@
               }, {
                 "required" : [ "tokenize" ]
               }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
+              }, {
                 "required" : [ "xpath" ]
               }, {
                 "required" : [ "xquery" ]
@@ -5419,6 +5630,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -5480,6 +5693,10 @@
               }, {
                 "required" : [ "tokenize" ]
               }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
+              }, {
                 "required" : [ "xpath" ]
               }, {
                 "required" : [ "xquery" ]
@@ -5536,6 +5753,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -5630,6 +5849,10 @@
               }, {
                 "required" : [ "tokenize" ]
               }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
+              }, {
                 "required" : [ "xpath" ]
               }, {
                 "required" : [ "xquery" ]
@@ -5691,6 +5914,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -5782,6 +6007,10 @@
               }, {
                 "required" : [ "tokenize" ]
               }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
+              }, {
                 "required" : [ "xpath" ]
               }, {
                 "required" : [ "xquery" ]
@@ -5843,6 +6072,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -5905,6 +6136,10 @@
               }, {
                 "required" : [ "tokenize" ]
               }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
+              }, {
                 "required" : [ "xpath" ]
               }, {
                 "required" : [ "xquery" ]
@@ -5966,6 +6201,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -6028,6 +6265,10 @@
               }, {
                 "required" : [ "tokenize" ]
               }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
+              }, {
                 "required" : [ "xpath" ]
               }, {
                 "required" : [ "xquery" ]
@@ -6089,6 +6330,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -6149,6 +6392,10 @@
                 "required" : [ "spel" ]
               }, {
                 "required" : [ "tokenize" ]
+              }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
               }, {
                 "required" : [ "xpath" ]
               }, {
@@ -6279,6 +6526,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -6604,6 +6853,10 @@
               }, {
                 "required" : [ "tokenize" ]
               }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
+              }, {
                 "required" : [ "xpath" ]
               }, {
                 "required" : [ "xquery" ]
@@ -6685,6 +6938,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -6766,6 +7021,16 @@
               "type" : "string",
               "title" : "Uri",
               "description" : "Sets the uri of the endpoint to send to."
+            },
+            "variableReceive" : {
+              "type" : "string",
+              "title" : "Variable Receive",
+              "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
+            },
+            "variableSend" : {
+              "type" : "string",
+              "title" : "Variable Send",
+              "description" : "To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using send variable then the message body is taken from this variable instead of the current Message , however the headers from the Message will still be used as well. In other words, the variable is used instead of the message body, but everything else is as usual."
             }
           }
         } ],
@@ -6828,6 +7093,16 @@
               "type" : "string",
               "title" : "Uri",
               "description" : "The uri of the endpoint to send to. The uri can be dynamic computed using the org.apache.camel.language.simple.SimpleLanguage expression."
+            },
+            "variableReceive" : {
+              "type" : "string",
+              "title" : "Variable Receive",
+              "description" : "To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using send variable then the message body is taken from this variable instead of the current Message , however the headers from the Message will still be used as well. In other words, the variable is used instead of the message body, but everything else is as usual."
+            },
+            "variableSend" : {
+              "type" : "string",
+              "title" : "Variable Send",
+              "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
             }
           }
         } ],
@@ -6922,6 +7197,10 @@
               }, {
                 "required" : [ "tokenize" ]
               }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
+              }, {
                 "required" : [ "xpath" ]
               }, {
                 "required" : [ "xquery" ]
@@ -6988,6 +7267,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -7058,10 +7339,21 @@
             "title" : "Id",
             "description" : "Sets the id of this node"
           },
+          "variableReceive" : {
+            "type" : "string",
+            "title" : "Variable Receive",
+            "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
+          },
+          "variableSend" : {
+            "type" : "string",
+            "title" : "Variable Send",
+            "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
+          },
           "asn1" : { },
           "avro" : { },
           "barcode" : { },
           "base64" : { },
+          "beanio" : { },
           "bindy" : { },
           "cbor" : { },
           "crypto" : { },
@@ -7118,6 +7410,8 @@
                 "required" : [ "barcode" ]
               }, {
                 "required" : [ "base64" ]
+              }, {
+                "required" : [ "beanio" ]
               }, {
                 "required" : [ "bindy" ]
               }, {
@@ -7214,6 +7508,14 @@
             "properties" : {
               "base64" : {
                 "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.Base64DataFormat"
+              }
+            }
+          }, {
+            "type" : "object",
+            "required" : [ "beanio" ],
+            "properties" : {
+              "beanio" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.BeanioDataFormat"
               }
             }
           }, {
@@ -7562,6 +7864,10 @@
               }, {
                 "required" : [ "tokenize" ]
               }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
+              }, {
                 "required" : [ "xpath" ]
               }, {
                 "required" : [ "xquery" ]
@@ -7623,6 +7929,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -7701,6 +8009,10 @@
               }, {
                 "required" : [ "tokenize" ]
               }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
+              }, {
                 "required" : [ "xpath" ]
               }, {
                 "required" : [ "xquery" ]
@@ -7763,6 +8075,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -7823,6 +8137,10 @@
                 "required" : [ "spel" ]
               }, {
                 "required" : [ "tokenize" ]
+              }, {
+                "required" : [ "variable" ]
+              }, {
+                "required" : [ "wasm" ]
               }, {
                 "required" : [ "xpath" ]
               }, {
@@ -7886,6 +8204,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { },
@@ -7966,6 +8286,16 @@
             "type" : "string",
             "title" : "Uri",
             "description" : "The uri of the endpoint to send to. The uri can be dynamic computed using the org.apache.camel.language.simple.SimpleLanguage expression."
+          },
+          "variableReceive" : {
+            "type" : "string",
+            "title" : "Variable Receive",
+            "description" : "To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using send variable then the message body is taken from this variable instead of the current Message , however the headers from the Message will still be used as well. In other words, the variable is used instead of the message body, but everything else is as usual."
+          },
+          "variableSend" : {
+            "type" : "string",
+            "title" : "Variable Send",
+            "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
           }
         },
         "required" : [ "uri" ]
@@ -9568,6 +9898,60 @@
           }
         }
       },
+      "org.apache.camel.model.dataformat.BeanioDataFormat" : {
+        "title" : "BeanIO",
+        "description" : "Marshal and unmarshal Java beans to and from flat files (such as CSV, delimited, or fixed length formats).",
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "beanReaderErrorHandlerType" : {
+            "type" : "string",
+            "title" : "Bean Reader Error Handler Type",
+            "description" : "To use a custom org.apache.camel.dataformat.beanio.BeanIOErrorHandler as error handler while parsing. Configure the fully qualified class name of the error handler. Notice the options ignoreUnidentifiedRecords, ignoreUnexpectedRecords, and ignoreInvalidRecords may not be in use when you use a custom error handler."
+          },
+          "encoding" : {
+            "type" : "string",
+            "title" : "Encoding",
+            "description" : "The charset to use. Is by default the JVM platform default charset."
+          },
+          "id" : {
+            "type" : "string",
+            "title" : "Id",
+            "description" : "The id of this node"
+          },
+          "ignoreInvalidRecords" : {
+            "type" : "boolean",
+            "title" : "Ignore Invalid Records",
+            "description" : "Whether to ignore invalid records."
+          },
+          "ignoreUnexpectedRecords" : {
+            "type" : "boolean",
+            "title" : "Ignore Unexpected Records",
+            "description" : "Whether to ignore unexpected records."
+          },
+          "ignoreUnidentifiedRecords" : {
+            "type" : "boolean",
+            "title" : "Ignore Unidentified Records",
+            "description" : "Whether to ignore unidentified records."
+          },
+          "mapping" : {
+            "type" : "string",
+            "title" : "Mapping",
+            "description" : "The BeanIO mapping file. Is by default loaded from the classpath. You can prefix with file:, http:, or classpath: to denote from where to load the mapping file."
+          },
+          "streamName" : {
+            "type" : "string",
+            "title" : "Stream Name",
+            "description" : "The name of the stream to use."
+          },
+          "unmarshalSingleObject" : {
+            "type" : "boolean",
+            "title" : "Unmarshal Single Object",
+            "description" : "This options controls whether to unmarshal as a list of objects or as a single object only. The former is the default mode, and the latter is only intended in special use-cases where beanio maps the Camel message to a single POJO bean."
+          }
+        },
+        "required" : [ "mapping", "streamName" ]
+      },
       "org.apache.camel.model.dataformat.BindyDataFormat" : {
         "title" : "Bindy",
         "description" : "Marshal and unmarshal Java beans from and to flat payloads (such as CSV, delimited, fixed length formats, or FIX messages).",
@@ -9938,6 +10322,9 @@
           },
           "base64" : {
             "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.Base64DataFormat"
+          },
+          "beanio" : {
+            "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.BeanioDataFormat"
           },
           "bindy" : {
             "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.BindyDataFormat"
@@ -12283,6 +12670,11 @@
               "title" : "Expression",
               "description" : "The expression value in your chosen language syntax"
             },
+            "headerName" : {
+              "type" : "string",
+              "title" : "Header Name",
+              "description" : "Name of header to use as input, instead of the message body"
+            },
             "id" : {
               "type" : "string",
               "title" : "Id",
@@ -12293,6 +12685,11 @@
               "title" : "Output Media Type",
               "description" : "The String representation of the MediaType to output"
             },
+            "propertyName" : {
+              "type" : "string",
+              "title" : "Property Name",
+              "description" : "Name of property to use as input, instead of the message body."
+            },
             "resultType" : {
               "type" : "string",
               "title" : "Result Type",
@@ -12302,6 +12699,11 @@
               "type" : "boolean",
               "title" : "Trim",
               "description" : "Whether to trim the value to remove leading and trailing whitespaces and line breaks"
+            },
+            "variableName" : {
+              "type" : "string",
+              "title" : "Variable Name",
+              "description" : "Name of variable to use as input, instead of the message body"
             }
           }
         } ],
@@ -12508,6 +12910,22 @@
             }
           }, {
             "type" : "object",
+            "required" : [ "variable" ],
+            "properties" : {
+              "variable" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.language.VariableExpression"
+              }
+            }
+          }, {
+            "type" : "object",
+            "required" : [ "wasm" ],
+            "properties" : {
+              "wasm" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.language.WasmExpression"
+              }
+            }
+          }, {
+            "type" : "object",
             "required" : [ "xpath" ],
             "properties" : {
               "xpath" : {
@@ -12554,6 +12972,8 @@
           "simple" : { },
           "spel" : { },
           "tokenize" : { },
+          "variable" : { },
+          "wasm" : { },
           "xpath" : { },
           "xquery" : { },
           "xtokenize" : { }
@@ -12637,7 +13057,7 @@
             "headerName" : {
               "type" : "string",
               "title" : "Header Name",
-              "description" : "Name of header to use as input, instead of the message body It has as higher precedent than the propertyName if both are set."
+              "description" : "Name of header to use as input, instead of the message body"
             },
             "id" : {
               "type" : "string",
@@ -12647,7 +13067,7 @@
             "propertyName" : {
               "type" : "string",
               "title" : "Property Name",
-              "description" : "Name of property to use as input, instead of the message body. It has a lower precedent than the headerName if both are set."
+              "description" : "Name of property to use as input, instead of the message body."
             },
             "resultType" : {
               "type" : "string",
@@ -12658,6 +13078,11 @@
               "type" : "boolean",
               "title" : "Trim",
               "description" : "Whether to trim the value to remove leading and trailing whitespaces and line breaks"
+            },
+            "variableName" : {
+              "type" : "string",
+              "title" : "Variable Name",
+              "description" : "Name of variable to use as input, instead of the message body"
             }
           }
         } ],
@@ -12800,7 +13225,7 @@
             "headerName" : {
               "type" : "string",
               "title" : "Header Name",
-              "description" : "Name of header to use as input, instead of the message body It has as higher precedent than the propertyName if both are set."
+              "description" : "Name of header to use as input, instead of the message body"
             },
             "id" : {
               "type" : "string",
@@ -12810,7 +13235,7 @@
             "propertyName" : {
               "type" : "string",
               "title" : "Property Name",
-              "description" : "Name of property to use as input, instead of the message body. It has a lower precedent than the headerName if both are set."
+              "description" : "Name of property to use as input, instead of the message body."
             },
             "resultType" : {
               "type" : "string",
@@ -12821,6 +13246,11 @@
               "type" : "boolean",
               "title" : "Trim",
               "description" : "Whether to trim the value to remove leading and trailing whitespaces and line breaks"
+            },
+            "variableName" : {
+              "type" : "string",
+              "title" : "Variable Name",
+              "description" : "Name of variable to use as input, instead of the message body"
             }
           }
         } ],
@@ -12853,7 +13283,7 @@
             "headerName" : {
               "type" : "string",
               "title" : "Header Name",
-              "description" : "Name of header to use as input, instead of the message body It has as higher precedent than the propertyName if both are set."
+              "description" : "Name of header to use as input, instead of the message body"
             },
             "id" : {
               "type" : "string",
@@ -12869,7 +13299,7 @@
             "propertyName" : {
               "type" : "string",
               "title" : "Property Name",
-              "description" : "Name of property to use as input, instead of the message body. It has a lower precedent than the headerName if both are set."
+              "description" : "Name of property to use as input, instead of the message body."
             },
             "resultType" : {
               "type" : "string",
@@ -12890,6 +13320,11 @@
               "type" : "boolean",
               "title" : "Unpack Array",
               "description" : "Whether to unpack a single element json-array into an object."
+            },
+            "variableName" : {
+              "type" : "string",
+              "title" : "Variable Name",
+              "description" : "Name of variable to use as input, instead of the message body"
             },
             "writeAsString" : {
               "type" : "boolean",
@@ -13208,7 +13643,7 @@
             "headerName" : {
               "type" : "string",
               "title" : "Header Name",
-              "description" : "Name of header to use as input, instead of the message body It has as higher precedent than the propertyName if both are set."
+              "description" : "Name of header to use as input, instead of the message body"
             },
             "id" : {
               "type" : "string",
@@ -13228,12 +13663,17 @@
             "propertyName" : {
               "type" : "string",
               "title" : "Property Name",
-              "description" : "Name of property to use as input, instead of the message body. It has a lower precedent than the headerName if both are set."
+              "description" : "Name of property to use as input, instead of the message body."
             },
             "regex" : {
               "type" : "boolean",
               "title" : "Regex",
               "description" : "If the token is a regular expression pattern. The default value is false"
+            },
+            "resultType" : {
+              "type" : "string",
+              "title" : "Result Type",
+              "description" : "Sets the class of the result type (type from output)"
             },
             "skipFirst" : {
               "type" : "boolean",
@@ -13250,6 +13690,11 @@
               "title" : "Trim",
               "description" : "Whether to trim the value to remove leading and trailing whitespaces and line breaks"
             },
+            "variableName" : {
+              "type" : "string",
+              "title" : "Variable Name",
+              "description" : "Name of variable to use as input, instead of the message body"
+            },
             "xml" : {
               "type" : "boolean",
               "title" : "Xml",
@@ -13258,6 +13703,72 @@
           }
         } ],
         "required" : [ "token" ]
+      },
+      "org.apache.camel.model.language.VariableExpression" : {
+        "title" : "Variable",
+        "description" : "Gets a variable",
+        "oneOf" : [ {
+          "type" : "string"
+        }, {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "expression" : {
+              "type" : "string",
+              "title" : "Expression",
+              "description" : "The expression value in your chosen language syntax"
+            },
+            "id" : {
+              "type" : "string",
+              "title" : "Id",
+              "description" : "Sets the id of this node"
+            },
+            "trim" : {
+              "type" : "boolean",
+              "title" : "Trim",
+              "description" : "Whether to trim the value to remove leading and trailing whitespaces and line breaks"
+            }
+          }
+        } ],
+        "required" : [ "expression" ]
+      },
+      "org.apache.camel.model.language.WasmExpression" : {
+        "title" : "Wasm",
+        "description" : "Call a wasm (web assembly) function.",
+        "oneOf" : [ {
+          "type" : "string"
+        }, {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "expression" : {
+              "type" : "string",
+              "title" : "Expression",
+              "description" : "The expression value in your chosen language syntax"
+            },
+            "id" : {
+              "type" : "string",
+              "title" : "Id",
+              "description" : "Sets the id of this node"
+            },
+            "module" : {
+              "type" : "string",
+              "title" : "Module",
+              "description" : "Set the module (the distributable, loadable, and executable unit of code in WebAssembly) resource that provides the expression function."
+            },
+            "resultType" : {
+              "type" : "string",
+              "title" : "Result Type",
+              "description" : "Sets the class of the result type (type from output)"
+            },
+            "trim" : {
+              "type" : "boolean",
+              "title" : "Trim",
+              "description" : "Whether to trim the value to remove leading and trailing whitespaces and line breaks"
+            }
+          }
+        } ],
+        "required" : [ "expression", "module" ]
       },
       "org.apache.camel.model.language.XMLTokenizerExpression" : {
         "title" : "XML Tokenize",
@@ -13281,7 +13792,7 @@
             "headerName" : {
               "type" : "string",
               "title" : "Header Name",
-              "description" : "Name of header to use as input, instead of the message body It has as higher precedent than the propertyName if both are set."
+              "description" : "Name of header to use as input, instead of the message body"
             },
             "id" : {
               "type" : "string",
@@ -13306,12 +13817,22 @@
             "propertyName" : {
               "type" : "string",
               "title" : "Property Name",
-              "description" : "Name of property to use as input, instead of the message body. It has a lower precedent than the headerName if both are set."
+              "description" : "Name of property to use as input, instead of the message body."
+            },
+            "resultType" : {
+              "type" : "string",
+              "title" : "Result Type",
+              "description" : "Sets the class of the result type (type from output)"
             },
             "trim" : {
               "type" : "boolean",
               "title" : "Trim",
               "description" : "Whether to trim the value to remove leading and trailing whitespaces and line breaks"
+            },
+            "variableName" : {
+              "type" : "string",
+              "title" : "Variable Name",
+              "description" : "Name of variable to use as input, instead of the message body"
             }
           }
         } ],
@@ -13344,7 +13865,7 @@
             "headerName" : {
               "type" : "string",
               "title" : "Header Name",
-              "description" : "Name of header to use as input, instead of the message body It has as higher precedent than the propertyName if both are set."
+              "description" : "Name of header to use as input, instead of the message body"
             },
             "id" : {
               "type" : "string",
@@ -13377,14 +13898,19 @@
             "propertyName" : {
               "type" : "string",
               "title" : "Property Name",
-              "description" : "Name of property to use as input, instead of the message body. It has a lower precedent than the headerName if both are set."
+              "description" : "Name of property to use as input, instead of the message body."
+            },
+            "resultQName" : {
+              "type" : "string",
+              "title" : "Result QName",
+              "description" : "Sets the output type supported by XPath.",
+              "default" : "NODESET",
+              "enum" : [ "NUMBER", "STRING", "BOOLEAN", "NODESET", "NODE" ]
             },
             "resultType" : {
               "type" : "string",
               "title" : "Result Type",
-              "description" : "Sets the class name of the result type (type from output) The default result type is NodeSet",
-              "default" : "NODESET",
-              "enum" : [ "NUMBER", "STRING", "BOOLEAN", "NODESET", "NODE" ]
+              "description" : "Sets the class of the result type (type from output)"
             },
             "saxon" : {
               "type" : "boolean",
@@ -13400,6 +13926,11 @@
               "type" : "boolean",
               "title" : "Trim",
               "description" : "Whether to trim the value to remove leading and trailing whitespaces and line breaks"
+            },
+            "variableName" : {
+              "type" : "string",
+              "title" : "Variable Name",
+              "description" : "Name of variable to use as input, instead of the message body"
             }
           }
         } ],
@@ -13427,7 +13958,7 @@
             "headerName" : {
               "type" : "string",
               "title" : "Header Name",
-              "description" : "Name of header to use as input, instead of the message body It has as higher precedent than the propertyName if both are set."
+              "description" : "Name of header to use as input, instead of the message body"
             },
             "id" : {
               "type" : "string",
@@ -13445,7 +13976,7 @@
             "propertyName" : {
               "type" : "string",
               "title" : "Property Name",
-              "description" : "Name of property to use as input, instead of the message body. It has a lower precedent than the headerName if both are set."
+              "description" : "Name of property to use as input, instead of the message body."
             },
             "resultType" : {
               "type" : "string",
@@ -13457,10 +13988,10 @@
               "title" : "Trim",
               "description" : "Whether to trim the value to remove leading and trailing whitespaces and line breaks"
             },
-            "type" : {
+            "variableName" : {
               "type" : "string",
-              "title" : "Type",
-              "description" : "Sets the class name of the result type (type from output) The default result type is NodeSet"
+              "title" : "Variable Name",
+              "description" : "Name of variable to use as input, instead of the message body"
             }
           }
         } ],
@@ -15139,6 +15670,8 @@
               }, {
                 "required" : [ "base64" ]
               }, {
+                "required" : [ "beanio" ]
+              }, {
                 "required" : [ "bindy" ]
               }, {
                 "required" : [ "cbor" ]
@@ -15234,6 +15767,14 @@
             "properties" : {
               "base64" : {
                 "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.Base64DataFormat"
+              }
+            }
+          }, {
+            "type" : "object",
+            "required" : [ "beanio" ],
+            "properties" : {
+              "beanio" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.BeanioDataFormat"
               }
             }
           }, {
@@ -15543,6 +16084,7 @@
           "avro" : { },
           "barcode" : { },
           "base64" : { },
+          "beanio" : { },
           "bindy" : { },
           "cbor" : { },
           "crypto" : { },

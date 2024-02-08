@@ -25,8 +25,11 @@ import org.apache.camel.spi.Metadata;
 /**
  * Expression for which the source of the input (body, header or property) can be provided.
  */
+@Deprecated
 public abstract class SingleInputExpressionDefinition extends ExpressionDefinition {
 
+    @XmlAttribute
+    private String variableName;
     @XmlAttribute
     @Metadata(label = "advanced")
     private String headerName;
@@ -47,8 +50,20 @@ public abstract class SingleInputExpressionDefinition extends ExpressionDefiniti
 
     protected SingleInputExpressionDefinition(AbstractBuilder<?, ?> builder) {
         super(builder);
+        this.variableName = builder.variableName;
         this.headerName = builder.headerName;
         this.propertyName = builder.propertyName;
+    }
+
+    public String getVariableName() {
+        return variableName;
+    }
+
+    /**
+     * Name of variable to use as input, instead of the message body
+     */
+    public void setVariableName(String variableName) {
+        this.variableName = variableName;
     }
 
     public String getHeaderName() {
@@ -57,8 +72,6 @@ public abstract class SingleInputExpressionDefinition extends ExpressionDefiniti
 
     /**
      * Name of header to use as input, instead of the message body
-     * </p>
-     * It has as higher precedent than the propertyName if both are set.
      */
     public void setHeaderName(String headerName) {
         this.headerName = headerName;
@@ -86,13 +99,20 @@ public abstract class SingleInputExpressionDefinition extends ExpressionDefiniti
             T extends AbstractBuilder<T, E>, E extends SingleInputExpressionDefinition>
             extends ExpressionDefinition.AbstractBuilder<T, E> {
 
+        private String variableName;
         private String headerName;
         private String propertyName;
 
         /**
+         * Name of variable to use as input, instead of the message body
+         */
+        public T variableName(String variableName) {
+            this.variableName = variableName;
+            return (T) this;
+        }
+
+        /**
          * Name of header to use as input, instead of the message body
-         * </p>
-         * It has as higher precedent than the propertyName if both are set.
          */
         public T headerName(String headerName) {
             this.headerName = headerName;

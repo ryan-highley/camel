@@ -34,7 +34,10 @@ import org.apache.camel.ExchangePropertyKey;
 import org.apache.camel.Expression;
 import org.apache.camel.InvalidPayloadException;
 import org.apache.camel.Message;
+import org.apache.camel.NoSuchHeaderException;
 import org.apache.camel.NoSuchLanguageException;
+import org.apache.camel.NoSuchPropertyException;
+import org.apache.camel.NoSuchVariableException;
 import org.apache.camel.Predicate;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.RuntimeExchangeException;
@@ -53,6 +56,7 @@ import org.apache.camel.support.GroupIterator;
 import org.apache.camel.support.GroupTokenIterator;
 import org.apache.camel.support.LanguageHelper;
 import org.apache.camel.support.LanguageSupport;
+import org.apache.camel.support.SingleInputTypedLanguageSupport;
 import org.apache.camel.util.InetAddressUtil;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.StringHelper;
@@ -82,19 +86,48 @@ public class ExpressionBuilder {
      * Will fallback and look in properties if not found in headers.
      *
      * @param  headerName the name of the header the expression will return
+     * @param  mandatory  whether the header is mandatory and if not present an exception is thrown
+     * @return            an expression object which will return the header value
+     */
+    public static Expression headerExpression(final String headerName, boolean mandatory) {
+        return headerExpression(simpleExpression(headerName), mandatory);
+    }
+
+    /**
+     * Returns an expression for the header value with the given name
+     * <p/>
+     * Will fallback and look in properties if not found in headers.
+     *
+     * @param  headerName the name of the header the expression will return
      * @return            an expression object which will return the header value
      */
     public static Expression headerExpression(final Expression headerName) {
+        return headerExpression(headerName, false);
+    }
+
+    /**
+     * Returns an expression for the header value with the given name
+     * <p/>
+     * Will fallback and look in properties if not found in headers.
+     *
+     * @param  headerName the name of the header the expression will return
+     * @param  mandatory  whether the header is mandatory and if not present an exception is thrown
+     * @return            an expression object which will return the header value
+     */
+    public static Expression headerExpression(final Expression headerName, final boolean mandatory) {
         return new ExpressionAdapter() {
             @Override
             public Object evaluate(Exchange exchange) {
-                String name = headerName.evaluate(exchange, String.class);
-                Object header = exchange.getIn().getHeader(name);
-                if (header == null) {
+                String key = headerName.evaluate(exchange, String.class);
+                Object answer = exchange.getIn().getHeader(key);
+                if (answer == null) {
                     // fall back on a property
-                    header = exchange.getProperty(name);
+                    answer = exchange.getProperty(key);
                 }
-                return header;
+                if (mandatory && answer == null) {
+                    throw RuntimeCamelException.wrapRuntimeCamelException(new NoSuchHeaderException(exchange, key, null));
+                }
+                return answer;
             }
 
             @Override
@@ -196,9 +229,31 @@ public class ExpressionBuilder {
      * Returns an expression for the variable with the given name
      *
      * @param  variableName the name of the variable the expression will return
+     * @param  mandatory    whether the variable is mandatory and if not present an exception is thrown
+     * @return              an expression object which will return the variable value
+     */
+    public static Expression variableExpression(final String variableName, boolean mandatory) {
+        return variableExpression(simpleExpression(variableName), mandatory);
+    }
+
+    /**
+     * Returns an expression for the variable with the given name
+     *
+     * @param  variableName the name of the variable the expression will return
      * @return              an expression object which will return the variable value
      */
     public static Expression variableExpression(final Expression variableName) {
+        return variableExpression(variableName, false);
+    }
+
+    /**
+     * Returns an expression for the variable with the given name
+     *
+     * @param  variableName the name of the variable the expression will return
+     * @param  mandatory    whether the variable is mandatory and if not present an exception is thrown
+     * @return              an expression object which will return the variable value
+     */
+    public static Expression variableExpression(final Expression variableName, final boolean mandatory) {
         return new ExpressionAdapter() {
             private VariableRepositoryFactory factory;
 
@@ -206,17 +261,22 @@ public class ExpressionBuilder {
             public Object evaluate(Exchange exchange) {
                 String key = variableName.evaluate(exchange, String.class);
                 String id = StringHelper.before(key, ":");
+                Object answer;
                 if (id != null) {
                     VariableRepository repo = factory.getVariableRepository(id);
                     if (repo != null) {
                         key = StringHelper.after(key, ":");
-                        return repo.getVariable(key);
+                        answer = repo.getVariable(key);
                     } else {
                         throw new IllegalArgumentException("VariableRepository with id: " + id + " does not exist");
                     }
                 } else {
-                    return exchange.getVariable(key);
+                    answer = exchange.getVariable(key);
                 }
+                if (mandatory && answer == null) {
+                    throw RuntimeCamelException.wrapRuntimeCamelException(new NoSuchVariableException(exchange, key));
+                }
+                return answer;
             }
 
             @Override
@@ -634,14 +694,40 @@ public class ExpressionBuilder {
      * Returns an expression for the property value of exchange with the given name
      *
      * @param  propertyName the name of the property the expression will return
+     * @param  mandatory    whether the property is mandatory and if not present an exception is thrown
+     * @return              an expression object which will return the property value
+     */
+    public static Expression exchangePropertyExpression(final String propertyName, boolean mandatory) {
+        return exchangePropertyExpression(simpleExpression(propertyName), mandatory);
+    }
+
+    /**
+     * Returns an expression for the property value of exchange with the given name
+     *
+     * @param  propertyName the name of the property the expression will return
      * @return              an expression object which will return the property value
      */
     public static Expression exchangePropertyExpression(final Expression propertyName) {
+        return exchangePropertyExpression(propertyName, false);
+    }
+
+    /**
+     * Returns an expression for the property value of exchange with the given name
+     *
+     * @param  propertyName the name of the property the expression will return
+     * @param  mandatory    whether the property is mandatory and if not present an exception is thrown
+     * @return              an expression object which will return the property value
+     */
+    public static Expression exchangePropertyExpression(final Expression propertyName, final boolean mandatory) {
         return new ExpressionAdapter() {
             @Override
             public Object evaluate(Exchange exchange) {
-                String text = propertyName.evaluate(exchange, String.class);
-                return exchange.getProperty(text);
+                String key = propertyName.evaluate(exchange, String.class);
+                Object answer = exchange.getProperty(key);
+                if (mandatory && answer == null) {
+                    throw RuntimeCamelException.wrapRuntimeCamelException(new NoSuchPropertyException(exchange, key));
+                }
+                return answer;
             }
 
             @Override
@@ -958,6 +1044,79 @@ public class ExpressionBuilder {
     }
 
     /**
+     * Returns an expression for evaluating the expression/predicate using the given language
+     *
+     * @param  expression the expression or predicate
+     * @param  input      input to use instead of message body
+     * @return            an expression object which will evaluate the expression/predicate using the given language
+     */
+    public static Expression singleInputLanguageExpression(final String language, final String expression, final String input) {
+        return new ExpressionAdapter() {
+            private Expression expr;
+            private Predicate pred;
+
+            @Override
+            public Object evaluate(Exchange exchange) {
+                return expr.evaluate(exchange, Object.class);
+            }
+
+            @Override
+            public boolean matches(Exchange exchange) {
+                return pred.matches(exchange);
+            }
+
+            @Override
+            public void init(CamelContext context) {
+                super.init(context);
+                Language lan = context.resolveLanguage(language);
+                if (lan != null) {
+                    if (input != null && lan instanceof SingleInputTypedLanguageSupport sil) {
+                        String prefix = StringHelper.before(input, ":");
+                        String name = StringHelper.after(input, ":");
+                        if (prefix != null) {
+                            prefix = prefix.trim();
+                        }
+                        if (name != null) {
+                            name = name.trim();
+                        }
+                        String header = null;
+                        String property = null;
+                        String variable = null;
+                        if ("header".equals(prefix)) {
+                            header = name;
+                        } else if ("property".equals(prefix) || "exchangeProperty".equals(prefix)) {
+                            property = name;
+                        } else if ("variable".equals(prefix)) {
+                            variable = name;
+                        } else {
+                            throw new IllegalArgumentException(
+                                    "Invalid input source for language. Should either be header:key, exchangeProperty:key, or variable:key, was: "
+                                                               + input);
+                        }
+                        Expression source = ExpressionBuilder.singleInputExpression(variable, header, property);
+                        expr = sil.createExpression(source, expression, null);
+                        expr.init(context);
+                        pred = PredicateBuilder.toPredicate(expr);
+                        pred.init(context);
+                    } else {
+                        pred = lan.createPredicate(expression);
+                        pred.init(context);
+                        expr = lan.createExpression(expression);
+                        expr.init(context);
+                    }
+                } else {
+                    throw new NoSuchLanguageException(language);
+                }
+            }
+
+            @Override
+            public String toString() {
+                return "language[" + language + ":" + expression + "]";
+            }
+        };
+    }
+
+    /**
      * Returns the expression for the exchanges inbound message body
      */
     public static Expression bodyExpression() {
@@ -1142,18 +1301,24 @@ public class ExpressionBuilder {
     }
 
     /**
+     * Creates a source {@link Expression} for languages that can accept input from other sources than the message body.
+     *
+     * @param  variableName the name of the variable from which the input data must be extracted if not empty.
      * @param  headerName   the name of the header from which the input data must be extracted if not empty.
      * @param  propertyName the name of the property from which the input data must be extracted if not empty and
      *                      {@code headerName} is empty.
-     * @return              a header expression if {@code headerName} is not empty, otherwise a property expression if
-     *                      {@code propertyName} is not empty or finally a body expression.
+     * @return              a variable expression if {@code variableName} is not empty, a header expression if
+     *                      {@code headerName} is not empty, otherwise a property expression if {@code propertyName} is
+     *                      not empty or finally a body expression.
      */
-    public static Expression singleInputExpression(String headerName, String propertyName) {
+    public static Expression singleInputExpression(String variableName, String headerName, String propertyName) {
         final Expression exp;
-        if (ObjectHelper.isNotEmpty(headerName)) {
-            exp = headerExpression(headerName);
+        if (ObjectHelper.isNotEmpty(variableName)) {
+            exp = variableExpression(variableName, true);
+        } else if (ObjectHelper.isNotEmpty(headerName)) {
+            exp = headerExpression(headerName, true);
         } else if (ObjectHelper.isNotEmpty(propertyName)) {
-            exp = exchangePropertyExpression(propertyName);
+            exp = exchangePropertyExpression(propertyName, true);
         } else {
             exp = bodyExpression();
         }
@@ -1163,7 +1328,6 @@ public class ExpressionBuilder {
     /**
      * Returns the expression for the current thread id
      */
-
     public static Expression threadIdExpression() {
         return new ExpressionAdapter() {
             @Override
@@ -2135,7 +2299,7 @@ public class ExpressionBuilder {
             public void init(CamelContext context) {
                 super.init(context);
                 final Language language = context.resolveLanguage("bean");
-                this.exp = language.createExpression(null, new Object[] { bean, method });
+                this.exp = language.createExpression(null, new Object[] { null, bean, method });
                 this.exp.init(context);
             }
 
@@ -2152,7 +2316,7 @@ public class ExpressionBuilder {
             @Override
             public Object evaluate(Exchange exchange) {
                 Object bean = expression.evaluate(exchange, Object.class);
-                Expression exp = language.createExpression(null, new Object[] { bean, method });
+                Expression exp = language.createExpression(null, new Object[] { null, bean, method });
                 exp.init(exchange.getContext());
                 return exp.evaluate(exchange, Object.class);
             }
@@ -2239,11 +2403,24 @@ public class ExpressionBuilder {
     }
 
     /**
+     * Returns an {@link TokenPairExpressionIterator} expression
+     */
+    public static Expression tokenizePairExpression(
+            Expression source, String startToken, String endToken, boolean includeTokens) {
+        return new TokenPairExpressionIterator(startToken, endToken, includeTokens);
+    }
+
+    /**
      * Returns an {@link TokenXMLExpressionIterator} expression
      */
     public static Expression tokenizeXMLExpression(String tagName, String inheritNamespaceTagName) {
         StringHelper.notEmpty(tagName, "tagName");
         return new TokenXMLExpressionIterator(tagName, inheritNamespaceTagName);
+    }
+
+    public static Expression tokenizeXMLExpression(Expression source, String tagName, String inheritNamespaceTagName) {
+        StringHelper.notEmpty(tagName, "tagName");
+        return new TokenXMLExpressionIterator(source, tagName, inheritNamespaceTagName);
     }
 
     public static Expression tokenizeXMLAwareExpression(String path, char mode) {
@@ -2273,7 +2450,8 @@ public class ExpressionBuilder {
             public void init(CamelContext context) {
                 super.init(context);
                 final Language language = context.resolveLanguage("xtokenize");
-                this.exp = language.createExpression(path, new Object[] { headerName, mode, group, namespaces });
+                this.exp = language.createExpression(path,
+                        new Object[] { null, null, headerName, null, mode, group, namespaces });
                 this.exp.init(context);
             }
 
@@ -2302,6 +2480,32 @@ public class ExpressionBuilder {
             @Override
             public String toString() {
                 return "bodyOneLine()";
+            }
+        };
+    }
+
+    /**
+     * Returns the expression as pretty formatted string
+     */
+    public static Expression prettyExpression(final Expression expression) {
+        return new ExpressionAdapter() {
+            @Override
+            public Object evaluate(Exchange exchange) {
+                String body = expression.evaluate(exchange, String.class);
+                if (body == null) {
+                    return null;
+                } else if (body.startsWith("{") && body.endsWith("}") || body.startsWith("[") && body.endsWith("]")) {
+                    return Jsoner.prettyPrint(body); //json
+                } else if (body.startsWith("<") && body.endsWith(">")) {
+                    return ExpressionBuilder.prettyXml(body); //xml
+                }
+
+                return body;
+            }
+
+            @Override
+            public String toString() {
+                return "pretty(" + expression + ")";
             }
         };
     }

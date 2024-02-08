@@ -21,11 +21,14 @@ import java.util.Map;
 import org.w3c.dom.Node;
 
 import org.apache.camel.model.DataFormatDefinition;
+import org.apache.camel.model.MarshalDefinition;
 import org.apache.camel.model.ProcessorDefinition;
+import org.apache.camel.model.UnmarshalDefinition;
 import org.apache.camel.model.dataformat.ASN1DataFormat;
 import org.apache.camel.model.dataformat.AvroDataFormat;
 import org.apache.camel.model.dataformat.AvroLibrary;
 import org.apache.camel.model.dataformat.Base64DataFormat;
+import org.apache.camel.model.dataformat.BeanioDataFormat;
 import org.apache.camel.model.dataformat.BindyDataFormat;
 import org.apache.camel.model.dataformat.BindyType;
 import org.apache.camel.model.dataformat.CBORDataFormat;
@@ -69,6 +72,8 @@ import org.apache.camel.support.jsse.KeyStoreParameters;
 public class DataFormatClause<T extends ProcessorDefinition<?>> {
     private final T processorType;
     private final Operation operation;
+    private String variableSend;
+    private String variableReceive;
     private boolean allowNullBody;
 
     /**
@@ -154,6 +159,55 @@ public class DataFormatClause<T extends ProcessorDefinition<?>> {
         dataFormat.setLineLength(Integer.toString(lineLength));
         dataFormat.setLineSeparator(lineSeparator);
         dataFormat.setUrlSafe(Boolean.toString(urlSafe));
+        return dataFormat(dataFormat);
+    }
+
+    /**
+     * Uses the beanio data format
+     */
+    public T beanio(String mapping, String streamName) {
+        BeanioDataFormat dataFormat = new BeanioDataFormat();
+        dataFormat.setMapping(mapping);
+        dataFormat.setStreamName(streamName);
+        return dataFormat(dataFormat);
+    }
+
+    /**
+     * Uses the beanio data format
+     */
+    public T beanio(String mapping, String streamName, String encoding) {
+        BeanioDataFormat dataFormat = new BeanioDataFormat();
+        dataFormat.setMapping(mapping);
+        dataFormat.setStreamName(streamName);
+        dataFormat.setEncoding(encoding);
+        return dataFormat(dataFormat);
+    }
+
+    /**
+     * Uses the beanio data format
+     */
+    public T beanio(
+            String mapping, String streamName, String encoding, boolean ignoreUnidentifiedRecords,
+            boolean ignoreUnexpectedRecords, boolean ignoreInvalidRecords) {
+        BeanioDataFormat dataFormat = new BeanioDataFormat();
+        dataFormat.setMapping(mapping);
+        dataFormat.setStreamName(streamName);
+        dataFormat.setEncoding(encoding);
+        dataFormat.setIgnoreUnidentifiedRecords(Boolean.toString(ignoreUnidentifiedRecords));
+        dataFormat.setIgnoreUnexpectedRecords(Boolean.toString(ignoreUnexpectedRecords));
+        dataFormat.setIgnoreInvalidRecords(Boolean.toString(ignoreInvalidRecords));
+        return dataFormat(dataFormat);
+    }
+
+    /**
+     * Uses the beanio data format
+     */
+    public T beanio(String mapping, String streamName, String encoding, String beanReaderErrorHandlerType) {
+        BeanioDataFormat dataFormat = new BeanioDataFormat();
+        dataFormat.setMapping(mapping);
+        dataFormat.setStreamName(streamName);
+        dataFormat.setEncoding(encoding);
+        dataFormat.setBeanReaderErrorHandlerType(beanReaderErrorHandlerType);
         return dataFormat(dataFormat);
     }
 
@@ -1349,13 +1403,48 @@ public class DataFormatClause<T extends ProcessorDefinition<?>> {
         return this;
     }
 
+    /**
+     * To use a variable to store the received message body (only body, not headers). This is handy for easy access to
+     * the received message body via variables.
+     *
+     * Important: When using receive variable then the received body is stored only in this variable and <b>not</b> on
+     * the current {@link org.apache.camel.Message}.
+     */
+    public DataFormatClause<T> variableSend(String variableSend) {
+        this.variableSend = variableSend;
+        return this;
+    }
+
+    /**
+     * To use a variable to store the received message body (only body, not headers). This is handy for easy access to
+     * the received message body via variables.
+     *
+     * Important: When using receive variable then the received body is stored only in this variable and <b>not</b> on
+     * the current {@link org.apache.camel.Message}.
+     */
+    public DataFormatClause<T> variableReceive(String variableReceive) {
+        this.variableReceive = variableReceive;
+        return this;
+    }
+
     @SuppressWarnings("unchecked")
     private T dataFormat(DataFormatDefinition dataFormatType) {
         switch (operation) {
             case Unmarshal:
-                return (T) processorType.unmarshal(dataFormatType, allowNullBody);
+                UnmarshalDefinition unmarshal = new UnmarshalDefinition(dataFormatType);
+                if (allowNullBody) {
+                    unmarshal.allowNullBody(true);
+                }
+                unmarshal.setVariableReceive(variableReceive);
+                unmarshal.setVariableSend(variableSend);
+                processorType.addOutput(unmarshal);
+                return processorType;
             case Marshal:
-                return (T) processorType.marshal(dataFormatType);
+                MarshalDefinition marshal = new MarshalDefinition(dataFormatType);
+                marshal.setVariableReceive(variableReceive);
+                marshal.setVariableSend(variableSend);
+                processorType.addOutput(marshal);
+                return processorType;
             default:
                 throw new IllegalArgumentException("Unknown DataFormat operation: " + operation);
         }

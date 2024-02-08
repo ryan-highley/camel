@@ -21,6 +21,13 @@ Durations and some time-related information were consolidated in a new internal 
 
 The `lookup` method in `org.apache.camel.component.properties.PropertiesLookup` now has a 2nd parameter for the default value.
 
+==== Languages
+
+The way languages are created and configured by Camel has been refactored to be aligned and avoid a thread-safety issues
+when using Java DSL. The setter/getter on the `Language` classes for options that are not general has been removed (such as in `TokenizeLanguage`).
+
+In XML and YAML DSL the `type` option in `<xquery>` has been renamed to `resultType` to be aligned with the other languages.
+
 ==== WireTap EIP
 
 The copied exchange is no longer having exchange property CORRELATION_ID set that links to the original exchange.
@@ -122,6 +129,10 @@ useful examples of how you might need to change your code to be compatible with 
 
 The component has been removed after deprecation in 4.3.0
 
+=== camel-jms
+
+The header with key `JMSCorrelationIDAsBytes` has changed value from `String` to `byte[]`.
+
 === camel-jsonata
 
 Replaced the previous JSONata library with a new one that offers complete compatibility with the JSONata reference implementation's features.
@@ -130,7 +141,53 @@ Replaced the previous JSONata library with a new one that offers complete compat
 
 The JdbcAggregationRepository now provides a deserializationFilter parameter. The default value for it is allowing all java packages and subpackages and all org.apache.camel packages and subpackages. If you plan to use particular classes and you want to expand the filter, you should change the value according to your needs. More details in CAMEL-20303.
 
+=== camel-facebook
+
+The component was removed without deprecation. The library supporting this component has been unmaintained for a long time. We found no indications that the library itself nor the component are working with modern Facebook, along with the absence of community interest, which lead us to decide to remove this component without deprecation.
+
+=== camel-kafka
+
+The component now has support for batch processing.
+
+=== camel-json-validator
+
+Removed deprecated `org.apache.camel.component.jsonvalidator.DefaultJsonSchemaLoader`,
+use `org.apache.camel.component.jsonvalidator.DefaultJsonUriSchemaLoader` instead.
+
+
 == Camel Spring Boot
+
+=== Ordering of BOM imports
+
+When using Camel on Spring Boot, it's recommended to use BOMs to import Camel and Spring dependencies.
+In Camel 4.4 onwards we changed the order to let Camel be first as shown below:
+
+[source,xml]
+----
+<dependencyManagement>
+    <dependencies>
+        <!-- Camel BOM -->
+        <dependency>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-spring-boot-bom</artifactId>
+            <version>${camel-version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <!-- Spring Boot BOM -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-dependencies</artifactId>
+            <version>${spring-boot-version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+----
+
+In previous versions, then we would have `spring-boot-dependencies` before `camel-spring-boot-bom`. However, to better
+align and ensure Camel starters are using supported dependencies, then it's recommended to let Camel be first.
 
 === Auto Configuration
 
@@ -138,6 +195,11 @@ The route controller configuration has been moved from general main to its own g
 All keys started with `camel.springboot.routesController` should be renamed to `camel.routecontroller.`, for example
 `camel.springboot.routeControllerBackOffDelay` should be renamed to `camel.routecontroller.backOffDelay`.
 And the option `camel.springboot.routeControllerSuperviseEnabled` has been renamed to `camel.routecontroller.enabled`.
+
+=== Routes Collector
+
+Camel Spring Boot will not honor the `camel.springboot.includeNonSingletons` option (default false). This means
+that only singleton `RouteBuilder` beans is added by default. Previously then prototype scoped beans would be added as well.
 
 === camel-platform-http-vertx
 

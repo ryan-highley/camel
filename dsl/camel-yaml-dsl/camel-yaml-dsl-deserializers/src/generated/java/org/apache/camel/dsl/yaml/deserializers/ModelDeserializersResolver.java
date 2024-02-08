@@ -40,6 +40,8 @@ public final class ModelDeserializersResolver implements YamlDeserializerResolve
             case "org.apache.camel.model.BeanDefinition": return new ModelDeserializers.BeanDefinitionDeserializer();
             case "org.apache.camel.model.app.BeanPropertiesDefinition": return new ModelDeserializers.BeanPropertiesDefinitionDeserializer();
             case "org.apache.camel.model.app.BeanPropertyDefinition": return new ModelDeserializers.BeanPropertyDefinitionDeserializer();
+            case "beanio": return new ModelDeserializers.BeanioDataFormatDeserializer();
+            case "org.apache.camel.model.dataformat.BeanioDataFormat": return new ModelDeserializers.BeanioDataFormatDeserializer();
             case "bearer-token": return new ModelDeserializers.BearerTokenDefinitionDeserializer();
             case "bearerToken": return new ModelDeserializers.BearerTokenDefinitionDeserializer();
             case "org.apache.camel.model.rest.BearerTokenDefinition": return new ModelDeserializers.BearerTokenDefinitionDeserializer();
@@ -545,6 +547,10 @@ public final class ModelDeserializersResolver implements YamlDeserializerResolve
             case "org.apache.camel.model.validator.ValidatorsDefinition": return new ModelDeserializers.ValidatorsDefinitionDeserializer();
             case "value": return new ModelDeserializers.ValueDefinitionDeserializer();
             case "org.apache.camel.model.ValueDefinition": return new ModelDeserializers.ValueDefinitionDeserializer();
+            case "variable": return new ModelDeserializers.VariableExpressionDeserializer();
+            case "org.apache.camel.model.language.VariableExpression": return new ModelDeserializers.VariableExpressionDeserializer();
+            case "wasm": return new ModelDeserializers.WasmExpressionDeserializer();
+            case "org.apache.camel.model.language.WasmExpression": return new ModelDeserializers.WasmExpressionDeserializer();
             case "weighted": return new ModelDeserializers.WeightedLoadBalancerDefinitionDeserializer();
             case "org.apache.camel.model.loadbalancer.WeightedLoadBalancerDefinition": return new ModelDeserializers.WeightedLoadBalancerDefinitionDeserializer();
             case "when": return new ModelDeserializers.WhenDefinitionDeserializer();

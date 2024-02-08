@@ -314,6 +314,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
+            <artifactId>camel-beanio</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
             <artifactId>camel-bindy</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -605,11 +610,6 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-exec</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-facebook</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -1790,6 +1790,11 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-wal</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-wasm</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

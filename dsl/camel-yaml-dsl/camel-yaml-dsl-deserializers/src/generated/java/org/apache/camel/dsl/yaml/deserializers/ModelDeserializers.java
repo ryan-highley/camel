@@ -135,6 +135,7 @@ import org.apache.camel.model.dataformat.ASN1DataFormat;
 import org.apache.camel.model.dataformat.AvroDataFormat;
 import org.apache.camel.model.dataformat.BarcodeDataFormat;
 import org.apache.camel.model.dataformat.Base64DataFormat;
+import org.apache.camel.model.dataformat.BeanioDataFormat;
 import org.apache.camel.model.dataformat.BindyDataFormat;
 import org.apache.camel.model.dataformat.CBORDataFormat;
 import org.apache.camel.model.dataformat.CryptoDataFormat;
@@ -202,6 +203,8 @@ import org.apache.camel.model.language.RefExpression;
 import org.apache.camel.model.language.SimpleExpression;
 import org.apache.camel.model.language.SpELExpression;
 import org.apache.camel.model.language.TokenizerExpression;
+import org.apache.camel.model.language.VariableExpression;
+import org.apache.camel.model.language.WasmExpression;
 import org.apache.camel.model.language.XMLTokenizerExpression;
 import org.apache.camel.model.language.XPathExpression;
 import org.apache.camel.model.language.XQueryExpression;
@@ -1236,6 +1239,93 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "value": {
                     String val = asText(node);
                     target.setValue(val);
+                    break;
+                }
+                default: {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    @YamlType(
+            nodes = "beanio",
+            types = org.apache.camel.model.dataformat.BeanioDataFormat.class,
+            order = org.apache.camel.dsl.yaml.common.YamlDeserializerResolver.ORDER_LOWEST - 1,
+            displayName = "BeanIO",
+            description = "Marshal and unmarshal Java beans to and from flat files (such as CSV, delimited, or fixed length formats).",
+            deprecated = false,
+            properties = {
+                    @YamlProperty(name = "beanReaderErrorHandlerType", type = "string", description = "To use a custom org.apache.camel.dataformat.beanio.BeanIOErrorHandler as error handler while parsing. Configure the fully qualified class name of the error handler. Notice the options ignoreUnidentifiedRecords, ignoreUnexpectedRecords, and ignoreInvalidRecords may not be in use when you use a custom error handler.", displayName = "Bean Reader Error Handler Type"),
+                    @YamlProperty(name = "encoding", type = "string", description = "The charset to use. Is by default the JVM platform default charset.", displayName = "Encoding"),
+                    @YamlProperty(name = "id", type = "string", description = "The id of this node", displayName = "Id"),
+                    @YamlProperty(name = "ignoreInvalidRecords", type = "boolean", description = "Whether to ignore invalid records.", displayName = "Ignore Invalid Records"),
+                    @YamlProperty(name = "ignoreUnexpectedRecords", type = "boolean", description = "Whether to ignore unexpected records.", displayName = "Ignore Unexpected Records"),
+                    @YamlProperty(name = "ignoreUnidentifiedRecords", type = "boolean", description = "Whether to ignore unidentified records.", displayName = "Ignore Unidentified Records"),
+                    @YamlProperty(name = "mapping", type = "string", required = true, description = "The BeanIO mapping file. Is by default loaded from the classpath. You can prefix with file:, http:, or classpath: to denote from where to load the mapping file.", displayName = "Mapping"),
+                    @YamlProperty(name = "streamName", type = "string", required = true, description = "The name of the stream to use.", displayName = "Stream Name"),
+                    @YamlProperty(name = "unmarshalSingleObject", type = "boolean", description = "This options controls whether to unmarshal as a list of objects or as a single object only. The former is the default mode, and the latter is only intended in special use-cases where beanio maps the Camel message to a single POJO bean.", displayName = "Unmarshal Single Object")
+            }
+    )
+    public static class BeanioDataFormatDeserializer extends YamlDeserializerBase<BeanioDataFormat> {
+        public BeanioDataFormatDeserializer() {
+            super(BeanioDataFormat.class);
+        }
+
+        @Override
+        protected BeanioDataFormat newInstance() {
+            return new BeanioDataFormat();
+        }
+
+        @Override
+        protected boolean setProperty(BeanioDataFormat target, String propertyKey,
+                String propertyName, Node node) {
+            propertyKey = org.apache.camel.util.StringHelper.dashToCamelCase(propertyKey);
+            switch(propertyKey) {
+                case "beanReaderErrorHandlerType": {
+                    String val = asText(node);
+                    target.setBeanReaderErrorHandlerType(val);
+                    break;
+                }
+                case "encoding": {
+                    String val = asText(node);
+                    target.setEncoding(val);
+                    break;
+                }
+                case "id": {
+                    String val = asText(node);
+                    target.setId(val);
+                    break;
+                }
+                case "ignoreInvalidRecords": {
+                    String val = asText(node);
+                    target.setIgnoreInvalidRecords(val);
+                    break;
+                }
+                case "ignoreUnexpectedRecords": {
+                    String val = asText(node);
+                    target.setIgnoreUnexpectedRecords(val);
+                    break;
+                }
+                case "ignoreUnidentifiedRecords": {
+                    String val = asText(node);
+                    target.setIgnoreUnidentifiedRecords(val);
+                    break;
+                }
+                case "mapping": {
+                    String val = asText(node);
+                    target.setMapping(val);
+                    break;
+                }
+                case "streamName": {
+                    String val = asText(node);
+                    target.setStreamName(val);
+                    break;
+                }
+                case "unmarshalSingleObject": {
+                    String val = asText(node);
+                    target.setUnmarshalSingleObject(val);
                     break;
                 }
                 default: {
@@ -3368,6 +3458,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "avro", type = "object:org.apache.camel.model.dataformat.AvroDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "barcode", type = "object:org.apache.camel.model.dataformat.BarcodeDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "base64", type = "object:org.apache.camel.model.dataformat.Base64DataFormat", oneOf = "dataFormatType"),
+                    @YamlProperty(name = "beanio", type = "object:org.apache.camel.model.dataformat.BeanioDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "bindy", type = "object:org.apache.camel.model.dataformat.BindyDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "cbor", type = "object:org.apache.camel.model.dataformat.CBORDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "crypto", type = "object:org.apache.camel.model.dataformat.CryptoDataFormat", oneOf = "dataFormatType"),
@@ -3447,6 +3538,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 }
                 case "base64": {
                     org.apache.camel.model.dataformat.Base64DataFormat val = asType(node, org.apache.camel.model.dataformat.Base64DataFormat.class);
+                    target.setDataFormatType(val);
+                    break;
+                }
+                case "beanio": {
+                    org.apache.camel.model.dataformat.BeanioDataFormat val = asType(node, org.apache.camel.model.dataformat.BeanioDataFormat.class);
                     target.setDataFormatType(val);
                     break;
                 }
@@ -3673,6 +3769,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "avro", type = "object:org.apache.camel.model.dataformat.AvroDataFormat"),
                     @YamlProperty(name = "barcode", type = "object:org.apache.camel.model.dataformat.BarcodeDataFormat"),
                     @YamlProperty(name = "base64", type = "object:org.apache.camel.model.dataformat.Base64DataFormat"),
+                    @YamlProperty(name = "beanio", type = "object:org.apache.camel.model.dataformat.BeanioDataFormat"),
                     @YamlProperty(name = "bindy", type = "object:org.apache.camel.model.dataformat.BindyDataFormat"),
                     @YamlProperty(name = "cbor", type = "object:org.apache.camel.model.dataformat.CBORDataFormat"),
                     @YamlProperty(name = "crypto", type = "object:org.apache.camel.model.dataformat.CryptoDataFormat"),
@@ -3763,6 +3860,16 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 }
                 case "base64": {
                     org.apache.camel.model.dataformat.Base64DataFormat val = asType(node, org.apache.camel.model.dataformat.Base64DataFormat.class);
+                    java.util.List<org.apache.camel.model.DataFormatDefinition> existing = target.getDataFormats();
+                    if (existing == null) {
+                        existing = new java.util.ArrayList<>();
+                    }
+                    existing.add(val);
+                    target.setDataFormats(existing);
+                    break;
+                }
+                case "beanio": {
+                    org.apache.camel.model.dataformat.BeanioDataFormat val = asType(node, org.apache.camel.model.dataformat.BeanioDataFormat.class);
                     java.util.List<org.apache.camel.model.DataFormatDefinition> existing = target.getDataFormats();
                     if (existing == null) {
                         existing = new java.util.ArrayList<>();
@@ -4150,10 +4257,13 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             properties = {
                     @YamlProperty(name = "bodyMediaType", type = "string", description = "The String representation of the message's body MediaType", displayName = "Body Media Type"),
                     @YamlProperty(name = "expression", type = "string", required = true, description = "The expression value in your chosen language syntax", displayName = "Expression"),
+                    @YamlProperty(name = "headerName", type = "string", description = "Name of header to use as input, instead of the message body", displayName = "Header Name"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "outputMediaType", type = "string", description = "The String representation of the MediaType to output", displayName = "Output Media Type"),
+                    @YamlProperty(name = "propertyName", type = "string", description = "Name of property to use as input, instead of the message body.", displayName = "Property Name"),
                     @YamlProperty(name = "resultType", type = "string", description = "Sets the class of the result type (type from output)", displayName = "Result Type"),
-                    @YamlProperty(name = "trim", type = "boolean", description = "Whether to trim the value to remove leading and trailing whitespaces and line breaks", displayName = "Trim")
+                    @YamlProperty(name = "trim", type = "boolean", description = "Whether to trim the value to remove leading and trailing whitespaces and line breaks", displayName = "Trim"),
+                    @YamlProperty(name = "variableName", type = "string", description = "Name of variable to use as input, instead of the message body", displayName = "Variable Name")
             }
     )
     public static class DatasonnetExpressionDeserializer extends YamlDeserializerBase<DatasonnetExpression> {
@@ -4186,6 +4296,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     target.setExpression(val);
                     break;
                 }
+                case "headerName": {
+                    String val = asText(node);
+                    target.setHeaderName(val);
+                    break;
+                }
                 case "id": {
                     String val = asText(node);
                     target.setId(val);
@@ -4196,6 +4311,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     target.setOutputMediaType(val);
                     break;
                 }
+                case "propertyName": {
+                    String val = asText(node);
+                    target.setPropertyName(val);
+                    break;
+                }
                 case "resultType": {
                     String val = asText(node);
                     target.setResultTypeName(val);
@@ -4204,6 +4324,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "trim": {
                     String val = asText(node);
                     target.setTrim(val);
+                    break;
+                }
+                case "variableName": {
+                    String val = asText(node);
+                    target.setVariableName(val);
                     break;
                 }
                 default: {
@@ -5041,7 +5166,9 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "ignoreInvalidEndpoint", type = "boolean", description = "Ignore the invalidate endpoint exception when try to create a producer with that endpoint", displayName = "Ignore Invalid Endpoint"),
                     @YamlProperty(name = "inheritErrorHandler", type = "boolean"),
-                    @YamlProperty(name = "shareUnitOfWork", type = "boolean", description = "Shares the org.apache.camel.spi.UnitOfWork with the parent and the resource exchange. Enrich will by default not share unit of work between the parent exchange and the resource exchange. This means the resource exchange has its own individual unit of work.", displayName = "Share Unit Of Work")
+                    @YamlProperty(name = "shareUnitOfWork", type = "boolean", description = "Shares the org.apache.camel.spi.UnitOfWork with the parent and the resource exchange. Enrich will by default not share unit of work between the parent exchange and the resource exchange. This means the resource exchange has its own individual unit of work.", displayName = "Share Unit Of Work"),
+                    @YamlProperty(name = "variableReceive", type = "string", description = "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message .", displayName = "Variable Receive"),
+                    @YamlProperty(name = "variableSend", type = "string", description = "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message .", displayName = "Variable Send")
             }
     )
     public static class EnrichDefinitionDeserializer extends YamlDeserializerBase<EnrichDefinition> {
@@ -5117,6 +5244,16 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "shareUnitOfWork": {
                     String val = asText(node);
                     target.setShareUnitOfWork(val);
+                    break;
+                }
+                case "variableReceive": {
+                    String val = asText(node);
+                    target.setVariableReceive(val);
+                    break;
+                }
+                case "variableSend": {
+                    String val = asText(node);
+                    target.setVariableSend(val);
                     break;
                 }
                 case "id": {
@@ -6748,11 +6885,12 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             deprecated = false,
             properties = {
                     @YamlProperty(name = "expression", type = "string", required = true, description = "The expression value in your chosen language syntax", displayName = "Expression"),
-                    @YamlProperty(name = "headerName", type = "string", description = "Name of header to use as input, instead of the message body It has as higher precedent than the propertyName if both are set.", displayName = "Header Name"),
+                    @YamlProperty(name = "headerName", type = "string", description = "Name of header to use as input, instead of the message body", displayName = "Header Name"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
-                    @YamlProperty(name = "propertyName", type = "string", description = "Name of property to use as input, instead of the message body. It has a lower precedent than the headerName if both are set.", displayName = "Property Name"),
+                    @YamlProperty(name = "propertyName", type = "string", description = "Name of property to use as input, instead of the message body.", displayName = "Property Name"),
                     @YamlProperty(name = "resultType", type = "string", description = "Sets the class of the result type (type from output)", displayName = "Result Type"),
-                    @YamlProperty(name = "trim", type = "boolean", description = "Whether to trim the value to remove leading and trailing whitespaces and line breaks", displayName = "Trim")
+                    @YamlProperty(name = "trim", type = "boolean", description = "Whether to trim the value to remove leading and trailing whitespaces and line breaks", displayName = "Trim"),
+                    @YamlProperty(name = "variableName", type = "string", description = "Name of variable to use as input, instead of the message body", displayName = "Variable Name")
             }
     )
     public static class Hl7TerserExpressionDeserializer extends YamlDeserializerBase<Hl7TerserExpression> {
@@ -6803,6 +6941,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "trim": {
                     String val = asText(node);
                     target.setTrim(val);
+                    break;
+                }
+                case "variableName": {
+                    String val = asText(node);
+                    target.setVariableName(val);
                     break;
                 }
                 default: {
@@ -7816,11 +7959,12 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             deprecated = false,
             properties = {
                     @YamlProperty(name = "expression", type = "string", required = true, description = "The expression value in your chosen language syntax", displayName = "Expression"),
-                    @YamlProperty(name = "headerName", type = "string", description = "Name of header to use as input, instead of the message body It has as higher precedent than the propertyName if both are set.", displayName = "Header Name"),
+                    @YamlProperty(name = "headerName", type = "string", description = "Name of header to use as input, instead of the message body", displayName = "Header Name"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
-                    @YamlProperty(name = "propertyName", type = "string", description = "Name of property to use as input, instead of the message body. It has a lower precedent than the headerName if both are set.", displayName = "Property Name"),
+                    @YamlProperty(name = "propertyName", type = "string", description = "Name of property to use as input, instead of the message body.", displayName = "Property Name"),
                     @YamlProperty(name = "resultType", type = "string", description = "Sets the class of the result type (type from output)", displayName = "Result Type"),
-                    @YamlProperty(name = "trim", type = "boolean", description = "Whether to trim the value to remove leading and trailing whitespaces and line breaks", displayName = "Trim")
+                    @YamlProperty(name = "trim", type = "boolean", description = "Whether to trim the value to remove leading and trailing whitespaces and line breaks", displayName = "Trim"),
+                    @YamlProperty(name = "variableName", type = "string", description = "Name of variable to use as input, instead of the message body", displayName = "Variable Name")
             }
     )
     public static class JqExpressionDeserializer extends YamlDeserializerBase<JqExpression> {
@@ -7871,6 +8015,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "trim": {
                     String val = asText(node);
                     target.setTrim(val);
+                    break;
+                }
+                case "variableName": {
+                    String val = asText(node);
+                    target.setVariableName(val);
                     break;
                 }
                 default: {
@@ -8126,14 +8275,15 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "allowEasyPredicate", type = "boolean", description = "Whether to allow using the easy predicate parser to pre-parse predicates.", displayName = "Allow Easy Predicate"),
                     @YamlProperty(name = "allowSimple", type = "boolean", description = "Whether to allow in inlined Simple exceptions in the JSONPath expression", displayName = "Allow Simple"),
                     @YamlProperty(name = "expression", type = "string", required = true, description = "The expression value in your chosen language syntax", displayName = "Expression"),
-                    @YamlProperty(name = "headerName", type = "string", description = "Name of header to use as input, instead of the message body It has as higher precedent than the propertyName if both are set.", displayName = "Header Name"),
+                    @YamlProperty(name = "headerName", type = "string", description = "Name of header to use as input, instead of the message body", displayName = "Header Name"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "option", type = "enum:DEFAULT_PATH_LEAF_TO_NULL,ALWAYS_RETURN_LIST,AS_PATH_LIST,SUPPRESS_EXCEPTIONS,REQUIRE_PROPERTIES", description = "To configure additional options on JSONPath. Multiple values can be separated by comma.", displayName = "Option"),
-                    @YamlProperty(name = "propertyName", type = "string", description = "Name of property to use as input, instead of the message body. It has a lower precedent than the headerName if both are set.", displayName = "Property Name"),
+                    @YamlProperty(name = "propertyName", type = "string", description = "Name of property to use as input, instead of the message body.", displayName = "Property Name"),
                     @YamlProperty(name = "resultType", type = "string", description = "Sets the class of the result type (type from output)", displayName = "Result Type"),
                     @YamlProperty(name = "suppressExceptions", type = "boolean", description = "Whether to suppress exceptions such as PathNotFoundException.", displayName = "Suppress Exceptions"),
                     @YamlProperty(name = "trim", type = "boolean", description = "Whether to trim the value to remove leading and trailing whitespaces and line breaks", displayName = "Trim"),
                     @YamlProperty(name = "unpackArray", type = "boolean", description = "Whether to unpack a single element json-array into an object.", displayName = "Unpack Array"),
+                    @YamlProperty(name = "variableName", type = "string", description = "Name of variable to use as input, instead of the message body", displayName = "Variable Name"),
                     @YamlProperty(name = "writeAsString", type = "boolean", description = "Whether to write the output of each row/element as a JSON String value instead of a Map/POJO value.", displayName = "Write As String")
             }
     )
@@ -8210,6 +8360,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "unpackArray": {
                     String val = asText(node);
                     target.setUnpackArray(val);
+                    break;
+                }
+                case "variableName": {
+                    String val = asText(node);
+                    target.setVariableName(val);
                     break;
                 }
                 case "writeAsString": {
@@ -9010,6 +9165,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "avro", type = "object:org.apache.camel.model.dataformat.AvroDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "barcode", type = "object:org.apache.camel.model.dataformat.BarcodeDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "base64", type = "object:org.apache.camel.model.dataformat.Base64DataFormat", oneOf = "dataFormatType"),
+                    @YamlProperty(name = "beanio", type = "object:org.apache.camel.model.dataformat.BeanioDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "bindy", type = "object:org.apache.camel.model.dataformat.BindyDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "cbor", type = "object:org.apache.camel.model.dataformat.CBORDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "crypto", type = "object:org.apache.camel.model.dataformat.CryptoDataFormat", oneOf = "dataFormatType"),
@@ -9046,6 +9202,8 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "univocityCsv", type = "object:org.apache.camel.model.dataformat.UniVocityCsvDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "univocityFixed", type = "object:org.apache.camel.model.dataformat.UniVocityFixedDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "univocityTsv", type = "object:org.apache.camel.model.dataformat.UniVocityTsvDataFormat", oneOf = "dataFormatType"),
+                    @YamlProperty(name = "variableReceive", type = "string", description = "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message .", displayName = "Variable Receive"),
+                    @YamlProperty(name = "variableSend", type = "string", description = "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message .", displayName = "Variable Send"),
                     @YamlProperty(name = "xmlSecurity", type = "object:org.apache.camel.model.dataformat.XMLSecurityDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "yaml", type = "object:org.apache.camel.model.dataformat.YAMLDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "zipDeflater", type = "object:org.apache.camel.model.dataformat.ZipDeflaterDataFormat", oneOf = "dataFormatType"),
@@ -9089,6 +9247,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 }
                 case "base64": {
                     org.apache.camel.model.dataformat.Base64DataFormat val = asType(node, org.apache.camel.model.dataformat.Base64DataFormat.class);
+                    target.setDataFormatType(val);
+                    break;
+                }
+                case "beanio": {
+                    org.apache.camel.model.dataformat.BeanioDataFormat val = asType(node, org.apache.camel.model.dataformat.BeanioDataFormat.class);
                     target.setDataFormatType(val);
                     break;
                 }
@@ -9280,6 +9443,16 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "inheritErrorHandler": {
                     String val = asText(node);
                     target.setInheritErrorHandler(java.lang.Boolean.valueOf(val));
+                    break;
+                }
+                case "variableReceive": {
+                    String val = asText(node);
+                    target.setVariableReceive(val);
+                    break;
+                }
+                case "variableSend": {
+                    String val = asText(node);
+                    target.setVariableSend(val);
                     break;
                 }
                 case "id": {
@@ -11283,7 +11456,8 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "ignoreInvalidEndpoint", type = "boolean", description = "Ignore the invalidate endpoint exception when try to create a producer with that endpoint", displayName = "Ignore Invalid Endpoint"),
                     @YamlProperty(name = "inheritErrorHandler", type = "boolean"),
-                    @YamlProperty(name = "timeout", type = "string", defaultValue = "-1", description = "Timeout in millis when polling from the external service. The timeout has influence about the poll enrich behavior. It basically operations in three different modes: negative value - Waits until a message is available and then returns it. Warning that this method could block indefinitely if no messages are available. 0 - Attempts to receive a message exchange immediately without waiting and returning null if a message exchange is not available yet. positive value - Attempts to receive a message exchange, waiting up to the given timeout to expire if a message is not yet available. Returns null if timed out The default value is -1 and therefore the method could block indefinitely, and therefore its recommended to use a timeout value", displayName = "Timeout")
+                    @YamlProperty(name = "timeout", type = "string", defaultValue = "-1", description = "Timeout in millis when polling from the external service. The timeout has influence about the poll enrich behavior. It basically operations in three different modes: negative value - Waits until a message is available and then returns it. Warning that this method could block indefinitely if no messages are available. 0 - Attempts to receive a message exchange immediately without waiting and returning null if a message exchange is not available yet. positive value - Attempts to receive a message exchange, waiting up to the given timeout to expire if a message is not yet available. Returns null if timed out The default value is -1 and therefore the method could block indefinitely, and therefore its recommended to use a timeout value", displayName = "Timeout"),
+                    @YamlProperty(name = "variableReceive", type = "string", description = "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message .", displayName = "Variable Receive")
             }
     )
     public static class PollEnrichDefinitionDeserializer extends YamlDeserializerBase<PollEnrichDefinition> {
@@ -11354,6 +11528,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "timeout": {
                     String val = asText(node);
                     target.setTimeout(val);
+                    break;
+                }
+                case "variableReceive": {
+                    String val = asText(node);
+                    target.setVariableReceive(val);
                     break;
                 }
                 case "id": {
@@ -11696,6 +11875,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "A key value pair where the value is an expression.",
             deprecated = false,
             properties = {
+                    @YamlProperty(name = "__extends", type = "object:org.apache.camel.model.language.ExpressionDefinition", oneOf = "expression"),
                     @YamlProperty(name = "expression", type = "object:org.apache.camel.model.language.ExpressionDefinition", description = "Property values as an expression", displayName = "Expression", oneOf = "expression"),
                     @YamlProperty(name = "key", type = "string", required = true, description = "Property key", displayName = "Key")
             }
@@ -11726,7 +11906,16 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     break;
                 }
                 default: {
-                    return false;
+                    ExpressionDefinition ed = target.getExpressionType();
+                    if (ed != null) {
+                        throw new org.apache.camel.dsl.yaml.common.exception.DuplicateFieldException(node, propertyName, "as an expression");
+                    }
+                    ed = ExpressionDeserializers.constructExpressionType(propertyKey, node);
+                    if (ed != null) {
+                        target.setExpressionType(ed);
+                    } else {
+                        return false;
+                    }
                 }
             }
             return true;
@@ -18040,7 +18229,9 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "inheritErrorHandler", type = "boolean"),
                     @YamlProperty(name = "parameters", type = "object"),
                     @YamlProperty(name = "pattern", type = "enum:InOnly,InOut", description = "Sets the optional ExchangePattern used to invoke this endpoint", displayName = "Pattern"),
-                    @YamlProperty(name = "uri", type = "string", required = true, description = "Sets the uri of the endpoint to send to.", displayName = "Uri")
+                    @YamlProperty(name = "uri", type = "string", required = true, description = "Sets the uri of the endpoint to send to.", displayName = "Uri"),
+                    @YamlProperty(name = "variableReceive", type = "string", description = "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message .", displayName = "Variable Receive"),
+                    @YamlProperty(name = "variableSend", type = "string", description = "To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using send variable then the message body is taken from this variable instead of the current Message , however the headers from the Message will still be used as well. In other words, the variable is used instead of the message body, but everything else is as usual.", displayName = "Variable Send")
             }
     )
     public static class ToDefinitionDeserializer extends YamlDeserializerEndpointAwareBase<ToDefinition> {
@@ -18089,6 +18280,16 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     target.setUri(val);
                     break;
                 }
+                case "variableReceive": {
+                    String val = asText(node);
+                    target.setVariableReceive(val);
+                    break;
+                }
+                case "variableSend": {
+                    String val = asText(node);
+                    target.setVariableSend(val);
+                    break;
+                }
                 case "id": {
                     String val = asText(node);
                     target.setId(val);
@@ -18129,7 +18330,9 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "inheritErrorHandler", type = "boolean"),
                     @YamlProperty(name = "parameters", type = "object"),
                     @YamlProperty(name = "pattern", type = "enum:InOnly,InOut", description = "Sets the optional ExchangePattern used to invoke this endpoint", displayName = "Pattern"),
-                    @YamlProperty(name = "uri", type = "string", required = true, description = "The uri of the endpoint to send to. The uri can be dynamic computed using the org.apache.camel.language.simple.SimpleLanguage expression.", displayName = "Uri")
+                    @YamlProperty(name = "uri", type = "string", required = true, description = "The uri of the endpoint to send to. The uri can be dynamic computed using the org.apache.camel.language.simple.SimpleLanguage expression.", displayName = "Uri"),
+                    @YamlProperty(name = "variableReceive", type = "string", description = "To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using send variable then the message body is taken from this variable instead of the current Message , however the headers from the Message will still be used as well. In other words, the variable is used instead of the message body, but everything else is as usual.", displayName = "Variable Receive"),
+                    @YamlProperty(name = "variableSend", type = "string", description = "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message .", displayName = "Variable Send")
             }
     )
     public static class ToDynamicDefinitionDeserializer extends YamlDeserializerEndpointAwareBase<ToDynamicDefinition> {
@@ -18198,6 +18401,16 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     target.setUri(val);
                     break;
                 }
+                case "variableReceive": {
+                    String val = asText(node);
+                    target.setVariableReceive(val);
+                    break;
+                }
+                case "variableSend": {
+                    String val = asText(node);
+                    target.setVariableSend(val);
+                    break;
+                }
                 case "id": {
                     String val = asText(node);
                     target.setId(val);
@@ -18228,15 +18441,17 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "endToken", type = "string", description = "The end token to use as tokenizer if using start/end token pairs. You can use simple language as the token to support dynamic tokens.", displayName = "End Token"),
                     @YamlProperty(name = "group", type = "string", description = "To group N parts together, for example to split big files into chunks of 1000 lines. You can use simple language as the group to support dynamic group sizes.", displayName = "Group"),
                     @YamlProperty(name = "groupDelimiter", type = "string", description = "Sets the delimiter to use when grouping. If this has not been set then token will be used as the delimiter.", displayName = "Group Delimiter"),
-                    @YamlProperty(name = "headerName", type = "string", description = "Name of header to use as input, instead of the message body It has as higher precedent than the propertyName if both are set.", displayName = "Header Name"),
+                    @YamlProperty(name = "headerName", type = "string", description = "Name of header to use as input, instead of the message body", displayName = "Header Name"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "includeTokens", type = "boolean", description = "Whether to include the tokens in the parts when using pairs. When including tokens then the endToken property must also be configured (to use pair mode). The default value is false", displayName = "Include Tokens"),
                     @YamlProperty(name = "inheritNamespaceTagName", type = "string", description = "To inherit namespaces from a root/parent tag name when using XML You can use simple language as the tag name to support dynamic names.", displayName = "Inherit Namespace Tag Name"),
-                    @YamlProperty(name = "propertyName", type = "string", description = "Name of property to use as input, instead of the message body. It has a lower precedent than the headerName if both are set.", displayName = "Property Name"),
+                    @YamlProperty(name = "propertyName", type = "string", description = "Name of property to use as input, instead of the message body.", displayName = "Property Name"),
                     @YamlProperty(name = "regex", type = "boolean", description = "If the token is a regular expression pattern. The default value is false", displayName = "Regex"),
+                    @YamlProperty(name = "resultType", type = "string", description = "Sets the class of the result type (type from output)", displayName = "Result Type"),
                     @YamlProperty(name = "skipFirst", type = "boolean", description = "To skip the very first element", displayName = "Skip First"),
                     @YamlProperty(name = "token", type = "string", required = true, description = "The (start) token to use as tokenizer, for example you can use the new line token. You can use simple language as the token to support dynamic tokens.", displayName = "Token"),
                     @YamlProperty(name = "trim", type = "boolean", description = "Whether to trim the value to remove leading and trailing whitespaces and line breaks", displayName = "Trim"),
+                    @YamlProperty(name = "variableName", type = "string", description = "Name of variable to use as input, instead of the message body", displayName = "Variable Name"),
                     @YamlProperty(name = "xml", type = "boolean", description = "Whether the input is XML messages. This option must be set to true if working with XML payloads.", displayName = "Xml")
             }
     )
@@ -18305,6 +18520,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     target.setRegex(val);
                     break;
                 }
+                case "resultType": {
+                    String val = asText(node);
+                    target.setResultTypeName(val);
+                    break;
+                }
                 case "skipFirst": {
                     String val = asText(node);
                     target.setSkipFirst(val);
@@ -18318,6 +18538,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "trim": {
                     String val = asText(node);
                     target.setTrim(val);
+                    break;
+                }
+                case "variableName": {
+                    String val = asText(node);
+                    target.setVariableName(val);
                     break;
                 }
                 case "xml": {
@@ -19178,6 +19403,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "avro", type = "object:org.apache.camel.model.dataformat.AvroDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "barcode", type = "object:org.apache.camel.model.dataformat.BarcodeDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "base64", type = "object:org.apache.camel.model.dataformat.Base64DataFormat", oneOf = "dataFormatType"),
+                    @YamlProperty(name = "beanio", type = "object:org.apache.camel.model.dataformat.BeanioDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "bindy", type = "object:org.apache.camel.model.dataformat.BindyDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "cbor", type = "object:org.apache.camel.model.dataformat.CBORDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "crypto", type = "object:org.apache.camel.model.dataformat.CryptoDataFormat", oneOf = "dataFormatType"),
@@ -19214,6 +19440,8 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "univocityCsv", type = "object:org.apache.camel.model.dataformat.UniVocityCsvDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "univocityFixed", type = "object:org.apache.camel.model.dataformat.UniVocityFixedDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "univocityTsv", type = "object:org.apache.camel.model.dataformat.UniVocityTsvDataFormat", oneOf = "dataFormatType"),
+                    @YamlProperty(name = "variableReceive", type = "string", description = "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message .", displayName = "Variable Receive"),
+                    @YamlProperty(name = "variableSend", type = "string", description = "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message .", displayName = "Variable Send"),
                     @YamlProperty(name = "xmlSecurity", type = "object:org.apache.camel.model.dataformat.XMLSecurityDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "yaml", type = "object:org.apache.camel.model.dataformat.YAMLDataFormat", oneOf = "dataFormatType"),
                     @YamlProperty(name = "zipDeflater", type = "object:org.apache.camel.model.dataformat.ZipDeflaterDataFormat", oneOf = "dataFormatType"),
@@ -19262,6 +19490,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 }
                 case "base64": {
                     org.apache.camel.model.dataformat.Base64DataFormat val = asType(node, org.apache.camel.model.dataformat.Base64DataFormat.class);
+                    target.setDataFormatType(val);
+                    break;
+                }
+                case "beanio": {
+                    org.apache.camel.model.dataformat.BeanioDataFormat val = asType(node, org.apache.camel.model.dataformat.BeanioDataFormat.class);
                     target.setDataFormatType(val);
                     break;
                 }
@@ -19453,6 +19686,16 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "inheritErrorHandler": {
                     String val = asText(node);
                     target.setInheritErrorHandler(java.lang.Boolean.valueOf(val));
+                    break;
+                }
+                case "variableReceive": {
+                    String val = asText(node);
+                    target.setVariableReceive(val);
+                    break;
+                }
+                case "variableSend": {
+                    String val = asText(node);
+                    target.setVariableSend(val);
                     break;
                 }
                 case "id": {
@@ -19660,6 +19903,150 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 }
                 default: {
                     return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    @YamlType(
+            nodes = "variable",
+            inline = true,
+            types = org.apache.camel.model.language.VariableExpression.class,
+            order = org.apache.camel.dsl.yaml.common.YamlDeserializerResolver.ORDER_LOWEST - 1,
+            displayName = "Variable",
+            description = "Gets a variable",
+            deprecated = false,
+            properties = {
+                    @YamlProperty(name = "expression", type = "string", required = true, description = "The expression value in your chosen language syntax", displayName = "Expression"),
+                    @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "trim", type = "boolean", description = "Whether to trim the value to remove leading and trailing whitespaces and line breaks", displayName = "Trim")
+            }
+    )
+    public static class VariableExpressionDeserializer extends YamlDeserializerBase<VariableExpression> {
+        public VariableExpressionDeserializer() {
+            super(VariableExpression.class);
+        }
+
+        @Override
+        protected VariableExpression newInstance() {
+            return new VariableExpression();
+        }
+
+        @Override
+        protected VariableExpression newInstance(String value) {
+            return new VariableExpression(value);
+        }
+
+        @Override
+        protected boolean setProperty(VariableExpression target, String propertyKey,
+                String propertyName, Node node) {
+            propertyKey = org.apache.camel.util.StringHelper.dashToCamelCase(propertyKey);
+            switch(propertyKey) {
+                case "expression": {
+                    String val = asText(node);
+                    target.setExpression(val);
+                    break;
+                }
+                case "id": {
+                    String val = asText(node);
+                    target.setId(val);
+                    break;
+                }
+                case "trim": {
+                    String val = asText(node);
+                    target.setTrim(val);
+                    break;
+                }
+                default: {
+                    ExpressionDefinition ed = target.getExpressionType();
+                    if (ed != null) {
+                        throw new org.apache.camel.dsl.yaml.common.exception.DuplicateFieldException(node, propertyName, "as an expression");
+                    }
+                    ed = ExpressionDeserializers.constructExpressionType(propertyKey, node);
+                    if (ed != null) {
+                        target.setExpressionType(ed);
+                    } else {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+    }
+
+    @YamlType(
+            nodes = "wasm",
+            inline = true,
+            types = org.apache.camel.model.language.WasmExpression.class,
+            order = org.apache.camel.dsl.yaml.common.YamlDeserializerResolver.ORDER_LOWEST - 1,
+            displayName = "Wasm",
+            description = "Call a wasm (web assembly) function.",
+            deprecated = false,
+            properties = {
+                    @YamlProperty(name = "expression", type = "string", required = true, description = "The expression value in your chosen language syntax", displayName = "Expression"),
+                    @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "module", type = "string", required = true, description = "Set the module (the distributable, loadable, and executable unit of code in WebAssembly) resource that provides the expression function.", displayName = "Module"),
+                    @YamlProperty(name = "resultType", type = "string", description = "Sets the class of the result type (type from output)", displayName = "Result Type"),
+                    @YamlProperty(name = "trim", type = "boolean", description = "Whether to trim the value to remove leading and trailing whitespaces and line breaks", displayName = "Trim")
+            }
+    )
+    public static class WasmExpressionDeserializer extends YamlDeserializerBase<WasmExpression> {
+        public WasmExpressionDeserializer() {
+            super(WasmExpression.class);
+        }
+
+        @Override
+        protected WasmExpression newInstance() {
+            return new WasmExpression();
+        }
+
+        @Override
+        protected WasmExpression newInstance(String value) {
+            return new WasmExpression(value);
+        }
+
+        @Override
+        protected boolean setProperty(WasmExpression target, String propertyKey,
+                String propertyName, Node node) {
+            propertyKey = org.apache.camel.util.StringHelper.dashToCamelCase(propertyKey);
+            switch(propertyKey) {
+                case "expression": {
+                    String val = asText(node);
+                    target.setExpression(val);
+                    break;
+                }
+                case "id": {
+                    String val = asText(node);
+                    target.setId(val);
+                    break;
+                }
+                case "module": {
+                    String val = asText(node);
+                    target.setModule(val);
+                    break;
+                }
+                case "resultType": {
+                    String val = asText(node);
+                    target.setResultTypeName(val);
+                    break;
+                }
+                case "trim": {
+                    String val = asText(node);
+                    target.setTrim(val);
+                    break;
+                }
+                default: {
+                    ExpressionDefinition ed = target.getExpressionType();
+                    if (ed != null) {
+                        throw new org.apache.camel.dsl.yaml.common.exception.DuplicateFieldException(node, propertyName, "as an expression");
+                    }
+                    ed = ExpressionDeserializers.constructExpressionType(propertyKey, node);
+                    if (ed != null) {
+                        target.setExpressionType(ed);
+                    } else {
+                        return false;
+                    }
                 }
             }
             return true;
@@ -19907,7 +20294,9 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "onPrepare", type = "string", description = "Uses the Processor when preparing the org.apache.camel.Exchange to be sent. This can be used to deep-clone messages that should be sent, or any custom logic needed before the exchange is sent.", displayName = "On Prepare"),
                     @YamlProperty(name = "parameters", type = "object"),
                     @YamlProperty(name = "pattern", type = "enum:InOnly,InOut", description = "Sets the optional ExchangePattern used to invoke this endpoint", displayName = "Pattern"),
-                    @YamlProperty(name = "uri", type = "string", required = true, description = "The uri of the endpoint to send to. The uri can be dynamic computed using the org.apache.camel.language.simple.SimpleLanguage expression.", displayName = "Uri")
+                    @YamlProperty(name = "uri", type = "string", required = true, description = "The uri of the endpoint to send to. The uri can be dynamic computed using the org.apache.camel.language.simple.SimpleLanguage expression.", displayName = "Uri"),
+                    @YamlProperty(name = "variableReceive", type = "string", description = "To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using send variable then the message body is taken from this variable instead of the current Message , however the headers from the Message will still be used as well. In other words, the variable is used instead of the message body, but everything else is as usual.", displayName = "Variable Receive"),
+                    @YamlProperty(name = "variableSend", type = "string", description = "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message .", displayName = "Variable Send")
             }
     )
     public static class WireTapDefinitionDeserializer extends YamlDeserializerEndpointAwareBase<WireTapDefinition> {
@@ -19989,6 +20378,16 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "uri": {
                     String val = asText(node);
                     target.setUri(val);
+                    break;
+                }
+                case "variableReceive": {
+                    String val = asText(node);
+                    target.setVariableReceive(val);
+                    break;
+                }
+                case "variableSend": {
+                    String val = asText(node);
+                    target.setVariableSend(val);
                     break;
                 }
                 case "id": {
@@ -20134,12 +20533,14 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             properties = {
                     @YamlProperty(name = "expression", type = "string", required = true, description = "The expression value in your chosen language syntax", displayName = "Expression"),
                     @YamlProperty(name = "group", type = "number", description = "To group N parts together", displayName = "Group"),
-                    @YamlProperty(name = "headerName", type = "string", description = "Name of header to use as input, instead of the message body It has as higher precedent than the propertyName if both are set.", displayName = "Header Name"),
+                    @YamlProperty(name = "headerName", type = "string", description = "Name of header to use as input, instead of the message body", displayName = "Header Name"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "mode", type = "enum:i,w,u,t", defaultValue = "i", description = "The extraction mode. The available extraction modes are: i - injecting the contextual namespace bindings into the extracted token (default) w - wrapping the extracted token in its ancestor context u - unwrapping the extracted token to its child content t - extracting the text content of the specified element", displayName = "Mode"),
                     @YamlProperty(name = "namespace", type = "array:org.apache.camel.model.PropertyDefinition", description = "Injects the XML Namespaces of prefix - uri mappings", displayName = "Namespace"),
-                    @YamlProperty(name = "propertyName", type = "string", description = "Name of property to use as input, instead of the message body. It has a lower precedent than the headerName if both are set.", displayName = "Property Name"),
-                    @YamlProperty(name = "trim", type = "boolean", description = "Whether to trim the value to remove leading and trailing whitespaces and line breaks", displayName = "Trim")
+                    @YamlProperty(name = "propertyName", type = "string", description = "Name of property to use as input, instead of the message body.", displayName = "Property Name"),
+                    @YamlProperty(name = "resultType", type = "string", description = "Sets the class of the result type (type from output)", displayName = "Result Type"),
+                    @YamlProperty(name = "trim", type = "boolean", description = "Whether to trim the value to remove leading and trailing whitespaces and line breaks", displayName = "Trim"),
+                    @YamlProperty(name = "variableName", type = "string", description = "Name of variable to use as input, instead of the message body", displayName = "Variable Name")
             }
     )
     public static class XMLTokenizerExpressionDeserializer extends YamlDeserializerBase<XMLTokenizerExpression> {
@@ -20197,9 +20598,19 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     target.setPropertyName(val);
                     break;
                 }
+                case "resultType": {
+                    String val = asText(node);
+                    target.setResultTypeName(val);
+                    break;
+                }
                 case "trim": {
                     String val = asText(node);
                     target.setTrim(val);
+                    break;
+                }
+                case "variableName": {
+                    String val = asText(node);
+                    target.setVariableName(val);
                     break;
                 }
                 default: {
@@ -20231,17 +20642,19 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "documentType", type = "string", description = "Name of class for document type The default value is org.w3c.dom.Document", displayName = "Document Type"),
                     @YamlProperty(name = "expression", type = "string", required = true, description = "The expression value in your chosen language syntax", displayName = "Expression"),
                     @YamlProperty(name = "factoryRef", type = "string", description = "References to a custom XPathFactory to lookup in the registry", displayName = "Factory Ref"),
-                    @YamlProperty(name = "headerName", type = "string", description = "Name of header to use as input, instead of the message body It has as higher precedent than the propertyName if both are set.", displayName = "Header Name"),
+                    @YamlProperty(name = "headerName", type = "string", description = "Name of header to use as input, instead of the message body", displayName = "Header Name"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "logNamespaces", type = "boolean", description = "Whether to log namespaces which can assist during troubleshooting", displayName = "Log Namespaces"),
                     @YamlProperty(name = "namespace", type = "array:org.apache.camel.model.PropertyDefinition", description = "Injects the XML Namespaces of prefix - uri mappings", displayName = "Namespace"),
                     @YamlProperty(name = "objectModel", type = "string", description = "The XPath object model to use", displayName = "Object Model"),
                     @YamlProperty(name = "preCompile", type = "boolean", description = "Whether to enable pre-compiling the xpath expression during initialization phase. pre-compile is enabled by default. This can be used to turn off, for example in cases the compilation phase is desired at the starting phase, such as if the application is ahead of time compiled (for example with camel-quarkus) which would then load the xpath factory of the built operating system, and not a JVM runtime.", displayName = "Pre Compile"),
-                    @YamlProperty(name = "propertyName", type = "string", description = "Name of property to use as input, instead of the message body. It has a lower precedent than the headerName if both are set.", displayName = "Property Name"),
-                    @YamlProperty(name = "resultType", type = "enum:NUMBER,STRING,BOOLEAN,NODESET,NODE", defaultValue = "NODESET", description = "Sets the class name of the result type (type from output) The default result type is NodeSet", displayName = "Result Type"),
+                    @YamlProperty(name = "propertyName", type = "string", description = "Name of property to use as input, instead of the message body.", displayName = "Property Name"),
+                    @YamlProperty(name = "resultQName", type = "enum:NUMBER,STRING,BOOLEAN,NODESET,NODE", defaultValue = "NODESET", description = "Sets the output type supported by XPath.", displayName = "Result QName"),
+                    @YamlProperty(name = "resultType", type = "string", description = "Sets the class of the result type (type from output)", displayName = "Result Type"),
                     @YamlProperty(name = "saxon", type = "boolean", description = "Whether to use Saxon.", displayName = "Saxon"),
                     @YamlProperty(name = "threadSafety", type = "boolean", description = "Whether to enable thread-safety for the returned result of the xpath expression. This applies to when using NODESET as the result type, and the returned set has multiple elements. In this situation there can be thread-safety issues if you process the NODESET concurrently such as from a Camel Splitter EIP in parallel processing mode. This option prevents concurrency issues by doing defensive copies of the nodes. It is recommended to turn this option on if you are using camel-saxon or Saxon in your application. Saxon has thread-safety issues which can be prevented by turning this option on.", displayName = "Thread Safety"),
-                    @YamlProperty(name = "trim", type = "boolean", description = "Whether to trim the value to remove leading and trailing whitespaces and line breaks", displayName = "Trim")
+                    @YamlProperty(name = "trim", type = "boolean", description = "Whether to trim the value to remove leading and trailing whitespaces and line breaks", displayName = "Trim"),
+                    @YamlProperty(name = "variableName", type = "string", description = "Name of variable to use as input, instead of the message body", displayName = "Variable Name")
             }
     )
     public static class XPathExpressionDeserializer extends YamlDeserializerBase<XPathExpression> {
@@ -20314,6 +20727,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     target.setPropertyName(val);
                     break;
                 }
+                case "resultQName": {
+                    String val = asText(node);
+                    target.setResultQName(val);
+                    break;
+                }
                 case "resultType": {
                     String val = asText(node);
                     target.setResultTypeName(val);
@@ -20332,6 +20750,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "trim": {
                     String val = asText(node);
                     target.setTrim(val);
+                    break;
+                }
+                case "variableName": {
+                    String val = asText(node);
+                    target.setVariableName(val);
                     break;
                 }
                 default: {
@@ -20362,13 +20785,13 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             properties = {
                     @YamlProperty(name = "configurationRef", type = "string", description = "Reference to a saxon configuration instance in the registry to use for xquery (requires camel-saxon). This may be needed to add custom functions to a saxon configuration, so these custom functions can be used in xquery expressions.", displayName = "Configuration Ref"),
                     @YamlProperty(name = "expression", type = "string", required = true, description = "The expression value in your chosen language syntax", displayName = "Expression"),
-                    @YamlProperty(name = "headerName", type = "string", description = "Name of header to use as input, instead of the message body It has as higher precedent than the propertyName if both are set.", displayName = "Header Name"),
+                    @YamlProperty(name = "headerName", type = "string", description = "Name of header to use as input, instead of the message body", displayName = "Header Name"),
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "namespace", type = "array:org.apache.camel.model.PropertyDefinition", description = "Injects the XML Namespaces of prefix - uri mappings", displayName = "Namespace"),
-                    @YamlProperty(name = "propertyName", type = "string", description = "Name of property to use as input, instead of the message body. It has a lower precedent than the headerName if both are set.", displayName = "Property Name"),
+                    @YamlProperty(name = "propertyName", type = "string", description = "Name of property to use as input, instead of the message body.", displayName = "Property Name"),
                     @YamlProperty(name = "resultType", type = "string", description = "Sets the class of the result type (type from output)", displayName = "Result Type"),
                     @YamlProperty(name = "trim", type = "boolean", description = "Whether to trim the value to remove leading and trailing whitespaces and line breaks", displayName = "Trim"),
-                    @YamlProperty(name = "type", type = "string", description = "Sets the class name of the result type (type from output) The default result type is NodeSet", displayName = "Type")
+                    @YamlProperty(name = "variableName", type = "string", description = "Name of variable to use as input, instead of the message body", displayName = "Variable Name")
             }
     )
     public static class XQueryExpressionDeserializer extends YamlDeserializerBase<XQueryExpression> {
@@ -20431,9 +20854,9 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     target.setTrim(val);
                     break;
                 }
-                case "type": {
+                case "variableName": {
                     String val = asText(node);
-                    target.setType(val);
+                    target.setVariableName(val);
                     break;
                 }
                 default: {
