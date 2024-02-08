@@ -11,7 +11,7 @@
     "supportLevel": "Stable",
     "groupId": "org.apache.camel",
     "artifactId": "camel-tahu",
-    "version": "4.3.0-SNAPSHOT",
+    "version": "4.4.0-SNAPSHOT",
     "scheme": "tahu",
     "extendsScheme": "",
     "syntax": "tahu:groupId\/edgeNode\/deviceId",
@@ -20,7 +20,8 @@
     "api": false,
     "consumerOnly": false,
     "producerOnly": false,
-    "lenientProperties": false
+    "lenientProperties": false,
+    "remote": true
   },
   "componentProperties": {
     "checkClientIdLength": { "index": 0, "kind": "property", "displayName": "Check Client Id Length", "group": "common", "label": "common", "required": false, "type": "boolean", "javaType": "boolean", "deprecated": false, "autowired": false, "secret": false, "defaultValue": true, "configurationClass": "org.apache.camel.component.tahu.TahuConfiguration", "configurationField": "configuration", "description": "MQTT client ID length check enabled" },

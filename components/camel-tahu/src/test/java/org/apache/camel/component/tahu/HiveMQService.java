@@ -28,6 +28,8 @@ public interface HiveMQService extends TestService {
 
     String getMqttHost();
 
+    boolean isRunning();
+
     default String getMqttHostAddress() {
         return String.format("tcp://%s:%d", getMqttHost(), getMqttPort());
     }

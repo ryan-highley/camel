@@ -105,7 +105,7 @@ public class TahuEdgeNodePublisherTest extends TahuTestSupport {
     public void configureContext(CamelContext context) throws Exception {
         LOG.trace("configureContext called");
 
-        final String containerAddress = hiveMQService.getMqttHostAddress();
+        final String containerAddress = spTckService.getMqttHostAddress();
 
         TahuConfiguration tahuConfig = new TahuConfiguration();
 

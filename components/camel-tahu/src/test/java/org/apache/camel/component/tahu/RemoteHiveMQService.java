@@ -18,12 +18,16 @@ package org.apache.camel.component.tahu;
 
 public class RemoteHiveMQService implements HiveMQService {
 
+    private volatile boolean running = false;
+
     @Override
     public void initialize() {
+        running = true;
     }
 
     @Override
     public void shutdown() {
+        running = false;
     }
 
     @Override
@@ -34,6 +38,11 @@ public class RemoteHiveMQService implements HiveMQService {
     @Override
     public String getMqttHost() {
         return "localhost";
+    }
+
+    @Override
+    public boolean isRunning() {
+        return running;
     }
 
 }

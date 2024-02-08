@@ -30,7 +30,7 @@ public class LocalHiveMQService implements HiveMQService, ContainerService<HiveM
     private static final Logger LOG = LoggerFactory.getLogger(LocalHiveMQService.class);
 
     @Container
-    final static HiveMQContainer container = new HiveMQContainer(DockerImageName.parse("hivemq/hivemq-ce").withTag("2023.9"))
+    final HiveMQContainer container = new HiveMQContainer(DockerImageName.parse("hivemq/hivemq-ce").withTag("2023.9"))
             .withLogLevel(Level.DEBUG)
             .withHiveMQConfig(MountableFile.forClasspathResource("/hivemq-ce/conf/config.xml"))
             .withCopyFileToContainer(MountableFile.forClasspathResource("/hivemq-ce/conf/logback.xml"),
@@ -39,10 +39,12 @@ public class LocalHiveMQService implements HiveMQService, ContainerService<HiveM
             .withExposedPorts(1883, 8000)
             .waitForExtension("Eclipse. Sparkplug. TCK");
 
+    @Override
     public int getMqttPort() {
         return container.getMqttPort();
     }
 
+    @Override
     public String getMqttHost() {
         return container.getHost();
     }
@@ -66,6 +68,11 @@ public class LocalHiveMQService implements HiveMQService, ContainerService<HiveM
     public void close() {
         LOG.info("Closing the HiveMQ container");
         container.close();
+    }
+
+    @Override
+    public boolean isRunning() {
+        return container.isRunning();
     }
 
     @Override

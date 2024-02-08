@@ -23,20 +23,22 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Stream;
 
+import org.apache.camel.test.infra.common.services.TestService;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.junit.jupiter.api.extension.AfterAllCallback;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
-public class SparkplugTCKService implements BeforeAllCallback, AfterAllCallback {
+@Testcontainers
+public class SparkplugTCKService implements TestService {
 
     private static final Logger LOG = LoggerFactory.getLogger(SparkplugTCKService.class);
 
@@ -44,18 +46,27 @@ public class SparkplugTCKService implements BeforeAllCallback, AfterAllCallback 
     public static final String SPARKPLUG_TCK_LOG_TOPIC = "SPARKPLUG_TCK/LOG";
     public static final String SPARKPLUG_TCK_RESULT_TOPIC = "SPARKPLUG_TCK/RESULT";
 
-    private final HiveMQService hiveMQService;
+    @RegisterExtension
+    HiveMQService hiveMQService = new LocalHiveMQService();
+
     private final SparkplugTCKMessageListener spTckMessageListener;
 
     private MqttClient mqttClient;
 
-    public SparkplugTCKService(HiveMQService hiveMQService) {
-        this(hiveMQService, new SparkplugTCKMessageListenerImpl());
+    public SparkplugTCKService() {
+        this(new SparkplugTCKMessageListenerImpl());
     }
 
-    public SparkplugTCKService(HiveMQService hiveMQService, SparkplugTCKMessageListener spTckMessageListener) {
-        this.hiveMQService = hiveMQService;
+    public SparkplugTCKService(SparkplugTCKMessageListener spTckMessageListener) {
         this.spTckMessageListener = spTckMessageListener;
+    }
+
+    String getMqttHostAddress() {
+        if (!hiveMQService.isRunning()) {
+            hiveMQService.initialize();
+        }
+
+        return hiveMQService.getMqttHostAddress();
     }
 
     @Override
@@ -64,7 +75,7 @@ public class SparkplugTCKService implements BeforeAllCallback, AfterAllCallback 
 
         try {
             mqttClient = new MqttClient(
-                    hiveMQService.getMqttHostAddress(), "Tahu-Test-" + MqttClient.generateClientId(), new MemoryPersistence());
+                    getMqttHostAddress(), "Tahu-Test-" + MqttClient.generateClientId(), new MemoryPersistence());
 
             mqttClient.connect();
 
@@ -151,5 +162,23 @@ public class SparkplugTCKService implements BeforeAllCallback, AfterAllCallback 
         public BlockingQueue<MqttMessage> getMessages(String topic) {
             return messages.getOrDefault(topic, EMPTY);
         }
+    }
+
+    @Override
+    public void initialize() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'initialize'");
+    }
+
+    @Override
+    public void registerProperties() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'registerProperties'");
+    }
+
+    @Override
+    public void shutdown() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'shutdown'");
     }
 }
