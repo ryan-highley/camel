@@ -51,7 +51,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -69,13 +68,8 @@ public class TahuEdgeNodeHandlerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(TahuEdgeNodeHandlerTest.class);
 
-    @Order(1)
     @RegisterExtension
-    public static HiveMQService hiveMQService = new LocalHiveMQService();
-
-    @Order(2)
-    @RegisterExtension
-    public static SparkplugTCKService spTckService = new SparkplugTCKService(hiveMQService);
+    public static SparkplugTCKService spTckService = new SparkplugTCKService();
 
     private static final String GROUP_ID = "G2";
     private static final String EDGE_NODE_ID = "E2";
@@ -89,8 +83,8 @@ public class TahuEdgeNodeHandlerTest {
 
     private static final MqttServerName MQTT_SERVER_NAME_1 = new MqttServerName("Mqtt Server One");
     private static final String MQTT_CLIENT_ID_1 = "Sparkplug-Tahu-Compatible-Impl-One";
-    // private static final MqttServerUrl MQTT_SERVER_URL_1
-    //         = MqttServerUrl.getMqttServerUrlSafe(hiveMQService.getMqttHostAddress());
+    private static final MqttServerUrl MQTT_SERVER_URL_1
+            = MqttServerUrl.getMqttServerUrlSafe(spTckService.getMqttHostAddress());
     private static final String USERNAME_1 = "admin";
     private static final String PASSWORD_1 = "changeme";
     private static final MqttServerName MQTT_SERVER_NAME_2 = new MqttServerName("Mqtt Server Two");
@@ -116,7 +110,10 @@ public class TahuEdgeNodeHandlerTest {
                     }
                 }
             });
-    private static Map<String, Map<String, Object>> metricDataTypeMap;
+    private static final Map<String, Map<String, Object>> metricDataTypeMap = new HashMap<>();
+
+    private static final BdSeqManager bdSeqManager = new CamelBdSeqManager(EDGE_NODE_DESCRIPTOR);
+    private static final ExecutorService handlerExecutorService = Executors.newSingleThreadExecutor();
 
     private TahuEdgeNodeHandler tahuEdgeNodeHandler;
 
@@ -127,7 +124,7 @@ public class TahuEdgeNodeHandlerTest {
         mqttServerDefinitions
                 .add(new MqttServerDefinition(
                         MQTT_SERVER_NAME_1, new MqttClientId(MQTT_CLIENT_ID_1, false),
-                        MqttServerUrl.getMqttServerUrlSafe(hiveMQService.getMqttHostAddress()), USERNAME_1, PASSWORD_1,
+                        MqttServerUrl.getMqttServerUrlSafe(spTckService.getMqttHostAddress()), USERNAME_1, PASSWORD_1,
                         KEEP_ALIVE_TIMEOUT, NDEATH_TOPIC));
         // mqttServerDefinitions
         // .add(new MqttServerDefinition(MQTT_SERVER_NAME_2, new
@@ -152,8 +149,6 @@ public class TahuEdgeNodeHandlerTest {
             System.out.println("\tKeep Alive Timeout: " + mqttServerDefinition.getKeepAliveTimeout());
         }
 
-        metricDataTypeMap = new HashMap<>();
-
         Map<String, Object> nodeMetricDataTypes = dataSimulator.getNodeBirthPayload(EDGE_NODE_DESCRIPTOR)
                 .getMetrics().stream().collect(Collectors.toMap(m -> m.getName(), m -> m.getDataType()));
 
@@ -165,12 +160,11 @@ public class TahuEdgeNodeHandlerTest {
 
             metricDataTypeMap.put(deviceDescriptor.getDeviceId(), deviceMetricDataTypes);
         }
+
     }
 
     @BeforeEach
     public void beforeEach() throws Exception {
-        BdSeqManager bdSeqManager = new CamelBdSeqManager(EDGE_NODE_DESCRIPTOR);
-        ExecutorService handlerExecutorService = Executors.newSingleThreadExecutor();
 
         tahuEdgeNodeHandler = new TahuEdgeNodeHandler(
                 EDGE_NODE_DESCRIPTOR, mqttServerDefinitions, PRIMARY_HOST_ID,

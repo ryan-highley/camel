@@ -188,7 +188,7 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
         LOG.trace(loggingMarker, "Camel doStop called");
 
         EdgeClient edgeClient = client;
-        if (edgeClient != null && !edgeClient.isDisconnectedOrDisconnecting() && edgeClient.isConnected()) {
+        if (edgeClient != null && edgeClient.isConnected() && !edgeClient.isDisconnectedOrDisconnecting()) {
             edgeClient.shutdown();
             edgeClientFuture.cancel(true);
         }

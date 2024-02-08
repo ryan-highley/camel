@@ -35,7 +35,6 @@ import org.apache.camel.test.infra.core.api.ConfigurableContext;
 import org.apache.camel.test.infra.core.api.ConfigurableRoute;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -49,22 +48,22 @@ public abstract class TahuTestSupport
 
     private static final Logger LOG = LoggerFactory.getLogger(TahuTestSupport.class);
 
-    @Order(1)
-    @RegisterExtension
-    public static HiveMQService hiveMQService = new RemoteHiveMQService();
+    // @Order(1)
+    // @RegisterExtension
+    // public static HiveMQService hiveMQService = new RemoteHiveMQService();
 
     // public static ContextLifeCycleManager contextLifeCycleManager = new DefaultContextLifeCycleManager();
 
-    @Order(2)
+    // @Order(2)
     @RegisterExtension
     // public static CamelContextExtension camelContextExtension = new SparkplugTCKService.SparkplugTCKCamelContextExtension();
     // public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension(contextLifeCycleManager);
     public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
 
-    @Order(3)
+    // @Order(3)
     @RegisterExtension
     public static SparkplugTCKService spTckService
-            = new SparkplugTCKService(hiveMQService, new TahuTestMockEndpointListener());
+            = new SparkplugTCKService(new TahuTestMockEndpointListener());
 
     @Override
     public CamelContextExtension getCamelContextExtension() {
