@@ -50,7 +50,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -115,9 +114,9 @@ public class TahuEdgeNodeHandlerTest {
     private static final BdSeqManager bdSeqManager = new CamelBdSeqManager(EDGE_NODE_DESCRIPTOR);
     private static final ExecutorService handlerExecutorService = Executors.newSingleThreadExecutor();
 
-    private TahuEdgeNodeHandler tahuEdgeNodeHandler;
+    private static TahuEdgeNodeHandler tahuEdgeNodeHandler;
 
-    private SparkplugTCKMessageListener spTckMessageListener;
+    private static SparkplugTCKMessageListener spTckMessageListener;
 
     @BeforeAll
     public static void beforeAll() throws Exception {
@@ -161,11 +160,6 @@ public class TahuEdgeNodeHandlerTest {
             metricDataTypeMap.put(deviceDescriptor.getDeviceId(), deviceMetricDataTypes);
         }
 
-    }
-
-    @BeforeEach
-    public void beforeEach() throws Exception {
-
         tahuEdgeNodeHandler = new TahuEdgeNodeHandler(
                 EDGE_NODE_DESCRIPTOR, mqttServerDefinitions, PRIMARY_HOST_ID,
                 USE_ALIASES, REBIRTH_DEBOUNCE_DELAY, metricDataTypeMap, handlerExecutorService, bdSeqManager);
@@ -174,20 +168,23 @@ public class TahuEdgeNodeHandlerTest {
 
         spTckMessageListener = spTckService.getSpTckMessageListener();
 
+    }
+
+    @BeforeEach
+    public void beforeEach() throws Exception {
         spTckMessageListener.getLogMessages().clear();
         spTckMessageListener.getResultMessages().clear();
     }
 
     @AfterEach
     public void afterEach() throws Exception {
-        tahuEdgeNodeHandler.stop();
-
         spTckMessageListener.getLogMessages().clear();
         spTckMessageListener.getResultMessages().clear();
     }
 
     @AfterAll
     public static void afterAll() throws Exception {
+        tahuEdgeNodeHandler.stop();
     }
 
     private String createEdgeTestParams(String testName) {
@@ -196,12 +193,11 @@ public class TahuEdgeNodeHandlerTest {
     }
 
     private void initiateTckTest(String testName) throws Exception {
-        BlockingQueue<MqttMessage> logMessages = spTckMessageListener.getLogMessages();
+        // BlockingQueue<MqttMessage> logMessages = spTckMessageListener.getLogMessages();
 
         String testParams = createEdgeTestParams(testName);
         spTckService.sendTestControlMessage("NEW_TEST " + testParams);
 
-        // assertThat(spTckMessageListener.getLogMessageBodies(), contains(containsString("Test started successfully:")));
         // MqttMessage logMessage = logMessages.poll(10L, TimeUnit.SECONDS);
         // assertThat("Test start message received", logMessage, notNullValue());
         // String logMessageText = new String(logMessage.getPayload(), StandardCharsets.UTF_8);
@@ -261,6 +257,7 @@ public class TahuEdgeNodeHandlerTest {
     }
 
     @Test
+    // @Order(1)
     public void sessionEstablishmentTest() throws Exception {
         try {
             initiateTckTest("SessionEstablishmentTest");
@@ -276,6 +273,7 @@ public class TahuEdgeNodeHandlerTest {
     }
 
     @Test
+    // @Order(2)
     public void sessionTerminationTest() throws Exception {
         try {
             initiateTckTest("SessionTerminationTest");
@@ -294,9 +292,9 @@ public class TahuEdgeNodeHandlerTest {
         }
     }
 
-    @Disabled
     @ParameterizedTest
     @ValueSource(strings = { "SendDataTest", "SendComplexDataTest", "ReceiveCommandTest" })
+    // @Order(3)
     public void sendDataTest(String testName) throws Exception {
         try {
             initiateTckTest(testName);
@@ -312,8 +310,8 @@ public class TahuEdgeNodeHandlerTest {
         }
     }
 
-    @Disabled
     @Test
+    // @Order(4)
     public void primaryHostTest() throws Exception {
         try {
             tahuEdgeNodeHandler.start();

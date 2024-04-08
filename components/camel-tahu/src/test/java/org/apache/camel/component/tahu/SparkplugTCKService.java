@@ -47,7 +47,7 @@ public class SparkplugTCKService implements TestService {
     public static final String SPARKPLUG_TCK_RESULT_TOPIC = "SPARKPLUG_TCK/RESULT";
 
     @RegisterExtension
-    HiveMQService hiveMQService = new LocalHiveMQService();
+    HiveMQService hiveMQService = HiveMQService.Factory.INSTANCE;
 
     private final SparkplugTCKMessageListener spTckMessageListener;
 

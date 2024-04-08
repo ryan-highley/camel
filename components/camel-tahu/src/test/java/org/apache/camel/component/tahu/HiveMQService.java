@@ -41,4 +41,12 @@ public interface HiveMQService extends TestService {
         System.setProperty(HIVEMQ_SERVICE_MQTT_HOST_ADDRESS, getMqttHostAddress());
     }
 
+    public static class Factory {
+        public static final HiveMQService INSTANCE;
+
+        static {
+            // Add logic for using RemoteHiveMQService based on system property if necessary
+            INSTANCE = new LocalHiveMQService();
+        }
+    }
 }

@@ -48,22 +48,11 @@ public abstract class TahuTestSupport
 
     private static final Logger LOG = LoggerFactory.getLogger(TahuTestSupport.class);
 
-    // @Order(1)
-    // @RegisterExtension
-    // public static HiveMQService hiveMQService = new RemoteHiveMQService();
-
-    // public static ContextLifeCycleManager contextLifeCycleManager = new DefaultContextLifeCycleManager();
-
-    // @Order(2)
     @RegisterExtension
-    // public static CamelContextExtension camelContextExtension = new SparkplugTCKService.SparkplugTCKCamelContextExtension();
-    // public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension(contextLifeCycleManager);
     public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
 
-    // @Order(3)
     @RegisterExtension
-    public static SparkplugTCKService spTckService
-            = new SparkplugTCKService(new TahuTestMockEndpointListener());
+    public static SparkplugTCKService spTckService = new SparkplugTCKService(new TahuTestMockEndpointListener());
 
     @Override
     public CamelContextExtension getCamelContextExtension() {
