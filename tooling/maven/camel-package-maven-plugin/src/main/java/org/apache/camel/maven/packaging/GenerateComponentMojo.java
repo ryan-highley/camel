@@ -48,6 +48,12 @@ public class GenerateComponentMojo extends AbstractGenerateMojo {
         invoke(GenerateEndpointUriFactoryMojo.class);
         // generate invoke-on-header
         invoke(GenerateInvokeOnHeaderMojo.class);
+        // generate data-type-transformer
+        invoke(GenerateDataTypeTransformerMojo.class);
+        // generate pojo-beans
+        invoke(GeneratePojoBeanMojo.class);
+        // generate dev-console
+        invoke(GenerateDevConsoleMojo.class);
         // prepare-components
         invoke(PrepareComponentMojo.class);
         // validate-components

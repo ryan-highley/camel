@@ -32,6 +32,8 @@ public class Lambda2Configuration implements Cloneable {
     private String accessKey;
     @UriParam(label = "security", secret = true)
     private String secretKey;
+    @UriParam(label = "security", secret = true)
+    private String sessionToken;
     @UriParam(enums = "ap-south-2,ap-south-1,eu-south-1,eu-south-2,us-gov-east-1,me-central-1,il-central-1,ca-central-1,eu-central-1,us-iso-west-1,eu-central-2,us-west-1,us-west-2,af-south-1,eu-north-1,eu-west-3,eu-west-2,eu-west-1,ap-northeast-3,ap-northeast-2,ap-northeast-1,me-south-1,sa-east-1,ap-east-1,cn-north-1,us-gov-west-1,ap-southeast-1,ap-southeast-2,us-iso-east-1,ap-southeast-3,ap-southeast-4,us-east-1,us-east-2,cn-northwest-1,us-isob-east-1,aws-global,aws-cn-global,aws-us-gov-global,aws-iso-global,aws-iso-b-global")
     private String region;
     @UriParam(label = "proxy", enums = "HTTP,HTTPS", defaultValue = "HTTPS")
@@ -56,6 +58,8 @@ public class Lambda2Configuration implements Cloneable {
     @UriParam(label = "security")
     private boolean useProfileCredentialsProvider;
     @UriParam(label = "security")
+    private boolean useSessionCredentials;
+    @UriParam(label = "security")
     private String profileCredentialsName;
 
     public LambdaClient getAwsLambdaClient() {
@@ -63,7 +67,7 @@ public class Lambda2Configuration implements Cloneable {
     }
 
     /**
-     * To use a existing configured AwsLambdaClient as client
+     * To use an existing configured AwsLambdaClient client
      */
     public void setAwsLambdaClient(LambdaClient awsLambdaClient) {
         this.awsLambdaClient = awsLambdaClient;
@@ -91,13 +95,24 @@ public class Lambda2Configuration implements Cloneable {
         this.secretKey = secretKey;
     }
 
+    public String getSessionToken() {
+        return sessionToken;
+    }
+
+    /**
+     * Amazon AWS Session Token used when the user needs to assume an IAM role
+     */
+    public void setSessionToken(String sessionToken) {
+        this.sessionToken = sessionToken;
+    }
+
     public String getRegion() {
         return region;
     }
 
     /**
-     * The region in which Lambda client needs to work. When using this parameter, the configuration will expect the
-     * lowercase name of the region (for example ap-east-1) You'll need to use the name Region.EU_WEST_1.id()
+     * The region in which the Lambda client needs to work. When using this parameter, the configuration will expect the
+     * lowercase name of the region (for example, ap-east-1) You'll need to use the name Region.EU_WEST_1.id()
      */
     public void setRegion(String region) {
         this.region = region;
@@ -174,8 +189,8 @@ public class Lambda2Configuration implements Cloneable {
     }
 
     /**
-     * Set the need for overidding the endpoint. This option needs to be used in combination with uriEndpointOverride
-     * option
+     * Set the need for overriding the endpoint. This option needs to be used in combination with the
+     * uriEndpointOverride option
      */
     public void setOverrideEndpoint(boolean overrideEndpoint) {
         this.overrideEndpoint = overrideEndpoint;
@@ -215,12 +230,24 @@ public class Lambda2Configuration implements Cloneable {
         this.useProfileCredentialsProvider = useProfileCredentialsProvider;
     }
 
+    public boolean isUseSessionCredentials() {
+        return useSessionCredentials;
+    }
+
+    /**
+     * Set whether the Lambda client should expect to use Session Credentials. This is useful in a situation in which
+     * the user needs to assume an IAM role for doing operations in Lambda.
+     */
+    public void setUseSessionCredentials(boolean useSessionCredentials) {
+        this.useSessionCredentials = useSessionCredentials;
+    }
+
     public String getProfileCredentialsName() {
         return profileCredentialsName;
     }
 
     /**
-     * If using a profile credentials provider this parameter will set the profile name
+     * If using a profile credentials provider, this parameter will set the profile name
      */
     public void setProfileCredentialsName(String profileCredentialsName) {
         this.profileCredentialsName = profileCredentialsName;

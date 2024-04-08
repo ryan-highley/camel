@@ -49,8 +49,8 @@ public class BeanWithXPathInjectionUsingHeaderValueTest extends ContextTestSuppo
     }
 
     @Override
-    protected Registry createRegistry() throws Exception {
-        Registry answer = super.createRegistry();
+    protected Registry createCamelRegistry() throws Exception {
+        Registry answer = super.createCamelRegistry();
         answer.bind("myBean", myBean);
         return answer;
     }
@@ -63,8 +63,9 @@ public class BeanWithXPathInjectionUsingHeaderValueTest extends ContextTestSuppo
         @Handler
         public void handler(
                 @XPath("//response/text()") String response,
-                @XPath(headerName = "invoiceDetails", value = "//invoice/person/name/text()") String userName,
-                @XPath(headerName = "invoiceDetails", value = "//invoice/person/date", resultType = String.class) String date) {
+                @XPath(source = "header:invoiceDetails", value = "//invoice/person/name/text()") String userName,
+                @XPath(source = "header:invoiceDetails", value = "//invoice/person/date",
+                       resultType = String.class) String date) {
             this.response = response;
             this.userName = userName;
             this.date = date;

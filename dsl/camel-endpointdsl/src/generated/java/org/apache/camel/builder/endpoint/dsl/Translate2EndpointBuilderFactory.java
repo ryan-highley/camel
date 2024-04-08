@@ -112,8 +112,8 @@ public interface Translate2EndpointBuilderFactory {
             return this;
         }
         /**
-         * Set the need for overidding the endpoint. This option needs to be
-         * used in combination with uriEndpointOverride option.
+         * Set the need for overriding the endpoint. This option needs to be
+         * used in combination with the uriEndpointOverride option.
          * 
          * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
          * 
@@ -129,8 +129,8 @@ public interface Translate2EndpointBuilderFactory {
             return this;
         }
         /**
-         * Set the need for overidding the endpoint. This option needs to be
-         * used in combination with uriEndpointOverride option.
+         * Set the need for overriding the endpoint. This option needs to be
+         * used in combination with the uriEndpointOverride option.
          * 
          * The option will be converted to a &lt;code&gt;boolean&lt;/code&gt;
          * type.
@@ -178,9 +178,9 @@ public interface Translate2EndpointBuilderFactory {
             return this;
         }
         /**
-         * The region in which Translate client needs to work. When using this
-         * parameter, the configuration will expect the lowercase name of the
-         * region (for example ap-east-1) You'll need to use the name
+         * The region in which the Translate client needs to work. When using
+         * this parameter, the configuration will expect the lowercase name of
+         * the region (for example, ap-east-1) You'll need to use the name
          * Region.EU_WEST_1.id().
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
@@ -329,7 +329,7 @@ public interface Translate2EndpointBuilderFactory {
             return this;
         }
         /**
-         * If using a profile credentials provider this parameter will set the
+         * If using a profile credentials provider, this parameter will set the
          * profile name.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
@@ -356,6 +356,21 @@ public interface Translate2EndpointBuilderFactory {
          */
         default Translate2EndpointBuilder secretKey(String secretKey) {
             doSetProperty("secretKey", secretKey);
+            return this;
+        }
+        /**
+         * Amazon AWS Session Token used when the user needs to assume an IAM
+         * role.
+         * 
+         * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
+         * 
+         * Group: security
+         * 
+         * @param sessionToken the value to set
+         * @return the dsl builder
+         */
+        default Translate2EndpointBuilder sessionToken(String sessionToken) {
+            doSetProperty("sessionToken", sessionToken);
             return this;
         }
         /**
@@ -465,6 +480,43 @@ public interface Translate2EndpointBuilderFactory {
             doSetProperty("useProfileCredentialsProvider", useProfileCredentialsProvider);
             return this;
         }
+        /**
+         * Set whether the Translate client should expect to use Session
+         * Credentials. This is useful in a situation in which the user needs to
+         * assume an IAM role for doing operations in Translate.
+         * 
+         * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
+         * 
+         * Default: false
+         * Group: security
+         * 
+         * @param useSessionCredentials the value to set
+         * @return the dsl builder
+         */
+        default Translate2EndpointBuilder useSessionCredentials(
+                boolean useSessionCredentials) {
+            doSetProperty("useSessionCredentials", useSessionCredentials);
+            return this;
+        }
+        /**
+         * Set whether the Translate client should expect to use Session
+         * Credentials. This is useful in a situation in which the user needs to
+         * assume an IAM role for doing operations in Translate.
+         * 
+         * The option will be converted to a &lt;code&gt;boolean&lt;/code&gt;
+         * type.
+         * 
+         * Default: false
+         * Group: security
+         * 
+         * @param useSessionCredentials the value to set
+         * @return the dsl builder
+         */
+        default Translate2EndpointBuilder useSessionCredentials(
+                String useSessionCredentials) {
+            doSetProperty("useSessionCredentials", useSessionCredentials);
+            return this;
+        }
     }
 
     /**
@@ -526,7 +578,7 @@ public interface Translate2EndpointBuilderFactory {
             return this;
         }
         /**
-         * To use a existing configured AWS Translate as client.
+         * To use an existing configured AWS Translate client.
          * 
          * The option is a:
          * &lt;code&gt;software.amazon.awssdk.services.translate.TranslateClient&lt;/code&gt; type.
@@ -542,7 +594,7 @@ public interface Translate2EndpointBuilderFactory {
             return this;
         }
         /**
-         * To use a existing configured AWS Translate as client.
+         * To use an existing configured AWS Translate client.
          * 
          * The option will be converted to a
          * &lt;code&gt;software.amazon.awssdk.services.translate.TranslateClient&lt;/code&gt; type.

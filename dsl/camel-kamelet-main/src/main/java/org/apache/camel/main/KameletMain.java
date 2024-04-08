@@ -17,6 +17,7 @@
 package org.apache.camel.main;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,7 +29,6 @@ import org.w3c.dom.Document;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.ExtendedCamelContext;
-import org.apache.camel.ManagementStatisticsLevel;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.dsl.support.SourceLoader;
@@ -50,6 +50,7 @@ import org.apache.camel.main.download.DependencyDownloaderPropertyBindingListene
 import org.apache.camel.main.download.DependencyDownloaderResourceLoader;
 import org.apache.camel.main.download.DependencyDownloaderRoutesLoader;
 import org.apache.camel.main.download.DependencyDownloaderStrategy;
+import org.apache.camel.main.download.DependencyDownloaderTransformerResolver;
 import org.apache.camel.main.download.DependencyDownloaderUriFactoryResolver;
 import org.apache.camel.main.download.DownloadListener;
 import org.apache.camel.main.download.DownloadModelineParser;
@@ -63,6 +64,7 @@ import org.apache.camel.main.download.PromptPropertyPlaceholderSource;
 import org.apache.camel.main.download.StubBeanRepository;
 import org.apache.camel.main.download.TypeConverterLoaderDownloadListener;
 import org.apache.camel.main.injection.AnnotationDependencyInjection;
+import org.apache.camel.main.reload.OpenApiGeneratorReloadStrategy;
 import org.apache.camel.main.util.ClipboardReloadStrategy;
 import org.apache.camel.main.util.ExtraClassesClassLoader;
 import org.apache.camel.main.util.ExtraFilesClassLoader;
@@ -83,6 +85,7 @@ import org.apache.camel.spi.PeriodTaskScheduler;
 import org.apache.camel.spi.Registry;
 import org.apache.camel.spi.ResourceLoader;
 import org.apache.camel.spi.RoutesLoader;
+import org.apache.camel.spi.TransformerResolver;
 import org.apache.camel.spi.UriFactoryResolver;
 import org.apache.camel.startup.jfr.FlightRecorderStartupStepRecorder;
 import org.apache.camel.support.DefaultContextReloadStrategy;
@@ -100,12 +103,15 @@ public class KameletMain extends MainCommandLineSupport {
     public static final String DEFAULT_KAMELETS_LOCATION = "classpath:/kamelets,github:apache:camel-kamelets/kamelets";
 
     protected final MainRegistry registry = new MainRegistry();
+    private String profile = "dev";
     private boolean download = true;
     private String repos;
     private boolean fresh;
     private boolean verbose;
     private String mavenSettings;
     private String mavenSettingsSecurity;
+    boolean mavenCentralEnabled = true;
+    boolean mavenApacheSnapshotEnabled = true;
     private String stubPattern;
     private boolean silent;
     private DownloadListener downloadListener;
@@ -174,6 +180,17 @@ public class KameletMain extends MainCommandLineSupport {
      */
     public <T> Map<String, T> lookupByType(Class<T> type) {
         return registry.findByTypeWithName(type);
+    }
+
+    public String getProfile() {
+        return profile;
+    }
+
+    /**
+     * Camel profile to use (dev = development, prod = production). The default is dev.
+     */
+    public void setProfile(String profile) {
+        this.profile = profile;
     }
 
     public boolean isDownload() {
@@ -261,6 +278,28 @@ public class KameletMain extends MainCommandLineSupport {
 
     public DownloadListener getDownloadListener() {
         return downloadListener;
+    }
+
+    public boolean isMavenCentralEnabled() {
+        return mavenCentralEnabled;
+    }
+
+    /**
+     * Whether downloading JARs from Maven Central repository is enabled
+     */
+    public void setMavenCentralEnabled(boolean mavenCentralEnabled) {
+        this.mavenCentralEnabled = mavenCentralEnabled;
+    }
+
+    public boolean isMavenApacheSnapshotEnabled() {
+        return mavenApacheSnapshotEnabled;
+    }
+
+    /**
+     * Whether downloading JARs from ASF Maven Snapshot repository is enabled
+     */
+    public void setMavenApacheSnapshotEnabled(boolean mavenApacheSnapshotEnabled) {
+        this.mavenApacheSnapshotEnabled = mavenApacheSnapshotEnabled;
     }
 
     /**
@@ -380,6 +419,8 @@ public class KameletMain extends MainCommandLineSupport {
         downloader.setFresh(fresh);
         downloader.setMavenSettings(mavenSettings);
         downloader.setMavenSettingsSecurity(mavenSettingsSecurity);
+        downloader.setMavenCentralEnabled(mavenCentralEnabled);
+        downloader.setMavenApacheSnapshotEnabled(mavenApacheSnapshotEnabled);
         if (downloadListener != null) {
             downloader.addDownloadListener(downloadListener);
         }
@@ -437,8 +478,9 @@ public class KameletMain extends MainCommandLineSupport {
                     }
                 }
             }
-
         }
+        configure().withProfile(profile);
+
         // embed HTTP server if port is specified
         Object port = getInitialProperties().get("camel.jbang.platform-http.port");
         if (port != null) {
@@ -447,28 +489,19 @@ public class KameletMain extends MainCommandLineSupport {
         }
         boolean console = "true".equals(getInitialProperties().get("camel.jbang.console"));
         if (console) {
+            configure().setDevConsoleEnabled(true);
             configure().httpServer().withEnabled(true);
+            configure().httpServer().withInfoEnabled(true); // also enable info if console is enabled
             configure().httpServer().withDevConsoleEnabled(true);
         }
-
-        // always enable developer console as it is needed by camel-cli-connector
-        configure().withDevConsoleEnabled(true);
-        // and enable a bunch of other stuff that gives more details for developers
-        configure().withCamelEventsTimestampEnabled(true);
-        configure().withLoadHealthChecks(true);
-        configure().withModeline(true);
-        configure().withLoadStatisticsEnabled(true);
-        configure().withMessageHistory(true);
-        configure().withInflightRepositoryBrowseEnabled(true);
-        configure().withEndpointRuntimeStatisticsEnabled(true);
-        configure().withJmxManagementStatisticsLevel(ManagementStatisticsLevel.Extended);
-        configure().withShutdownLogInflightExchangesOnTimeout(false);
-        configure().withShutdownTimeout(10);
-        configure().withStartupRecorder("backlog");
-
         boolean tracing = "true".equals(getInitialProperties().get("camel.jbang.backlogTracing"));
         if (tracing) {
-            configure().withBacklogTracing(true);
+            configure().tracerConfig().withEnabled(true);
+        }
+        boolean infoConsole = "true".equals(getInitialProperties().get("camel.jbang.info"));
+        if (infoConsole) {
+            configure().httpServer().withEnabled(true);
+            configure().httpServer().withInfoEnabled(true);
         }
         boolean health = "true".equals(getInitialProperties().get("camel.jbang.health"));
         if (health) {
@@ -546,7 +579,7 @@ public class KameletMain extends MainCommandLineSupport {
                     new DependencyDownloaderStrategy(answer));
 
             // download class-resolver
-            ClassResolver classResolver = new DependencyDownloaderClassResolver(answer, knownDeps);
+            ClassResolver classResolver = new DependencyDownloaderClassResolver(answer, knownDeps, silent);
             answer.setClassResolver(classResolver);
             // re-create factory finder with download class-resolver
             FactoryFinderResolver ffr = PluginHelper.getFactoryFinderResolver(answer);
@@ -561,6 +594,8 @@ public class KameletMain extends MainCommandLineSupport {
                     new DependencyDownloaderDataFormatResolver(answer, stubPattern, silent));
             answer.getCamelContextExtension().addContextPlugin(LanguageResolver.class,
                     new DependencyDownloaderLanguageResolver(answer, stubPattern, silent));
+            answer.getCamelContextExtension().addContextPlugin(TransformerResolver.class,
+                    new DependencyDownloaderTransformerResolver(answer, stubPattern, silent));
             answer.getCamelContextExtension().addContextPlugin(UriFactoryResolver.class,
                     new DependencyDownloaderUriFactoryResolver(answer));
             answer.getCamelContextExtension().addContextPlugin(ResourceLoader.class,
@@ -608,6 +643,16 @@ public class KameletMain extends MainCommandLineSupport {
                 answer.addService(reloader);
                 PeriodTaskScheduler scheduler = PluginHelper.getPeriodTaskScheduler(answer);
                 scheduler.schedulePeriodTask(reloader, 2000);
+            }
+
+            // reload with openapi
+            String openapi = getInitialProperties().getProperty("camel.jbang.open-api");
+            String reload = getInitialProperties().getProperty("camel.main.routesReloadDirectory");
+            if (openapi != null && (reload != null || sourceDir != null)) {
+                // add open-api reloader that generate output to .camel-jbang/generated-openapi.yaml
+                File file = Paths.get(openapi).toFile();
+                OpenApiGeneratorReloadStrategy rs = new OpenApiGeneratorReloadStrategy(file);
+                answer.addService(rs);
             }
         } catch (Exception e) {
             throw RuntimeCamelException.wrapRuntimeException(e);
@@ -718,21 +763,19 @@ public class KameletMain extends MainCommandLineSupport {
      */
     protected void configureInitialProperties(String location) {
         addInitialProperty("camel.component.kamelet.location", location);
+        addInitialProperty("camel.component.rest-api.consumerComponentName", "platform-http");
         addInitialProperty("camel.component.rest.consumerComponentName", "platform-http");
         addInitialProperty("camel.component.rest.producerComponentName", "vertx-http");
-        addInitialProperty("came.main.jmxUpdateRouteEnabled", "true");
+        // make it easy to load mock-data from file without having to add camel-mock to classpath
+        addInitialProperty("camel.component.rest-openapi.mockIncludePattern", "file:camel-mock/**,classpath:camel-mock/**");
     }
 
     protected String startupInfo() {
         StringBuilder sb = new StringBuilder();
         sb.append("Using Java ").append(System.getProperty("java.version"));
-        String pid = getPid();
-        if (pid != null) {
-            sb.append(" with PID ").append(pid);
-        }
+        sb.append(" with PID ").append(getPid());
         sb.append(". Started by ").append(System.getProperty("user.name"));
         sb.append(" in ").append(System.getProperty("user.dir"));
-
         return sb.toString();
     }
 

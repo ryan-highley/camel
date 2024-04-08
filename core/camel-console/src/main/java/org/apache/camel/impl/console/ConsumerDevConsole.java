@@ -34,7 +34,7 @@ import org.apache.camel.spi.annotations.DevConsole;
 import org.apache.camel.support.console.AbstractDevConsole;
 import org.apache.camel.util.json.JsonObject;
 
-@DevConsole("consumer")
+@DevConsole(name = "consumer", displayName = "Consumers", description = "Display information about Camel consumers")
 public class ConsumerDevConsole extends AbstractDevConsole {
 
     public ConsumerDevConsole() {
@@ -139,7 +139,7 @@ public class ConsumerDevConsole extends AbstractDevConsole {
                 String id = route.getId();
                 ManagedRouteMBean mr = mcc.getManagedRoute(id);
                 ManagedConsumerMBean mc = mcc.getManagedConsumer(id);
-                if (mc != null) {
+                if (mr != null && mc != null) {
                     JsonObject jo = new JsonObject();
                     Integer inflight = mc.getInflightExchanges();
                     if (inflight == null) {

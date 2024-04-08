@@ -37,6 +37,9 @@ public class MSK2Configuration implements Cloneable {
     private String accessKey;
     @UriParam(label = "security", secret = true)
     private String secretKey;
+
+    @UriParam(label = "security", secret = true)
+    private String sessionToken;
     @UriParam
     @Metadata(required = true)
     private MSK2Operations operation;
@@ -61,6 +64,8 @@ public class MSK2Configuration implements Cloneable {
     @UriParam(label = "security")
     private boolean useProfileCredentialsProvider;
     @UriParam(label = "security")
+    private boolean useSessionCredentials;
+    @UriParam(label = "security")
     private String profileCredentialsName;
 
     public KafkaClient getMskClient() {
@@ -68,7 +73,7 @@ public class MSK2Configuration implements Cloneable {
     }
 
     /**
-     * To use a existing configured AWS MSK as client
+     * To use an existing configured AWS MSK client
      */
     public void setMskClient(KafkaClient mskClient) {
         this.mskClient = mskClient;
@@ -94,6 +99,17 @@ public class MSK2Configuration implements Cloneable {
      */
     public void setSecretKey(String secretKey) {
         this.secretKey = secretKey;
+    }
+
+    public String getSessionToken() {
+        return sessionToken;
+    }
+
+    /**
+     * Amazon AWS Session Token used when the user needs to assume an IAM role
+     */
+    public void setSessionToken(String sessionToken) {
+        this.sessionToken = sessionToken;
     }
 
     public MSK2Operations getOperation() {
@@ -145,8 +161,8 @@ public class MSK2Configuration implements Cloneable {
     }
 
     /**
-     * The region in which MSK client needs to work. When using this parameter, the configuration will expect the
-     * lowercase name of the region (for example ap-east-1) You'll need to use the name Region.EU_WEST_1.id()
+     * The region in which the MSK client needs to work. When using this parameter, the configuration will expect the
+     * lowercase name of the region (for example, ap-east-1) You'll need to use the name Region.EU_WEST_1.id()
      */
     public void setRegion(String region) {
         this.region = region;
@@ -179,8 +195,8 @@ public class MSK2Configuration implements Cloneable {
     }
 
     /**
-     * Set the need for overidding the endpoint. This option needs to be used in combination with uriEndpointOverride
-     * option
+     * Set the need for overriding the endpoint. This option needs to be used in combination with the
+     * uriEndpointOverride option
      */
     public void setOverrideEndpoint(boolean overrideEndpoint) {
         this.overrideEndpoint = overrideEndpoint;
@@ -220,12 +236,24 @@ public class MSK2Configuration implements Cloneable {
         this.useProfileCredentialsProvider = useProfileCredentialsProvider;
     }
 
+    public boolean isUseSessionCredentials() {
+        return useSessionCredentials;
+    }
+
+    /**
+     * Set whether the MSK client should expect to use Session Credentials. This is useful in a situation in which the
+     * user needs to assume an IAM role for doing operations in MSK.
+     */
+    public void setUseSessionCredentials(boolean useSessionCredentials) {
+        this.useSessionCredentials = useSessionCredentials;
+    }
+
     public String getProfileCredentialsName() {
         return profileCredentialsName;
     }
 
     /**
-     * If using a profile credentials provider this parameter will set the profile name
+     * If using a profile credentials provider, this parameter will set the profile name
      */
     public void setProfileCredentialsName(String profileCredentialsName) {
         this.profileCredentialsName = profileCredentialsName;

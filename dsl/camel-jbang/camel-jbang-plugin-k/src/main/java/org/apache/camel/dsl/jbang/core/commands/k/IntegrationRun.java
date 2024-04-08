@@ -147,7 +147,7 @@ public class IntegrationRun extends KubeBaseCommand {
     String[] labels;
 
     @CommandLine.Option(names = { "--traits", "-t" },
-                        description = "Add a label to the integration. Use name values pairs like \"--label my.company=hello\".")
+                        description = "Add a trait configuration to the integration. Use name values pairs like \"--trait trait.name.config=hello\".")
     String[] traits;
 
     @CommandLine.Option(names = { "--use-flows" }, defaultValue = "true",
@@ -173,6 +173,12 @@ public class IntegrationRun extends KubeBaseCommand {
     }
 
     public Integer doCall() throws Exception {
+        // Operator id must be set
+        if (ObjectHelper.isEmpty(operatorId)) {
+            printer().println("Operator id must be set");
+            return -1;
+        }
+
         List<String> integrationSources
                 = Stream.concat(Arrays.stream(Optional.ofNullable(filePaths).orElseGet(() -> new String[] {})),
                         Arrays.stream(Optional.ofNullable(sources).orElseGet(() -> new String[] {}))).toList();
@@ -216,13 +222,12 @@ public class IntegrationRun extends KubeBaseCommand {
                     .collect(Collectors.toMap(it -> it[0].trim(), it -> it[1].trim())));
         }
 
-        if (operatorId != null) {
-            if (integration.getMetadata().getAnnotations() == null) {
-                integration.getMetadata().setAnnotations(new HashMap<>());
-            }
-
-            integration.getMetadata().getAnnotations().put(KubeCommand.OPERATOR_ID_LABEL, operatorId);
+        if (integration.getMetadata().getAnnotations() == null) {
+            integration.getMetadata().setAnnotations(new HashMap<>());
         }
+
+        // --operator-id={id} is a syntax sugar for '--annotation camel.apache.org/operator.id={id}'
+        integration.getMetadata().getAnnotations().put(KubeCommand.OPERATOR_ID_LABEL, operatorId);
 
         if (labels != null && labels.length > 0) {
             integration.getMetadata().setLabels(Arrays.stream(labels)
@@ -308,7 +313,10 @@ public class IntegrationRun extends KubeBaseCommand {
                 case "yaml" -> printer().println(KubernetesHelper.yaml().dumpAsMap(integration));
                 case "json" -> printer().println(
                         JSonHelper.prettyPrint(KubernetesHelper.json().writer().writeValueAsString(integration), 2));
-                default -> printer().printf("Unsupported output format %s%n", output);
+                default -> {
+                    printer().printf("Unsupported output format '%s' (supported: yaml, json)%n", output);
+                    return -1;
+                }
             }
 
             return 0;
@@ -332,7 +340,7 @@ public class IntegrationRun extends KubeBaseCommand {
         }
 
         if (logs) {
-            new IntegrationLogs(getMain()).watchLogs(integration);
+            new IntegrationLogs(getMain()).watchLogs(integration.getMetadata().getName());
         }
 
         return 0;

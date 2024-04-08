@@ -30,15 +30,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class FromRestGetPolicyTest extends ContextTestSupport {
 
     @Override
-    protected Registry createRegistry() throws Exception {
-        Registry jndi = super.createRegistry();
+    protected Registry createCamelRegistry() throws Exception {
+        Registry jndi = super.createCamelRegistry();
         jndi.bind("dummy-rest", new DummyRestConsumerFactory());
         return jndi;
     }
 
     @Test
     public void testFromRestModel() throws Exception {
-        assertEquals(2, context.getRoutes().size());
+        // routes are inlined
+        assertEquals(1, context.getRoutes().size());
 
         assertEquals(1, context.getRestDefinitions().size());
 

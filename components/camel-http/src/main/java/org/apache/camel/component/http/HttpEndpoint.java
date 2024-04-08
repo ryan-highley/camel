@@ -58,7 +58,9 @@ import org.slf4j.LoggerFactory;
  */
 @UriEndpoint(firstVersion = "2.3.0", scheme = "http,https", title = "HTTP,HTTPS", syntax = "http://httpUri",
              producerOnly = true, category = { Category.HTTP }, lenientProperties = true, headersClass = HttpConstants.class)
-@Metadata(excludeProperties = "httpBinding,matchOnUriPrefix,chunked,transferException")
+@Metadata(excludeProperties = "httpBinding,matchOnUriPrefix,chunked,transferException", annotations = {
+        "protocol=http"
+})
 @ManagedResource(description = "Managed HttpEndpoint")
 public class HttpEndpoint extends HttpCommonEndpoint {
 
@@ -144,22 +146,20 @@ public class HttpEndpoint extends HttpCommonEndpoint {
     @UriParam(label = "producer,advanced", description = "To use custom host header for producer. When not set in query will "
                                                          + "be ignored. When set will override host header derived from url.")
     private String customHostHeader;
-    @UriParam(label = "producer,advanced",
+    @UriParam(label = "producer",
               description = "Whether to skip mapping all the Camel headers as HTTP request headers."
                             + " If there are no data from Camel headers needed to be included in the HTTP request then this can avoid"
                             + " parsing overhead with many object allocations for the JVM garbage collector.")
     private boolean skipRequestHeaders;
-
-    @UriParam(label = "producer", defaultValue = "false",
-              description = "Whether to the HTTP request should follow redirects."
-                            + " By default the HTTP request does not follow redirects ")
-    private boolean followRedirects;
-
-    @UriParam(label = "producer,advanced",
+    @UriParam(label = "producer",
               description = "Whether to skip mapping all the HTTP response headers to Camel headers."
                             + " If there are no data needed from HTTP headers then this can avoid parsing overhead"
                             + " with many object allocations for the JVM garbage collector.")
     private boolean skipResponseHeaders;
+    @UriParam(label = "producer,advanced", defaultValue = "false",
+              description = "Whether to the HTTP request should follow redirects."
+                            + " By default the HTTP request does not follow redirects ")
+    private boolean followRedirects;
     @UriParam(label = "producer,advanced", description = "To set a custom HTTP User-Agent request header")
     private String userAgent;
 

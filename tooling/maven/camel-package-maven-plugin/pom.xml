@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>maven-plugins</artifactId>
-        <version>4.4.0-SNAPSHOT</version>
+        <version>4.6.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-package-maven-plugin</artifactId>
@@ -66,6 +66,11 @@
             <groupId>org.mvel</groupId>
             <artifactId>mvel2</artifactId>
             <version>${mvel-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup</groupId>
+            <artifactId>kotlinpoet-jvm</artifactId>
+            <version>${kotlinpoet-version}</version>
         </dependency>
 
         <dependency>

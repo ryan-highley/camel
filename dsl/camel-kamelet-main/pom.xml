@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>dsl</artifactId>
-        <version>4.4.0-SNAPSHOT</version>
+        <version>4.6.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-kamelet-main</artifactId>
@@ -89,6 +89,10 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
+            <artifactId>camel-rest</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
             <artifactId>camel-stub</artifactId>
         </dependency>
         <dependency>
@@ -124,6 +128,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
+            <artifactId>camel-openapi-rest-dsl-generator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.camel</groupId>
             <artifactId>camel-resourceresolver-github</artifactId>
             <scope>test</scope>
         </dependency>
@@ -150,11 +159,6 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-mock</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-rest</artifactId>
             <scope>test</scope>
         </dependency>
 

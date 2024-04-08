@@ -52,8 +52,7 @@ public interface JmsComponentBuilderFactory {
          * Sets the JMS client ID to use. Note that this value, if specified,
          * must be unique and can only be used by a single JMS connection
          * instance. It is typically only required for durable topic
-         * subscriptions. If using Apache ActiveMQ you may prefer to use Virtual
-         * Topics instead.
+         * subscriptions with JMS 1.1.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
          * 
@@ -508,12 +507,12 @@ public interface JmsComponentBuilderFactory {
          * DefaultMessageListenerContainer, for both consumer endpoints and the
          * ReplyTo consumer of producer endpoints. Possible values: SimpleAsync
          * (uses Spring's SimpleAsyncTaskExecutor) or ThreadPool (uses Spring's
-         * ThreadPoolTaskExecutor with optimal values - cached threadpool-like).
-         * If not set, it defaults to the previous behaviour, which uses a
-         * cached thread pool for consumer endpoints and SimpleAsync for reply
-         * consumers. The use of ThreadPool is recommended to reduce thread
-         * trash in elastic configurations with dynamically increasing and
-         * decreasing concurrent consumers.
+         * ThreadPoolTaskExecutor with optimal values - cached
+         * thread-pool-like). If not set, it defaults to the previous behaviour,
+         * which uses a cached thread pool for consumer endpoints and
+         * SimpleAsync for reply consumers. The use of ThreadPool is recommended
+         * to reduce thread trash in elastic configurations with dynamically
+         * increasing and decreasing concurrent consumers.
          * 
          * The option is a:
          * &lt;code&gt;org.apache.camel.component.jms.DefaultTaskExecutorType&lt;/code&gt; type.
@@ -932,8 +931,8 @@ public interface JmsComponentBuilderFactory {
         }
         /**
          * This option is used to allow additional headers which may have values
-         * that are invalid according to JMS specification. For example some
-         * message systems such as WMQ do this with header names using prefix
+         * that are invalid according to JMS specification. For example, some
+         * message systems, such as WMQ, do this with header names using prefix
          * JMS_IBM_MQMD_ containing values with byte array or other invalid
          * types. You can specify multiple header names separated by comma, and
          * use as suffix for wildcard matching.
@@ -1206,7 +1205,7 @@ public interface JmsComponentBuilderFactory {
          * Whether to startup the JmsConsumer message listener asynchronously,
          * when starting a route. For example if a JmsConsumer cannot get a
          * connection to a remote JMS broker, then it may block while retrying
-         * and/or failover. This will cause Camel to block while starting
+         * and/or fail-over. This will cause Camel to block while starting
          * routes. By setting this option to true, you will let routes startup,
          * while the JmsConsumer connects to the JMS broker using a dedicated
          * thread in asynchronous mode. If this option is used, then beware that
@@ -1374,9 +1373,9 @@ public interface JmsComponentBuilderFactory {
             return this;
         }
         /**
-         * Whether to include all JMSXxxx properties when mapping from JMS to
-         * Camel Message. Setting this to true will include properties such as
-         * JMSXAppID, and JMSXUserID etc. Note: If you are using a custom
+         * Whether to include all JMSX prefixed properties when mapping from JMS
+         * to Camel Message. Setting this to true will include properties such
+         * as JMSXAppID, and JMSXUserID etc. Note: If you are using a custom
          * headerFilterStrategy then this option does not apply.
          * 
          * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
@@ -1662,6 +1661,24 @@ public interface JmsComponentBuilderFactory {
             return this;
         }
         /**
+         * A pluggable TemporaryQueueResolver that allows you to use your own
+         * resolver for creating temporary queues (some messaging systems has
+         * special requirements for creating temporary queues).
+         * 
+         * The option is a:
+         * &lt;code&gt;org.apache.camel.component.jms.TemporaryQueueResolver&lt;/code&gt; type.
+         * 
+         * Group: advanced
+         * 
+         * @param temporaryQueueResolver the value to set
+         * @return the dsl builder
+         */
+        default JmsComponentBuilder temporaryQueueResolver(
+                org.apache.camel.component.jms.TemporaryQueueResolver temporaryQueueResolver) {
+            doSetProperty("temporaryQueueResolver", temporaryQueueResolver);
+            return this;
+        }
+        /**
          * If enabled and you are using Request Reply messaging (InOut) and an
          * Exchange failed on the consumer side, then the caused Exception will
          * be send back in response as a jakarta.jms.ObjectMessage. If the
@@ -1805,8 +1822,8 @@ public interface JmsComponentBuilderFactory {
             return this;
         }
         /**
-         * Allows to control whether stacktraces should be logged or not, by the
-         * default errorHandler.
+         * Allows to control whether stack-traces should be logged or not, by
+         * the default errorHandler.
          * 
          * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
          * 
@@ -2069,6 +2086,7 @@ public interface JmsComponentBuilderFactory {
             case "recoveryInterval": getOrCreateConfiguration((JmsComponent) component).setRecoveryInterval((long) value); return true;
             case "requestTimeoutCheckerInterval": getOrCreateConfiguration((JmsComponent) component).setRequestTimeoutCheckerInterval((long) value); return true;
             case "synchronous": getOrCreateConfiguration((JmsComponent) component).setSynchronous((boolean) value); return true;
+            case "temporaryQueueResolver": getOrCreateConfiguration((JmsComponent) component).setTemporaryQueueResolver((org.apache.camel.component.jms.TemporaryQueueResolver) value); return true;
             case "transferException": getOrCreateConfiguration((JmsComponent) component).setTransferException((boolean) value); return true;
             case "transferExchange": getOrCreateConfiguration((JmsComponent) component).setTransferExchange((boolean) value); return true;
             case "useMessageIDAsCorrelationID": getOrCreateConfiguration((JmsComponent) component).setUseMessageIDAsCorrelationID((boolean) value); return true;

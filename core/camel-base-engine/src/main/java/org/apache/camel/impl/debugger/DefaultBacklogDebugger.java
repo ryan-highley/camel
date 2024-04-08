@@ -82,6 +82,7 @@ public final class DefaultBacklogDebugger extends ServiceSupport implements Back
     private boolean bodyIncludeStreams;
     private boolean bodyIncludeFiles = true;
     private boolean includeExchangeProperties = true;
+    private boolean includeExchangeVariables = true;
     private boolean includeException = true;
 
     /**
@@ -498,6 +499,46 @@ public final class DefaultBacklogDebugger extends ServiceSupport implements Back
     }
 
     @Override
+    public void setExchangeVariableOnBreakpoint(String nodeId, String variableName, Object value)
+            throws NoTypeConversionAvailableException {
+        SuspendedExchange se = suspendedBreakpoints.get(nodeId);
+        if (se != null) {
+            Class<?> oldType = se.getExchange().getMessage().getHeader(variableName) == null
+                    ? null : se.getExchange().getMessage().getHeader(variableName).getClass();
+            setExchangeVariableOnBreakpoint(nodeId, variableName, value, oldType);
+        }
+    }
+
+    @Override
+    public void setExchangeVariableOnBreakpoint(String nodeId, String variableName, Object value, Class<?> type)
+            throws NoTypeConversionAvailableException {
+        SuspendedExchange se = suspendedBreakpoints.get(nodeId);
+        if (se != null) {
+            logger.log("Breakpoint at node " + nodeId + " is updating exchange variable on exchangeId: "
+                       + se.getExchange().getExchangeId() + " with key: " + variableName + " and value: " + value);
+            if (type == null) {
+                se.getExchange().setVariable(variableName, value);
+            } else {
+                Object convertedValue
+                        = se.getExchange().getContext().getTypeConverter().mandatoryConvertTo(type, se.getExchange(), value);
+                se.getExchange().setVariable(variableName, convertedValue);
+            }
+            refreshBacklogTracerEventMessage(nodeId, se);
+        }
+    }
+
+    @Override
+    public void removeExchangeVariableOnBreakpoint(String nodeId, String variableName) {
+        SuspendedExchange se = suspendedBreakpoints.get(nodeId);
+        if (se != null) {
+            logger.log("Breakpoint at node " + nodeId + " is removing variable on exchangeId: "
+                       + se.getExchange().getExchangeId() + " with key: " + variableName);
+            se.getExchange().removeVariable(variableName);
+            refreshBacklogTracerEventMessage(nodeId, se);
+        }
+    }
+
+    @Override
     public long getFallbackTimeout() {
         return fallbackTimeout;
     }
@@ -678,6 +719,16 @@ public final class DefaultBacklogDebugger extends ServiceSupport implements Back
     }
 
     @Override
+    public boolean isIncludeExchangeVariables() {
+        return includeExchangeVariables;
+    }
+
+    @Override
+    public void setIncludeExchangeVariables(boolean includeExchangeVariables) {
+        this.includeExchangeVariables = includeExchangeVariables;
+    }
+
+    @Override
     public boolean isIncludeException() {
         return includeException;
     }
@@ -792,7 +843,7 @@ public final class DefaultBacklogDebugger extends ServiceSupport implements Back
      * @return          the XML
      */
     private String dumpAsXml(Exchange exchange) {
-        return MessageHelper.dumpAsXml(exchange.getIn(), includeExchangeProperties, true, 2, true,
+        return MessageHelper.dumpAsXml(exchange.getIn(), includeExchangeProperties, includeExchangeVariables, true, 2, true,
                 isBodyIncludeStreams(), isBodyIncludeFiles(),
                 getBodyMaxChars());
     }
@@ -804,7 +855,7 @@ public final class DefaultBacklogDebugger extends ServiceSupport implements Back
      * @return          the JSon
      */
     private String dumpAsJSon(Exchange exchange) {
-        return MessageHelper.dumpAsJSon(exchange.getIn(), includeExchangeProperties, true, 2, true,
+        return MessageHelper.dumpAsJSon(exchange.getIn(), includeExchangeProperties, includeExchangeVariables, true, 2, true,
                 isBodyIncludeStreams(), isBodyIncludeFiles(),
                 getBodyMaxChars(), true);
     }

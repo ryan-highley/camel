@@ -32,6 +32,7 @@ import org.apache.camel.ExchangePropertyKey;
 import org.apache.camel.MessageHistory;
 import org.apache.camel.NamedNode;
 import org.apache.camel.NamedRoute;
+import org.apache.camel.NonManagedService;
 import org.apache.camel.Ordered;
 import org.apache.camel.Processor;
 import org.apache.camel.Route;
@@ -636,10 +637,13 @@ public class CamelInternalProcessor extends DelegateAsyncProcessor implements In
                 String toNode = processorDefinition.getId();
                 String exchangeId = exchange.getExchangeId();
                 boolean includeExchangeProperties = backlogTracer.isIncludeExchangeProperties();
-                String messageAsXml = MessageHelper.dumpAsXml(exchange.getIn(), includeExchangeProperties, true, 4,
+                boolean includeExchangeVariables = backlogTracer.isIncludeExchangeVariables();
+                String messageAsXml = MessageHelper.dumpAsXml(exchange.getIn(), includeExchangeProperties,
+                        includeExchangeVariables, true, 4,
                         true, backlogTracer.isBodyIncludeStreams(), backlogTracer.isBodyIncludeFiles(),
                         backlogTracer.getBodyMaxChars());
-                String messageAsJSon = MessageHelper.dumpAsJSon(exchange.getIn(), includeExchangeProperties, true, 4,
+                String messageAsJSon = MessageHelper.dumpAsJSon(exchange.getIn(), includeExchangeProperties,
+                        includeExchangeVariables, true, 4,
                         true, backlogTracer.isBodyIncludeStreams(), backlogTracer.isBodyIncludeFiles(),
                         backlogTracer.getBodyMaxChars(), true);
 
@@ -675,12 +679,15 @@ public class CamelInternalProcessor extends DelegateAsyncProcessor implements In
                     String routeId = routeDefinition != null ? routeDefinition.getRouteId() : null;
                     String exchangeId = exchange.getExchangeId();
                     boolean includeExchangeProperties = backlogTracer.isIncludeExchangeProperties();
+                    boolean includeExchangeVariables = backlogTracer.isIncludeExchangeVariables();
                     long created = exchange.getClock().getCreated();
-                    String messageAsXml = MessageHelper.dumpAsXml(exchange.getIn(), includeExchangeProperties, true, 4,
+                    String messageAsXml = MessageHelper.dumpAsXml(exchange.getIn(), includeExchangeProperties,
+                            includeExchangeVariables, true, 4,
                             true, backlogTracer.isBodyIncludeStreams(), backlogTracer.isBodyIncludeFiles(),
                             backlogTracer.getBodyMaxChars());
                     String messageAsJSon
-                            = MessageHelper.dumpAsJSon(exchange.getIn(), includeExchangeProperties, true, 4,
+                            = MessageHelper.dumpAsJSon(exchange.getIn(), includeExchangeProperties, includeExchangeVariables,
+                                    true, 4,
                                     true, backlogTracer.isBodyIncludeStreams(), backlogTracer.isBodyIncludeFiles(),
                                     backlogTracer.getBodyMaxChars(), true);
                     DefaultBacklogTracerEventMessage pseudoLast = new DefaultBacklogTracerEventMessage(
@@ -1213,7 +1220,7 @@ public class CamelInternalProcessor extends DelegateAsyncProcessor implements In
     /**
      * Event notifier for {@link BacklogTracerAdvice} to capture {@link Exchange} sent to endpoints during tracing.
      */
-    private static final class BacklogTraceAdviceEventNotifier extends SimpleEventNotifierSupport {
+    private static final class BacklogTraceAdviceEventNotifier extends SimpleEventNotifierSupport implements NonManagedService {
 
         private final Object dummy = new Object();
 
@@ -1229,9 +1236,7 @@ public class CamelInternalProcessor extends DelegateAsyncProcessor implements In
         public void notify(CamelEvent event) throws Exception {
             if (event instanceof CamelEvent.ExchangeSendingEvent ess) {
                 Exchange e = ess.getExchange();
-                if (uris.containsKey(e)) {
-                    uris.put(e, ess.getEndpoint());
-                }
+                uris.computeIfPresent(e, (key, val) -> ess.getEndpoint());
             }
         }
 

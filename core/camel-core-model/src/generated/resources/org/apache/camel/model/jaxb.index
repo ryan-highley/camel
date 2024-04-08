@@ -99,6 +99,7 @@ TemplatedRoutesDefinition
 ThreadPoolProfileDefinition
 ThreadsDefinition
 ThrottleDefinition
+ThrottlingMode
 ThrowExceptionDefinition
 ToDefinition
 ToDynamicDefinition

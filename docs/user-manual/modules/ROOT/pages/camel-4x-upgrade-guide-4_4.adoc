@@ -21,6 +21,68 @@ Durations and some time-related information were consolidated in a new internal 
 
 The `lookup` method in `org.apache.camel.component.properties.PropertiesLookup` now has a 2nd parameter for the default value.
 
+Some of the Java DSL for `tokenize`, `xmlTokenize`, `xpath`, `xquery` and `jsonpath` has been removed as part of making the DSL model consistent.
+
+Here are a few examples of migration before vs after:
+
+[source,java]
+----
+ from("direct:in")
+    .choice()
+        .when().xpath("/invoice/@orderType = 'premium'", "invoiceDetails")
+            .to("mock:premium")
+        .when() .xpath("/invoice/@orderType = 'standard'", "invoiceDetails")
+            .to("mock:standard")
+        .otherwise()
+            .to("mock:unknown")
+    .end();
+----
+
+You can use the _fluent expression_ builder to configure all the options:
+
+[source,java]
+----
+// use fluent builder expression to create the languages
+var premium = expression().xpath().expression("/invoice/@orderType = 'premium'").source("header:invoiceDetails").end();
+var standard = expression().xpath().expression("/invoice/@orderType = 'standard'").source("header:invoiceDetails").end();
+
+from("direct:in")
+    .choice()
+        .when(premium)
+            .to("mock:premium")
+        .when(standard)
+            .to("mock:standard")
+        .otherwise()
+            .to("mock:unknown")
+    .end();
+----
+
+In the example above notice how we use `source` to specify the input to use, in this case a header named invoiceDetails.
+The `source` can also be variable, or exchange property.
+
+And another example with `tokenize`:
+
+[source,java]
+----
+from("direct:start")
+    .split().tokenize("\r\n|\n", true, 2, "\n", true)
+        .log("${body}")
+        .to("mock:line");
+----
+
+You can use the _fluent expression_ builder to configure all the options:
+
+[source,java]
+----
+// use fluent builder expression to create the languages
+var token = expression().tokenize().token("\r\n|\n").regex(true).group(2).groupDelimiter("\n").skipFirst(true).end();
+
+from("direct:start")
+    .split(token)
+        .log("${body}")
+        .to("mock:line");
+----
+
 ==== Languages
 
 The way languages are created and configured by Camel has been refactored to be aligned and avoid a thread-safety issues
@@ -28,10 +90,24 @@ when using Java DSL. The setter/getter on the `Language` classes for options tha
 
 In XML and YAML DSL the `type` option in `<xquery>` has been renamed to `resultType` to be aligned with the other languages.
 
+In XML and YAML DSL The `headerName` on `<xpath>`, `<xquery>` has been renamed to `source` and you should prefix the value with `header:name` to declare
+it is a header, because other kind of sources can be specified also. The same change has applied to `@XPath` and `@XQuery`
+language annotations.
+
 ==== WireTap EIP
 
 The copied exchange is no longer having exchange property CORRELATION_ID set that links to the original exchange.
 The reason is that this link should only be for EIPs with sub exchanges such as Splitter and Multicast.
+
+==== Throttle EIP
+
+Previously Camel used a throttler based on the total number of requests over a period of time ("TotalRequests" mode). That was
+the default on Camel up to version 4.2.0. On Camel 4.3.0 we introduced a new one based on the number of concurrent requests and
+replaced the former.
+
+With Camel 4.4.0 we refactored the xref:components:eips:throttle-eip.adoc[Throttle EIP] implementation so that Camel can support two different modes of throttling.
+
+Check the component documentation for details about how to use each mode.
 
 ==== MDC logging
 
@@ -49,7 +125,7 @@ And the option `camel.main.routeControllerSuperviseEnabled` has been renamed to 
 
 All kamelets are now turned off error handling in the route templates. This is done to make using kamelets
 the same as calling a regular Camel component endpoint. Backwards mode can be enabled by setting `noErrorHandler=false`
-on the `KameletComponent` or as URI parameter `to("kamelet:http-sink?noErrorHandler=true&uri=xxxxx")`.
+on the `KameletComponent` or as URI parameter `to("kamelet:http-sink?noErrorHandler=false&uri=xxxxx")`.
 
 === camel-azure-cosmosdb
 
@@ -87,7 +163,7 @@ With the SHARED_KEY_CREDENTIAL mode the user could explicitly set the sharedKey 
 With the AZURE_IDENTITY mode the user will be able to use the Default Azure Credentials Chain.
 With the AZURE_SAS mode the user could explicitly set the sasSignature or sasCredential parameter.
 With the CLIENT_SECRET mode the user could explicitly set clientId, clientSecret and tenantId or specify a ClientSecretCredential instance.
-With the SERVICE_CLIENT_INSTANCE the user could explicity set a serviceClient parameter by passing a DataLakeServiceClient instance.
+With the SERVICE_CLIENT_INSTANCE the user could explicitly set a serviceClient parameter by passing a DataLakeServiceClient instance.
 This is part of the effort explained in CAMEL-18590.
 
 === camel-azure-storage-queue
@@ -101,6 +177,11 @@ This is part of the effort explained in CAMEL-18590.
 === camel-cassandraql
 
 The NamedCassandraAggregationRepository now provides a deserializationFilter parameter. The default value for it is allowing all java packages and subpackages and all org.apache.camel packages and subpackages. If you plan to use particular classes and you want to expand the filter, you should change the value according to your needs. More details in CAMEL-20306.
+
+=== camel-coap
+
+Upgraded from org.eclipse.californium v2 to v3 which was a painful upgrade. Removed the `"CamelCoapUri` header that would
+allow a producer to create dynamic client to send to another Url. Use Camel's existing `toD` EIP for that instead.
 
 === camel-consul
 
@@ -154,6 +235,13 @@ The component now has support for batch processing.
 Removed deprecated `org.apache.camel.component.jsonvalidator.DefaultJsonSchemaLoader`,
 use `org.apache.camel.component.jsonvalidator.DefaultJsonUriSchemaLoader` instead.
 
+=== camel-splunk-hec
+
+Removed `token` from the URI's path in favor of setting it through a `token` query parameter. While the `token` was in the URI path, it could potentially be leaked within the logs.
+
+=== camel-openapi-java and camel-rest-openapi
+
+Deprecated support for the old Swagger 2.0 spec. Only OpenAPI v3 specs is supported from Camel 4.5 onwards.
 
 == Camel Spring Boot
 

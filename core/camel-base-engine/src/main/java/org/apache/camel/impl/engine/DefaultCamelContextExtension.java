@@ -99,6 +99,7 @@ class DefaultCamelContextExtension implements ExtendedCamelContext {
     private final List<BootstrapCloseable> bootstraps = new CopyOnWriteArrayList<>();
 
     private volatile String description;
+    private volatile String profile;
     private volatile ExchangeFactory exchangeFactory;
     private volatile ExchangeFactoryManager exchangeFactoryManager;
     private volatile ProcessorExchangeFactory processorExchangeFactory;
@@ -214,6 +215,16 @@ class DefaultCamelContextExtension implements ExtendedCamelContext {
     @Override
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    @Override
+    public String getProfile() {
+        return profile;
+    }
+
+    @Override
+    public void setProfile(String profile) {
+        this.profile = profile;
     }
 
     @Override
@@ -338,7 +349,8 @@ class DefaultCamelContextExtension implements ExtendedCamelContext {
         return managementMBeanAssembler;
     }
 
-    void setManagementMBeanAssembler(ManagementMBeanAssembler managementMBeanAssembler) {
+    @Override
+    public void setManagementMBeanAssembler(ManagementMBeanAssembler managementMBeanAssembler) {
         this.managementMBeanAssembler
                 = camelContext.getInternalServiceManager().addService(camelContext, managementMBeanAssembler, false);
     }
@@ -790,11 +802,6 @@ class DefaultCamelContextExtension implements ExtendedCamelContext {
             synchronized (lock) {
                 if (typeConverterRegistry == null) {
                     setTypeConverterRegistry(camelContext.createTypeConverterRegistry());
-
-                    // some registries are also a type converter implementation
-                    if (typeConverterRegistry instanceof TypeConverter newTypeConverter) {
-                        setTypeConverter(newTypeConverter);
-                    }
                 }
             }
         }
@@ -803,6 +810,10 @@ class DefaultCamelContextExtension implements ExtendedCamelContext {
 
     void setTypeConverterRegistry(TypeConverterRegistry typeConverterRegistry) {
         this.typeConverterRegistry = camelContext.getInternalServiceManager().addService(camelContext, typeConverterRegistry);
+        // some registries are also a type converter implementation
+        if (typeConverterRegistry instanceof TypeConverter newTypeConverter) {
+            setTypeConverter(newTypeConverter);
+        }
     }
 
     void stopTypeConverter() {

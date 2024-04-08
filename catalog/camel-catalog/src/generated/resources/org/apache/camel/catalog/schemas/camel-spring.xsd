@@ -990,6 +990,15 @@ Route to be executed when Circuit Breaker EIP executes fallback
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:element name="openApi" type="tns:openApiDefinition">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+<![CDATA[
+To use OpenApi as contract-first with Camel Rest DSL.
+]]>
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
   <xs:element name="openIdConnect" type="tns:openIdConnectDefinition">
     <xs:annotation>
       <xs:documentation xml:lang="en">
@@ -1215,7 +1224,7 @@ Evaluates a Python expression.
     <xs:annotation>
       <xs:documentation xml:lang="en">
 <![CDATA[
-The destination endpoints are selected by random.
+The destination endpoints are selected randomly.
 ]]>
       </xs:documentation>
     </xs:annotation>
@@ -1431,7 +1440,7 @@ Forces a rollback by stopping routing the message
     <xs:annotation>
       <xs:documentation xml:lang="en">
 <![CDATA[
-The destination endpoints are selected in a round-robin fashion. This is a well known and classic policy, which spreads
+The destination endpoints are selected in a round-robin fashion. This is a well-known and classic policy, which spreads
 the load evenly.
 ]]>
       </xs:documentation>
@@ -1720,7 +1729,7 @@ Sets the value of a message header
     <xs:annotation>
       <xs:documentation xml:lang="en">
 <![CDATA[
-Allows to set multiple headers on the message at the same time.
+Allows setting multiple headers on the message at the same time.
 ]]>
       </xs:documentation>
     </xs:annotation>
@@ -3947,7 +3956,7 @@ Enables random backoff. Default value: false
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-Sets a reference to an exiting bean to use, which is looked up from the registry.
+Sets a reference to an existing bean to use, which is looked up from the registry.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -4473,7 +4482,29 @@ configuring the circuit breaker EIP.
   <xs:complexType name="resilience4JConfigurationCommon">
     <xs:complexContent>
       <xs:extension base="tns:identifiedType">
-        <xs:sequence/>
+        <xs:sequence>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="recordException" type="xs:string">
+            <xs:annotation>
+              <xs:documentation xml:lang="en">
+<![CDATA[
+Configure a list of exceptions that are recorded as a failure and thus increase the failure rate. Any exception matching
+or inheriting from one of the list counts as a failure, unless explicitly ignored via ignoreExceptions.
+]]>
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="ignoreException" type="xs:string">
+            <xs:annotation>
+              <xs:documentation xml:lang="en">
+<![CDATA[
+Configure a list of exceptions that are ignored and neither count as a failure nor success. Any exception matching or
+inheriting from one of the list will not count as a failure nor success, even if the exceptions is part of
+recordExceptions.
+]]>
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
         <xs:attribute name="circuitBreaker" type="xs:string">
           <xs:annotation>
             <xs:documentation xml:lang="en">
@@ -5714,7 +5745,7 @@ Sets the back off multiplier. Default value: 2.0
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-Turn on exponential backk off. Default value: false
+Turn on exponential back off. Default value: false
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -7228,7 +7259,7 @@ Class name to use for marshal and unmarshalling.
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-Which Avro library to use. Default value: ApacheAvro
+Which Avro library to use. Default value: avroJackson
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -12258,6 +12289,7 @@ XML. May be null.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="kamelet" type="xs:boolean"/>
         <xs:attribute name="logMask" type="xs:string">
           <xs:annotation>
             <xs:documentation xml:lang="en">
@@ -13654,6 +13686,15 @@ correlation key is throttled together.
             </xs:annotation>
           </xs:element>
         </xs:sequence>
+        <xs:attribute name="mode" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Sets the throttling mode to one of the available modes enumerated in ThrottlingMode. Default value: TotalRequests
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
         <xs:attribute name="executorService" type="xs:string">
           <xs:annotation>
             <xs:documentation xml:lang="en">
@@ -13688,6 +13729,15 @@ value: true
 <![CDATA[
 Whether or not throttler throws the ThrottlerRejectedExecutionException when the exchange exceeds the request limit Is
 by default false. Default value: false
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="timePeriodMillis" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Sets the time period during which the maximum request count is valid for. Default value: 1000
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -15222,29 +15272,12 @@ The String representation of the MediaType to output.
   <xs:complexType abstract="true" name="singleInputTypedExpressionDefinition">
     <xs:simpleContent>
       <xs:extension base="tns:typedExpressionDefinition">
-        <xs:attribute name="variableName" type="xs:string">
+        <xs:attribute name="source" type="xs:string">
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-Name of variable to use as input, instead of the message body.
-]]>
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="headerName" type="xs:string">
-          <xs:annotation>
-            <xs:documentation xml:lang="en">
-<![CDATA[
-Name of header to use as input, instead of the message body.
-]]>
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="propertyName" type="xs:string">
-          <xs:annotation>
-            <xs:documentation xml:lang="en">
-<![CDATA[
-Name of property to use as input, instead of the message body.
+Source to use, instead of message body. You can prefix with variable:, header:, or property: to specify kind of source.
+Otherwise, the source is assumed to be a variable. Use empty or null to use default source, which is the message body.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -15497,15 +15530,6 @@ Whether to validate the bean has the configured method. Default value: true
   <xs:complexType name="simpleExpression">
     <xs:simpleContent>
       <xs:extension base="tns:typedExpressionDefinition"/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:complexType abstract="true" name="singleInputExpressionDefinition">
-    <xs:simpleContent>
-      <xs:extension base="tns:expression">
-        <xs:attribute name="variableName" type="xs:string"/>
-        <xs:attribute name="headerName" type="xs:string"/>
-        <xs:attribute name="propertyName" type="xs:string"/>
-      </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
   <xs:complexType name="spELExpression">
@@ -16360,6 +16384,63 @@ The flow used by the OAuth2 security scheme. Valid values are implicit, password
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
+  <xs:complexType name="openApiDefinition">
+    <xs:complexContent>
+      <xs:extension base="tns:optionalIdentifiedDefinition">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="apiContextPath" type="xs:string"/>
+        </xs:sequence>
+        <xs:attribute name="specification" type="xs:string" use="required">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Path to the OpenApi specification file.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="routeId" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Sets the id of the route.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="disabled" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Whether to disable all the REST services from the OpenAPI contract from the route during build time. Once an REST
+service has been disabled then it cannot be enabled later at runtime. Default value: false
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="missingOperation" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Whether to fail, ignore or return a mock response for OpenAPI operations that are not mapped to a corresponding route.
+Default value: fail
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="mockIncludePattern" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Used for inclusive filtering of mock data from directories. The pattern is using Ant-path style pattern. Multiple
+patterns can be specified separated by comma. Default value: classpath:camel-mock/**
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
   <xs:complexType name="openIdConnectDefinition">
     <xs:complexContent>
       <xs:extension base="tns:restSecurityDefinition">
@@ -16644,7 +16725,10 @@ generated host with this configured hostname.
       <xs:annotation>
         <xs:documentation xml:lang="en">
 <![CDATA[
-Whether to use X-Forward headers for Host and related setting. The default value is true. Default value: true
+Whether to use X-Forward headers to set host etc. for OpenApi. This may be needed in special cases involving
+reverse-proxy and networking going from HTTP to HTTPS etc. Then the proxy can send X-Forward headers (X-Forwarded-Proto)
+that influences the host names in the OpenAPI schema that camel-openapi-java generates from Rest DSL routes. Default
+value: false
 ]]>
         </xs:documentation>
       </xs:annotation>
@@ -16675,8 +16759,8 @@ or camel-netty-http that includes a HTTP server.
       <xs:annotation>
         <xs:documentation xml:lang="en">
 <![CDATA[
-Sets a leading API context-path the REST API services will be using. This can be used when using components such as
-camel-servlet where the deployed web application is deployed using a context-path.
+Sets a leading context-path the REST API will be using. This can be used when using components such as camel-servlet
+where the deployed web application is deployed using a context-path.
 ]]>
         </xs:documentation>
       </xs:annotation>
@@ -16717,6 +16801,16 @@ using. Default value: allLocalIp
         <xs:documentation xml:lang="en">
 <![CDATA[
 Sets the binding mode to use. The default value is off. Default value: off
+]]>
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="bindingPackageScan" type="xs:string">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">
+<![CDATA[
+Package name to use as base (offset) for classpath scanning of POJO classes are located when using binding mode is
+enabled for JSon or XML. Multiple package names can be separated by comma.
 ]]>
         </xs:documentation>
       </xs:annotation>
@@ -16767,10 +16861,11 @@ default value is false. Default value: false
       <xs:annotation>
         <xs:documentation xml:lang="en">
 <![CDATA[
-Inline routes in rest-dsl which are linked using direct endpoints. By default, each service in Rest DSL is an individual
-route, meaning that you would have at least two routes per service (rest-dsl, and the route linked from rest-dsl).
-Enabling this allows Camel to optimize and inline this as a single route, however this requires to use direct endpoints,
-which must be unique per service. This option is default false. Default value: false
+Inline routes in rest-dsl which are linked using direct endpoints. Each service in Rest DSL is an individual route,
+meaning that you would have at least two routes per service (rest-dsl, and the route linked from rest-dsl). By inlining
+(default) allows Camel to optimize and inline this as a single route, however this requires to use direct endpoints,
+which must be unique per service. If a route is not using direct endpoint then the rest-dsl is not inlined, and will
+become an individual route. This option is default true. Default value: true
 ]]>
         </xs:documentation>
       </xs:annotation>
@@ -16800,6 +16895,7 @@ custom name of the data format, not to refer to an existing data format instance
     <xs:complexContent>
       <xs:extension base="tns:optionalIdentifiedDefinition">
         <xs:sequence>
+          <xs:element minOccurs="0" ref="tns:openApi"/>
           <xs:element minOccurs="0" ref="tns:securityDefinitions"/>
           <xs:element maxOccurs="unbounded" minOccurs="0" name="securityRequirements" type="tns:securityDefinition">
             <xs:annotation>
@@ -17926,6 +18022,12 @@ An optional certificate alias to use. This is useful when the keystore has multi
       <xs:enumeration value="NEVER"/>
     </xs:restriction>
   </xs:simpleType>
+  <xs:simpleType name="throttlingMode">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="TotalRequests"/>
+      <xs:enumeration value="ConcurrentRequests"/>
+    </xs:restriction>
+  </xs:simpleType>
   <xs:simpleType name="bindyType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Csv"/>
@@ -17937,6 +18039,39 @@ An optional certificate alias to use. This is useful when the keystore has multi
     <xs:restriction base="xs:string">
       <xs:enumeration value="type"/>
       <xs:enumeration value="regexp"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="option">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="DEFAULT_PATH_LEAF_TO_NULL"/>
+      <xs:enumeration value="ALWAYS_RETURN_LIST"/>
+      <xs:enumeration value="AS_PATH_LIST"/>
+      <xs:enumeration value="SUPPRESS_EXCEPTIONS"/>
+      <xs:enumeration value="REQUIRE_PROPERTIES"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="scope">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="SINGLETON"/>
+      <xs:enumeration value="REQUEST"/>
+      <xs:enumeration value="PROTOTYPE"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="mode">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="INJECTING_CONTEXTUAL_NAMESPACE_BINDINGS"/>
+      <xs:enumeration value="WRAPPING_EXTRACTED_TOKEN"/>
+      <xs:enumeration value="UNWRAPPING_EXTRACTED_TOKEN"/>
+      <xs:enumeration value="EXTRACTING_TEXT_CONTENT"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="resultQName">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="NUMBER"/>
+      <xs:enumeration value="STRING"/>
+      <xs:enumeration value="BOOLEAN"/>
+      <xs:enumeration value="NODESET"/>
+      <xs:enumeration value="NODE"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="collectionFormat">

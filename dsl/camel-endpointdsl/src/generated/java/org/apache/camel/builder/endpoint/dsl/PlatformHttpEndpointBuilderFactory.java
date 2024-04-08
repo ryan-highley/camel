@@ -61,6 +61,167 @@ public interface PlatformHttpEndpointBuilderFactory {
             return this;
         }
         /**
+         * Sets which server can receive cookies.
+         * 
+         * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
+         * 
+         * Group: consumer
+         * 
+         * @param cookieDomain the value to set
+         * @return the dsl builder
+         */
+        default PlatformHttpEndpointBuilder cookieDomain(String cookieDomain) {
+            doSetProperty("cookieDomain", cookieDomain);
+            return this;
+        }
+        /**
+         * Sets whether to prevent client side scripts from accessing created
+         * cookies.
+         * 
+         * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
+         * 
+         * Default: false
+         * Group: consumer
+         * 
+         * @param cookieHttpOnly the value to set
+         * @return the dsl builder
+         */
+        default PlatformHttpEndpointBuilder cookieHttpOnly(
+                boolean cookieHttpOnly) {
+            doSetProperty("cookieHttpOnly", cookieHttpOnly);
+            return this;
+        }
+        /**
+         * Sets whether to prevent client side scripts from accessing created
+         * cookies.
+         * 
+         * The option will be converted to a &lt;code&gt;boolean&lt;/code&gt;
+         * type.
+         * 
+         * Default: false
+         * Group: consumer
+         * 
+         * @param cookieHttpOnly the value to set
+         * @return the dsl builder
+         */
+        default PlatformHttpEndpointBuilder cookieHttpOnly(String cookieHttpOnly) {
+            doSetProperty("cookieHttpOnly", cookieHttpOnly);
+            return this;
+        }
+        /**
+         * Sets the maximum cookie age in seconds.
+         * 
+         * The option is a: &lt;code&gt;java.lang.Long&lt;/code&gt; type.
+         * 
+         * Group: consumer
+         * 
+         * @param cookieMaxAge the value to set
+         * @return the dsl builder
+         */
+        default PlatformHttpEndpointBuilder cookieMaxAge(Long cookieMaxAge) {
+            doSetProperty("cookieMaxAge", cookieMaxAge);
+            return this;
+        }
+        /**
+         * Sets the maximum cookie age in seconds.
+         * 
+         * The option will be converted to a
+         * &lt;code&gt;java.lang.Long&lt;/code&gt; type.
+         * 
+         * Group: consumer
+         * 
+         * @param cookieMaxAge the value to set
+         * @return the dsl builder
+         */
+        default PlatformHttpEndpointBuilder cookieMaxAge(String cookieMaxAge) {
+            doSetProperty("cookieMaxAge", cookieMaxAge);
+            return this;
+        }
+        /**
+         * Sets the URL path that must exist in the requested URL in order to
+         * send the Cookie.
+         * 
+         * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
+         * 
+         * Default: /
+         * Group: consumer
+         * 
+         * @param cookiePath the value to set
+         * @return the dsl builder
+         */
+        default PlatformHttpEndpointBuilder cookiePath(String cookiePath) {
+            doSetProperty("cookiePath", cookiePath);
+            return this;
+        }
+        /**
+         * Sets whether to prevent the browser from sending cookies along with
+         * cross-site requests.
+         * 
+         * The option is a:
+         * &lt;code&gt;org.apache.camel.component.platform.http.cookie.CookieConfiguration.CookieSameSite&lt;/code&gt; type.
+         * 
+         * Default: Lax
+         * Group: consumer
+         * 
+         * @param cookieSameSite the value to set
+         * @return the dsl builder
+         */
+        default PlatformHttpEndpointBuilder cookieSameSite(
+                org.apache.camel.component.platform.http.cookie.CookieConfiguration.CookieSameSite cookieSameSite) {
+            doSetProperty("cookieSameSite", cookieSameSite);
+            return this;
+        }
+        /**
+         * Sets whether to prevent the browser from sending cookies along with
+         * cross-site requests.
+         * 
+         * The option will be converted to a
+         * &lt;code&gt;org.apache.camel.component.platform.http.cookie.CookieConfiguration.CookieSameSite&lt;/code&gt; type.
+         * 
+         * Default: Lax
+         * Group: consumer
+         * 
+         * @param cookieSameSite the value to set
+         * @return the dsl builder
+         */
+        default PlatformHttpEndpointBuilder cookieSameSite(String cookieSameSite) {
+            doSetProperty("cookieSameSite", cookieSameSite);
+            return this;
+        }
+        /**
+         * Sets whether the cookie is only sent to the server with an encrypted
+         * request over HTTPS.
+         * 
+         * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
+         * 
+         * Default: false
+         * Group: consumer
+         * 
+         * @param cookieSecure the value to set
+         * @return the dsl builder
+         */
+        default PlatformHttpEndpointBuilder cookieSecure(boolean cookieSecure) {
+            doSetProperty("cookieSecure", cookieSecure);
+            return this;
+        }
+        /**
+         * Sets whether the cookie is only sent to the server with an encrypted
+         * request over HTTPS.
+         * 
+         * The option will be converted to a &lt;code&gt;boolean&lt;/code&gt;
+         * type.
+         * 
+         * Default: false
+         * Group: consumer
+         * 
+         * @param cookieSecure the value to set
+         * @return the dsl builder
+         */
+        default PlatformHttpEndpointBuilder cookieSecure(String cookieSecure) {
+            doSetProperty("cookieSecure", cookieSecure);
+            return this;
+        }
+        /**
          * A comma separated list of HTTP methods to serve, e.g. GET,POST . If
          * no methods are specified, all methods will be served.
          * 
@@ -159,6 +320,54 @@ public interface PlatformHttpEndpointBuilderFactory {
             doSetProperty("produces", produces);
             return this;
         }
+    }
+
+    /**
+     * Advanced builder for endpoint for the Platform HTTP component.
+     */
+    public interface AdvancedPlatformHttpEndpointBuilder
+            extends
+                EndpointConsumerBuilder {
+        default PlatformHttpEndpointBuilder basic() {
+            return (PlatformHttpEndpointBuilder) this;
+        }
+        /**
+         * Whether to enable the Cookie Handler that allows Cookie addition,
+         * expiry, and retrieval (currently only supported by
+         * camel-platform-http-vertx).
+         * 
+         * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
+         * 
+         * Default: false
+         * Group: consumer
+         * 
+         * @param useCookieHandler the value to set
+         * @return the dsl builder
+         */
+        default AdvancedPlatformHttpEndpointBuilder useCookieHandler(
+                boolean useCookieHandler) {
+            doSetProperty("useCookieHandler", useCookieHandler);
+            return this;
+        }
+        /**
+         * Whether to enable the Cookie Handler that allows Cookie addition,
+         * expiry, and retrieval (currently only supported by
+         * camel-platform-http-vertx).
+         * 
+         * The option will be converted to a &lt;code&gt;boolean&lt;/code&gt;
+         * type.
+         * 
+         * Default: false
+         * Group: consumer
+         * 
+         * @param useCookieHandler the value to set
+         * @return the dsl builder
+         */
+        default AdvancedPlatformHttpEndpointBuilder useCookieHandler(
+                String useCookieHandler) {
+            doSetProperty("useCookieHandler", useCookieHandler);
+            return this;
+        }
         /**
          * Whether to use streaming for large requests and responses (currently
          * only supported by camel-platform-http-vertx).
@@ -171,7 +380,8 @@ public interface PlatformHttpEndpointBuilderFactory {
          * @param useStreaming the value to set
          * @return the dsl builder
          */
-        default PlatformHttpEndpointBuilder useStreaming(boolean useStreaming) {
+        default AdvancedPlatformHttpEndpointBuilder useStreaming(
+                boolean useStreaming) {
             doSetProperty("useStreaming", useStreaming);
             return this;
         }
@@ -188,20 +398,10 @@ public interface PlatformHttpEndpointBuilderFactory {
          * @param useStreaming the value to set
          * @return the dsl builder
          */
-        default PlatformHttpEndpointBuilder useStreaming(String useStreaming) {
+        default AdvancedPlatformHttpEndpointBuilder useStreaming(
+                String useStreaming) {
             doSetProperty("useStreaming", useStreaming);
             return this;
-        }
-    }
-
-    /**
-     * Advanced builder for endpoint for the Platform HTTP component.
-     */
-    public interface AdvancedPlatformHttpEndpointBuilder
-            extends
-                EndpointConsumerBuilder {
-        default PlatformHttpEndpointBuilder basic() {
-            return (PlatformHttpEndpointBuilder) this;
         }
         /**
          * Allows for bridging the consumer to the Camel routing Error Handler,

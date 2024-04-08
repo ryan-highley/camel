@@ -50,7 +50,22 @@ class ModelJSonSchemaResolver implements JSonSchemaResolver {
     }
 
     @Override
+    public String getTransformerJSonSchema(String name) {
+        throw new UnsupportedOperationException("Only getModelJSonSchema is in use");
+    }
+
+    @Override
+    public String getDevConsoleJSonSchema(String name) {
+        throw new UnsupportedOperationException("Only getModelJSonSchema is in use");
+    }
+
+    @Override
     public String getOtherJSonSchema(String name) {
+        throw new UnsupportedOperationException("Only getModelJSonSchema is in use");
+    }
+
+    @Override
+    public String getPojoBeanJSonSchema(String name) {
         throw new UnsupportedOperationException("Only getModelJSonSchema is in use");
     }
 

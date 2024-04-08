@@ -178,9 +178,9 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
             traceFile = createLockFile(lockFile.getName() + "-trace.json");
             debugFile = createLockFile(lockFile.getName() + "-debug.json");
             executor.scheduleWithFixedDelay(this::task, 0, delay, TimeUnit.MILLISECONDS);
-            LOG.info("Management from Camel JBang enabled");
+            LOG.info("Camel JBang CLI enabled");
         } else {
-            LOG.warn("Cannot create PID file: {}. This integration cannot be managed by Camel JBang.", getPid());
+            LOG.warn("Cannot create PID file: {}. This integration cannot be managed by Camel JBang CLI.", getPid());
         }
     }
 
@@ -476,7 +476,7 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
             jo.put("elapsed", watch.taken());
             jo.put("status", "success");
             // avoid double wrap
-            jo.put("message", MessageHelper.dumpAsJSonObject(out.getMessage(), true, true, true, true, true,
+            jo.put("message", MessageHelper.dumpAsJSonObject(out.getMessage(), true, true, true, true, true, true,
                     BODY_MAX_CHARS).getMap("message"));
             IOHelper.writeText(jo.toJson(), outputFile);
         }
@@ -581,7 +581,7 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                     jo.put("elapsed", watch.taken());
                     jo.put("status", "success");
                     // avoid double wrap
-                    jo.put("message", MessageHelper.dumpAsJSonObject(out.getMessage(), true, true, true, true, true,
+                    jo.put("message", MessageHelper.dumpAsJSonObject(out.getMessage(), true, true, true, true, true, true,
                             BODY_MAX_CHARS).getMap("message"));
                     IOHelper.writeText(jo.toJson(), outputFile);
                 } else {
@@ -899,11 +899,11 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                         root.put("fault-tolerance", json);
                     }
                 }
-                DevConsole dc12a = dcr.resolveById("route-circuit-breaker");
+                DevConsole dc12a = dcr.resolveById("circuit-breaker");
                 if (dc12a != null) {
                     JsonObject json = (JsonObject) dc12a.call(DevConsole.MediaType.JSON);
                     if (json != null && !json.isEmpty()) {
-                        root.put("route-circuit-breaker", json);
+                        root.put("circuit-breaker", json);
                     }
                 }
                 DevConsole dc12 = camelContext.getCamelContextExtension().getContextPlugin(DevConsoleRegistry.class)
@@ -948,6 +948,13 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                     JsonObject json = (JsonObject) dc15.call(DevConsole.MediaType.JSON);
                     if (json != null && !json.isEmpty()) {
                         root.put("variables", json);
+                    }
+                }
+                DevConsole dc16 = dcr.resolveById("transformers");
+                if (dc16 != null) {
+                    JsonObject json = (JsonObject) dc16.call(DevConsole.MediaType.JSON);
+                    if (json != null && !json.isEmpty()) {
+                        root.put("transformers", json);
                     }
                 }
             }
@@ -1103,6 +1110,14 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
             JsonObject json = (JsonObject) dc.get().call(DevConsole.MediaType.JSON);
             if (json != null) {
                 root.put("mllp", json);
+            }
+        }
+        // knative is optional
+        dc = PluginHelper.getDevConsoleResolver(camelContext).lookupDevConsole("knative");
+        if (dc.isPresent()) {
+            JsonObject json = (JsonObject) dc.get().call(DevConsole.MediaType.JSON);
+            if (json != null) {
+                root.put("knative", json);
             }
         }
 

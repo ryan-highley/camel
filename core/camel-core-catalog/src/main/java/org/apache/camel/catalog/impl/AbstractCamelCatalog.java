@@ -48,11 +48,14 @@ import org.apache.camel.tooling.model.BaseModel;
 import org.apache.camel.tooling.model.BaseOptionModel;
 import org.apache.camel.tooling.model.ComponentModel;
 import org.apache.camel.tooling.model.DataFormatModel;
+import org.apache.camel.tooling.model.DevConsoleModel;
 import org.apache.camel.tooling.model.EipModel;
 import org.apache.camel.tooling.model.JsonMapper;
 import org.apache.camel.tooling.model.LanguageModel;
 import org.apache.camel.tooling.model.MainModel;
 import org.apache.camel.tooling.model.OtherModel;
+import org.apache.camel.tooling.model.PojoBeanModel;
+import org.apache.camel.tooling.model.TransformerModel;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.ReflectionHelper;
 import org.apache.camel.util.StringHelper;
@@ -61,7 +64,6 @@ import org.apache.camel.util.URISupport;
 /**
  * Base class for both the runtime RuntimeCamelCatalog from camel-core and the complete CamelCatalog from camel-catalog.
  */
-@SuppressWarnings("unused")
 public abstract class AbstractCamelCatalog {
 
     private static final Pattern SYNTAX_PATTERN = Pattern.compile("([\\w.]+)");
@@ -110,6 +112,33 @@ public abstract class AbstractCamelCatalog {
     public LanguageModel languageModel(String name) {
         String json = languageJSonSchema(name);
         return json != null ? JsonMapper.generateLanguageModel(json) : null;
+    }
+
+    public String transformerJSonSchema(String name) {
+        return getJSonSchemaResolver().getTransformerJSonSchema(name);
+    }
+
+    public TransformerModel transformerModel(String name) {
+        String json = transformerJSonSchema(name);
+        return json != null ? JsonMapper.generateTransformerModel(json) : null;
+    }
+
+    public PojoBeanModel pojoBeanModel(String name) {
+        String json = pojoBeanJSonSchema(name);
+        return json != null ? JsonMapper.generatePojoBeanModel(json) : null;
+    }
+
+    public String pojoBeanJSonSchema(String name) {
+        return getJSonSchemaResolver().getPojoBeanJSonSchema(name);
+    }
+
+    public String devConsoleJSonSchema(String name) {
+        return getJSonSchemaResolver().getDevConsoleJSonSchema(name);
+    }
+
+    public DevConsoleModel devConsoleModel(String name) {
+        String json = devConsoleJSonSchema(name);
+        return json != null ? JsonMapper.generateDevConsoleModel(json) : null;
     }
 
     public String otherJSonSchema(String name) {

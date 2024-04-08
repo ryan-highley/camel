@@ -230,6 +230,24 @@ public interface BacklogDebugger extends StatefulService {
     void removeExchangePropertyOnBreakpoint(String nodeId, String exchangePropertyName);
 
     /**
+     * Updates/adds the variable (uses same type as old variableName value) on the suspended breakpoint at the given
+     * node id
+     */
+    void setExchangeVariableOnBreakpoint(String nodeId, String variableName, Object value)
+            throws NoTypeConversionAvailableException;
+
+    /**
+     * Updates/adds the variable (with a new type) on the suspended breakpoint at the given node id
+     */
+    void setExchangeVariableOnBreakpoint(String nodeId, String variableName, Object value, Class<?> type)
+            throws NoTypeConversionAvailableException;
+
+    /**
+     * Removes the variable on the suspended breakpoint at the given node id
+     */
+    void removeExchangeVariableOnBreakpoint(String nodeId, String variableName);
+
+    /**
      * Fallback Timeout in seconds (300 seconds as default) when block the message processing in Camel. A timeout used
      * for waiting for a message to arrive at a given breakpoint.
      */
@@ -351,6 +369,16 @@ public interface BacklogDebugger extends StatefulService {
      * Whether to include the exchange properties in the traced message
      */
     void setIncludeExchangeProperties(boolean includeExchangeProperties);
+
+    /**
+     * Whether to include the exchange variables in the traced message
+     */
+    boolean isIncludeExchangeVariables();
+
+    /**
+     * Whether to include the exchange variables in the traced message
+     */
+    void setIncludeExchangeVariables(boolean includeExchangeVariables);
 
     /**
      * Trace messages to include exception if the message failed

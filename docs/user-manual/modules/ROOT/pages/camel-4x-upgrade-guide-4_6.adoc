@@ -1,0 +1,64 @@
+= Apache Camel 4.x Upgrade Guide
+
+This document is for helping you upgrade your Apache Camel application
+from Camel 4.x to 4.y. For example, if you are upgrading Camel 4.0 to 4.2, then you should follow the guides
+from both 4.0 to 4.1 and 4.1 to 4.2.
+
+== Upgrading Camel 4.5 to 4.6
+
+=== variables
+
+When using `variableReceive` then the variable is only set if processing the `Exchange` was completely successfully.
+
+For example calling a route that fails due to an exception being thrown (even if `onException` or `errorHandler` are in use)
+then the variable is no longer set. Also, if the route is marked for rollback, or to stop continue routing with `.stop()`.
+
+This is the same logic that the routing engine uses, whether to continue routing the `Exchange` or not.
+
+=== camel-as2
+
+The `camel-as2` component has upgraded HTTP Client 4.x to 5.x and because of that, there are some options that have changed.
+
+=== camel-elasticsearch
+
+The class `org.apache.camel.component.es.aggregation.ElastichsearchBulkRequestAggregationStrategy` has been renamed to `org.apache.camel.component.es.aggregation.ElasticsearchBulkRequestAggregationStrategy`.
+
+=== camel-rest-openapi
+
+The `specifciationUri` in the `rest-api` component has changed from being a `java.net.URI` to a `String` type
+, as it uses Camels `ResourceLoader` to load from pluggable resources and also more tooling friendly.
+
+The validator using Atlassian `swagger-request-validator` JAR has been removed, as this library is not JakartaEE compatible,
+and was causing classloading problems. The validator is now using similar validation as Rest DSL. However, the validator
+no longer check for JSon payloads if any required nodes is missing.
+
+=== camel-langchain4j-chat
+
+The Camel Langchain4j Chat component name has been changed from `camel-langchain-chat`to `camel-langchain4j-chat` to adhere to the standardized naming conventions within the LangChain4j ecosystem.
+
+If you are migrating from Camel 4.5, please ensure the following:
+
+- Update your maven dependencies, changing from `camel-langchain-chat`to `camel-langchain4j-chat`
+- Adjust your endpoints, replacing `langchain-chat` with `langchain4j-chat`
+- Transfer any Camel class references from `org.apache.camel.component.chat.ChatLangchain*` to `org.apache.camel.component.langchain4j.chat.ChatLangchain4j*`
+- Modify the header name `The prompt Template`  from  `CamelLangChainChatPromptTemplate` to `CamelLangChain4jChatPromptTemplate`
+
+=== camel-langchain4j-embeddings
+
+The Camel Langchain4j Embeddings component name has been changed from `camel-langchain-embedings` to `camel-langchain4j-embedings` to adhere to the standardized naming conventions within the LangChain4j ecosystem.
+
+If you are migrating from Camel 4.5, please ensure the following
+
+- Update your maven dependencies, changing from  `camel-langchain-embedings`to `camel-langchain4j-embedings`
+- Adjust your endpoints, replacing `langchain-embedings` with `langchain4j-embedings`
+- Transfer any Camel class references from `org.apache.camel.component.langchain.embeddings.LangChainEmbeddings*` to `org.apache.camel.component.langchain4j.embeddings.LangChain4jEmbeddings*`
+- Modify the header name `The Finish Reason` from  `CamelLangChainEmbeddingsFinishReason` to `CamelLangChain4jEmbeddingsFinishReason`
+- Modify the header name `The Input Token Count` from  `CamelLangChainEmbeddingsInputTokenCount` to `CamelLangChain4jEmbeddingsInputTokenCount`
+- Modify the header name `The Output Token Count` from  `CamelLangChainEmbeddingsOutputTokenCount` to `CamelLangChain4jEmbeddingsOutputTokenCount`
+- Modify the header name `The Total Token Count` from  `CamelLangChainEmbeddingsTotalTokenCount` to `CamelLangChain4jEmbeddingsTotalTokenCount`
+- Modify the header name `A dense vector embedding of a text` from  `CamelLangChainEmbeddingsVector` to `CamelLangChain4jEmbeddingsVector`
+
+=== camel-platform-http
+
+The `PlatformHttpEngine` class has changed the `createConsumer` method to return a `org.apache.camel.component.platform.http.spi.PlatformHttpConsumer` type,
+instead of `org.apache.camel.Consumer`.

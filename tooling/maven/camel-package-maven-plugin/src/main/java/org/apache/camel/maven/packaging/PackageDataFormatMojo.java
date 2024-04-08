@@ -178,7 +178,8 @@ public class PackageDataFormatMojo extends AbstractGeneratorMojo {
 
                         String json = PackageHelper.loadText(new File(
                                 core,
-                                "target/classes/org/apache/camel/model/dataformat/" + modelName + PackageHelper.JSON_SUFIX));
+                                "src/generated/resources/META-INF/org/apache/camel/model/dataformat/" + modelName
+                                      + PackageHelper.JSON_SUFIX));
 
                         // any excluded properties
                         Class<?> clazz = loadClass(javaType);
@@ -192,6 +193,10 @@ public class PackageDataFormatMojo extends AbstractGeneratorMojo {
 
                         final DataFormatModel dataFormatModel
                                 = extractDataFormatModel(project, json, name, clazz, included, excluded);
+
+                        SchemaHelper.addModelMetadata(dataFormatModel, project);
+                        SchemaHelper.addModelMetadata(dataFormatModel, metadata);
+
                         if (!modelName.equals(name)) {
                             /* Prefer description from the clazz */
                             setDescriptionFromClass(clazz, dataFormatModel);

@@ -20,17 +20,23 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.camel.tooling.model.ArtifactModel;
 import org.apache.camel.tooling.model.BaseModel;
 import org.apache.camel.tooling.model.ComponentModel;
 import org.apache.camel.tooling.model.DataFormatModel;
+import org.apache.camel.tooling.model.DevConsoleModel;
 import org.apache.camel.tooling.model.EipModel;
+import org.apache.camel.tooling.model.EntityRef;
+import org.apache.camel.tooling.model.Kind;
 import org.apache.camel.tooling.model.LanguageModel;
 import org.apache.camel.tooling.model.MainModel;
 import org.apache.camel.tooling.model.OtherModel;
+import org.apache.camel.tooling.model.PojoBeanModel;
 import org.apache.camel.tooling.model.ReleaseModel;
+import org.apache.camel.tooling.model.TransformerModel;
 
 /**
  * Catalog of components, data formats, models (EIPs), languages, and more from this Apache Camel release.
@@ -193,6 +199,16 @@ public interface CamelCatalog {
     List<String> findLanguageNames();
 
     /**
+     * Find all the transformer names from the Camel catalog
+     */
+    List<String> findTransformerNames();
+
+    /**
+     * Find all the dev-console names from the Camel catalog
+     */
+    List<String> findDevConsoleNames();
+
+    /**
      * Find all the model names from the Camel catalog
      */
     List<String> findModelNames();
@@ -201,6 +217,16 @@ public interface CamelCatalog {
      * Find all the other (miscellaneous) names from the Camel catalog
      */
     List<String> findOtherNames();
+
+    /**
+     * Find all the pojo beans names from the Camel catalog
+     */
+    List<String> findBeansNames();
+
+    /**
+     * Find all the capability names from the Camel catalog
+     */
+    List<String> findCapabilityNames();
 
     /**
      * @param  kind the kind to look for
@@ -214,9 +240,17 @@ public interface CamelCatalog {
                 return findDataFormatNames();
             case language:
                 return findLanguageNames();
+            case transformer:
+                return findTransformerNames();
+            case console:
+                return findDevConsoleNames();
             case other:
                 return findOtherNames();
             case eip:
+                return findModelNames();
+            case bean:
+                return findBeansNames();
+            case model:
                 return findModelNames();
             default:
                 throw new IllegalArgumentException("Unexpected kind " + kind);
@@ -271,6 +305,14 @@ public interface CamelCatalog {
      * @return      language details in JSon
      */
     String languageJSonSchema(String name);
+
+    /**
+     * Returns the transformer information as JSON format.
+     *
+     * @param  name the transformer name
+     * @return      transformer details in JSon
+     */
+    String transformerJSonSchema(String name);
 
     /**
      * Returns the other (miscellaneous) information as JSON format.
@@ -488,6 +530,16 @@ public interface CamelCatalog {
     String listLanguagesAsJson();
 
     /**
+     * Lists all the transformers summary details in JSon
+     */
+    String listTransformersAsJson();
+
+    /**
+     * Lists all the dev-consoles summary details in JSon
+     */
+    String listDevConsolesAsJson();
+
+    /**
      * Lists all the models (EIPs) summary details in JSon
      */
     String listModelsAsJson();
@@ -521,6 +573,18 @@ public interface CamelCatalog {
     LanguageModel languageModel(String name);
 
     /**
+     * @param  name the transformer name to look up
+     * @return      the requested transformer or {@code null} in case it is not available in this {@link CamelCatalog}
+     */
+    TransformerModel transformerModel(String name);
+
+    /**
+     * @param  name the dev-console name to look up
+     * @return      the requested dev-console or {@code null} in case it is not available in this {@link CamelCatalog}
+     */
+    DevConsoleModel devConsoleModel(String name);
+
+    /**
      * @param  name the other name to look up
      * @return      the requested other or {@code null} in case it is not available in this {@link CamelCatalog}
      */
@@ -531,6 +595,12 @@ public interface CamelCatalog {
      * @return      the requested EIP model or {@code null} in case it is not available in this {@link CamelCatalog}
      */
     EipModel eipModel(String name);
+
+    /**
+     * @param  name the FQN class name to look up
+     * @return      the requested Bean model or {@code null} in case it is not available in this {@link CamelCatalog}
+     */
+    PojoBeanModel pojoBeanModel(String name);
 
     /**
      * @return the requested main model or {@code null} in case it is not available in this {@link CamelCatalog}
@@ -552,9 +622,17 @@ public interface CamelCatalog {
                 return dataFormatModel(name);
             case language:
                 return languageModel(name);
+            case transformer:
+                return transformerModel(name);
+            case console:
+                return devConsoleModel(name);
             case other:
                 return otherModel(name);
             case eip:
+                return eipModel(name);
+            case bean:
+                return pojoBeanModel(name);
+            case model:
                 return eipModel(name);
             default:
                 throw new IllegalArgumentException("Unexpected kind " + kind);
@@ -590,4 +668,8 @@ public interface CamelCatalog {
      */
     List<ReleaseModel> camelQuarkusReleases();
 
+    /**
+     * Find the entity the given capability maps to.
+     */
+    Optional<EntityRef> findCapabilityRef(String capability);
 }

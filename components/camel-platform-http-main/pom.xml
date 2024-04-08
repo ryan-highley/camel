@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>components</artifactId>
-        <version>4.4.0-SNAPSHOT</version>
+        <version>4.6.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-platform-http-main</artifactId>
@@ -42,13 +42,6 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-main</artifactId>
-        </dependency>
-
-        <!-- jolokia -->
-        <dependency>
-            <groupId>org.jolokia</groupId>
-            <artifactId>jolokia-agent-jvm</artifactId>
-            <version>${jolokia-version}</version>
         </dependency>
 
         <!-- use vertx as http engine -->

@@ -31,7 +31,7 @@ import org.apache.camel.support.console.AbstractDevConsole;
 import org.apache.camel.util.json.JsonArray;
 import org.apache.camel.util.json.JsonObject;
 
-@DevConsole("stub")
+@DevConsole(name = "stub", description = "Browse messages on stub endpoints")
 public class StubConsole extends AbstractDevConsole {
 
     /**
@@ -55,7 +55,7 @@ public class StubConsole extends AbstractDevConsole {
     public static final String BROWSE = "browse";
 
     public StubConsole() {
-        super("camel", "stub", "Stub", "Browse messages on stub");
+        super("camel", "stub", "Stub", "Browse messages on stub endpoints");
     }
 
     @Override
@@ -165,7 +165,7 @@ public class StubConsole extends AbstractDevConsole {
                 for (Exchange exchange : copy) {
                     try {
                         JsonObject msg
-                                = MessageHelper.dumpAsJSonObject(exchange.getMessage(), false, true, true, false, true,
+                                = MessageHelper.dumpAsJSonObject(exchange.getMessage(), false, true, true, true, false, true,
                                         128 * 1024);
                         arr.add(msg);
                     } catch (Exception e) {

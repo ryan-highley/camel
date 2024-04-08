@@ -981,6 +981,9 @@ public class ModelWriter extends BaseWriter {
     public void writeOAuth2Definition(OAuth2Definition def) throws IOException {
         doWriteOAuth2Definition("oauth2", def);
     }
+    public void writeOpenApiDefinition(OpenApiDefinition def) throws IOException {
+        doWriteOpenApiDefinition("openApi", def);
+    }
     public void writeOpenIdConnectDefinition(
             OpenIdConnectDefinition def)
             throws IOException {
@@ -1984,12 +1987,19 @@ public class ModelWriter extends BaseWriter {
         doWriteAttribute("bulkheadEnabled", def.getBulkheadEnabled());
         doWriteAttribute("waitDurationInOpenState", def.getWaitDurationInOpenState());
     }
+    protected void doWriteResilience4jConfigurationCommonElements(
+            Resilience4jConfigurationCommon def)
+            throws IOException {
+        doWriteList(null, "ignoreException", def.getIgnoreExceptions(), this::doWriteString);
+        doWriteList(null, "recordException", def.getRecordExceptions(), this::doWriteString);
+    }
     protected void doWriteResilience4jConfigurationCommon(
             String name,
             Resilience4jConfigurationCommon def)
             throws IOException {
         startElement(name);
         doWriteResilience4jConfigurationCommonAttributes(def);
+        doWriteResilience4jConfigurationCommonElements(def);
         endElement(name);
     }
     protected void doWriteResilience4jConfigurationDefinition(
@@ -1998,6 +2008,7 @@ public class ModelWriter extends BaseWriter {
             throws IOException {
         startElement(name);
         doWriteResilience4jConfigurationCommonAttributes(def);
+        doWriteResilience4jConfigurationCommonElements(def);
         endElement(name);
     }
     protected void doWriteRestContextRefDefinition(
@@ -2098,6 +2109,7 @@ public class ModelWriter extends BaseWriter {
         doWriteAttribute("logMask", def.getLogMask());
         doWriteAttribute("nodePrefixId", def.getNodePrefixId());
         doWriteAttribute("messageHistory", def.getMessageHistory());
+        doWriteAttribute("kamelet", toString(def.isKamelet()));
         doWriteAttribute("autoStartup", def.getAutoStartup());
         doWriteAttribute("delayer", def.getDelayer());
         doWriteAttribute("group", def.getGroup());
@@ -2420,6 +2432,8 @@ public class ModelWriter extends BaseWriter {
             throws IOException {
         startElement(name);
         doWriteProcessorDefinitionAttributes(def);
+        doWriteAttribute("mode", def.getMode());
+        doWriteAttribute("timePeriodMillis", def.getTimePeriodMillis());
         doWriteAttribute("rejectExecution", def.getRejectExecution());
         doWriteAttribute("callerRunsWhenRejected", def.getCallerRunsWhenRejected());
         doWriteAttribute("executorService", def.getExecutorService());
@@ -4144,9 +4158,7 @@ public class ModelWriter extends BaseWriter {
             SingleInputTypedExpressionDefinition def)
             throws IOException {
         doWriteTypedExpressionDefinitionAttributes(def);
-        doWriteAttribute("headerName", def.getHeaderName());
-        doWriteAttribute("variableName", def.getVariableName());
-        doWriteAttribute("propertyName", def.getPropertyName());
+        doWriteAttribute("source", def.getSource());
     }
     protected void doWriteSingleInputTypedExpressionDefinition(
             String name,
@@ -4401,6 +4413,20 @@ public class ModelWriter extends BaseWriter {
         doWriteList(null, "scopes", def.getScopes(), this::doWriteRestPropertyDefinition);
         endElement(name);
     }
+    protected void doWriteOpenApiDefinition(
+            String name,
+            OpenApiDefinition def)
+            throws IOException {
+        startElement(name);
+        doWriteOptionalIdentifiedDefinitionAttributes(def);
+        doWriteAttribute("mockIncludePattern", def.getMockIncludePattern());
+        doWriteAttribute("missingOperation", def.getMissingOperation());
+        doWriteAttribute("routeId", def.getRouteId());
+        doWriteAttribute("specification", def.getSpecification());
+        doWriteAttribute("disabled", def.getDisabled());
+        doWriteElement("apiContextPath", def.getApiContextPath(), this::doWriteString);
+        endElement(name);
+    }
     protected void doWriteOpenIdConnectDefinition(
             String name,
             OpenIdConnectDefinition def)
@@ -4515,6 +4541,7 @@ public class ModelWriter extends BaseWriter {
         doWriteAttribute("host", def.getHost());
         doWriteAttribute("producerComponent", def.getProducerComponent());
         doWriteAttribute("enableCORS", def.getEnableCORS());
+        doWriteAttribute("bindingPackageScan", def.getBindingPackageScan());
         doWriteAttribute("useXForwardHeaders", def.getUseXForwardHeaders());
         doWriteAttribute("apiHost", def.getApiHost());
         doWriteAttribute("contextPath", def.getContextPath());
@@ -4552,6 +4579,7 @@ public class ModelWriter extends BaseWriter {
         doWriteAttribute("disabled", def.getDisabled());
         doWriteAttribute("tag", def.getTag());
         doWriteAttribute("consumes", def.getConsumes());
+        doWriteElement("openApi", def.getOpenApi(), this::doWriteOpenApiDefinition);
         doWriteList(null, "securityRequirements", def.getSecurityRequirements(), this::doWriteSecurityDefinition);
         doWriteList(null, null, def.getVerbs(), this::doWriteVerbDefinitionRef);
         doWriteElement("securityDefinitions", def.getSecurityDefinitions(), this::doWriteRestSecuritiesDefinition);
@@ -4930,6 +4958,7 @@ public class ModelWriter extends BaseWriter {
                 case "DeleteDefinition" -> doWriteDeleteDefinition("delete", (DeleteDefinition) v);
                 case "GetDefinition" -> doWriteGetDefinition("get", (GetDefinition) v);
                 case "HeadDefinition" -> doWriteHeadDefinition("head", (HeadDefinition) v);
+                case "OpenApiDefinition" -> doWriteOpenApiDefinition("openApi", (OpenApiDefinition) v);
                 case "PatchDefinition" -> doWritePatchDefinition("patch", (PatchDefinition) v);
                 case "PostDefinition" -> doWritePostDefinition("post", (PostDefinition) v);
                 case "PutDefinition" -> doWritePutDefinition("put", (PutDefinition) v);

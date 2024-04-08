@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.camel.Endpoint;
+import org.apache.camel.NonManagedService;
 import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.spi.CamelEvent.ExchangeCreatedEvent;
 import org.apache.camel.spi.CamelEvent.ExchangeSendingEvent;
@@ -41,7 +42,7 @@ import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DefaultRuntimeEndpointRegistry extends EventNotifierSupport implements RuntimeEndpointRegistry {
+public class DefaultRuntimeEndpointRegistry extends EventNotifierSupport implements RuntimeEndpointRegistry, NonManagedService {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultRuntimeEndpointRegistry.class);
 
@@ -255,8 +256,8 @@ public class DefaultRuntimeEndpointRegistry extends EventNotifierSupport impleme
             String uri = endpoint.getEndpointUri();
 
             Map<String, String> uris = outputs.get(routeId);
-            if (uris != null && !uris.containsKey(uri)) {
-                uris.put(uri, uri);
+            if (uris != null) {
+                uris.putIfAbsent(uri, uri);
             }
             if (extended) {
                 String key = asUtilizationKey(routeId, uri);

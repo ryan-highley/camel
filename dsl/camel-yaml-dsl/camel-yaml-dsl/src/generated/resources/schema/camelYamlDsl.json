@@ -207,6 +207,85 @@
           }
         }
       },
+      "org.apache.camel.ErrorHandlerFactory" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "anyOf" : [ {
+          "oneOf" : [ {
+            "type" : "object",
+            "required" : [ "deadLetterChannel" ],
+            "properties" : {
+              "deadLetterChannel" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.errorhandler.DeadLetterChannelDefinition"
+              }
+            }
+          }, {
+            "not" : {
+              "anyOf" : [ {
+                "required" : [ "deadLetterChannel" ]
+              }, {
+                "required" : [ "defaultErrorHandler" ]
+              }, {
+                "required" : [ "jtaTransactionErrorHandler" ]
+              }, {
+                "required" : [ "noErrorHandler" ]
+              }, {
+                "required" : [ "refErrorHandler" ]
+              }, {
+                "required" : [ "springTransactionErrorHandler" ]
+              } ]
+            }
+          }, {
+            "type" : "object",
+            "required" : [ "defaultErrorHandler" ],
+            "properties" : {
+              "defaultErrorHandler" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.errorhandler.DefaultErrorHandlerDefinition"
+              }
+            }
+          }, {
+            "type" : "object",
+            "required" : [ "jtaTransactionErrorHandler" ],
+            "properties" : {
+              "jtaTransactionErrorHandler" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.errorhandler.JtaTransactionErrorHandlerDefinition"
+              }
+            }
+          }, {
+            "type" : "object",
+            "required" : [ "noErrorHandler" ],
+            "properties" : {
+              "noErrorHandler" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.errorhandler.NoErrorHandlerDefinition"
+              }
+            }
+          }, {
+            "type" : "object",
+            "required" : [ "refErrorHandler" ],
+            "properties" : {
+              "refErrorHandler" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.errorhandler.RefErrorHandlerDefinition"
+              }
+            }
+          }, {
+            "type" : "object",
+            "required" : [ "springTransactionErrorHandler" ],
+            "properties" : {
+              "springTransactionErrorHandler" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.errorhandler.SpringTransactionErrorHandlerDefinition"
+              }
+            }
+          } ]
+        } ],
+        "properties" : {
+          "deadLetterChannel" : { },
+          "defaultErrorHandler" : { },
+          "jtaTransactionErrorHandler" : { },
+          "noErrorHandler" : { },
+          "refErrorHandler" : { },
+          "springTransactionErrorHandler" : { }
+        }
+      },
       "org.apache.camel.dsl.yaml.deserializers.BeansDeserializer" : {
         "type" : "array",
         "additionalProperties" : false,
@@ -214,7 +293,7 @@
           "$ref" : "#/items/definitions/org.apache.camel.model.app.RegistryBeanDefinition"
         }
       },
-      "org.apache.camel.dsl.yaml.deserializers.ErrorHandlerBuilderDeserializer" : {
+      "org.apache.camel.dsl.yaml.deserializers.ErrorHandlerDeserializer" : {
         "type" : "object",
         "additionalProperties" : false,
         "anyOf" : [ {
@@ -552,7 +631,7 @@
             "ref" : {
               "type" : "string",
               "title" : "Ref",
-              "description" : "Sets a reference to an exiting bean to use, which is looked up from the registry"
+              "description" : "Sets a reference to an existing bean to use, which is looked up from the registry"
             },
             "scope" : {
               "type" : "string",
@@ -4362,7 +4441,8 @@
             "type" : "string",
             "title" : "Retries Exhausted Log Level",
             "description" : "Sets the logging level to use when retries have been exhausted",
-            "default" : "ERROR"
+            "default" : "ERROR",
+            "enum" : [ "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF" ]
           },
           "retryAttemptedLogInterval" : {
             "type" : "number",
@@ -4374,7 +4454,8 @@
             "type" : "string",
             "title" : "Retry Attempted Log Level",
             "description" : "Sets the logging level to use for logging retry attempts",
-            "default" : "DEBUG"
+            "default" : "DEBUG",
+            "enum" : [ "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF" ]
           },
           "useCollisionAvoidance" : {
             "type" : "boolean",
@@ -4384,7 +4465,7 @@
           "useExponentialBackOff" : {
             "type" : "boolean",
             "title" : "Use Exponential Back Off",
-            "description" : "Turn on exponential backk off"
+            "description" : "Turn on exponential back off"
           }
         }
       },
@@ -4769,6 +4850,14 @@
             "title" : "Id",
             "description" : "The id of this node"
           },
+          "ignoreException" : {
+            "type" : "array",
+            "title" : "Ignore Exception",
+            "description" : "Configure a list of exceptions that are ignored and neither count as a failure nor success. Any exception matching or inheriting from one of the list will not count as a failure nor success, even if the exceptions is part of recordExceptions.",
+            "items" : {
+              "type" : "string"
+            }
+          },
           "minimumNumberOfCalls" : {
             "type" : "number",
             "title" : "Minimum Number Of Calls",
@@ -4780,6 +4869,14 @@
             "title" : "Permitted Number Of Calls In Half Open State",
             "description" : "Configures the number of permitted calls when the CircuitBreaker is half open. The size must be greater than 0. Default size is 10.",
             "default" : "10"
+          },
+          "recordException" : {
+            "type" : "array",
+            "title" : "Record Exception",
+            "description" : "Configure a list of exceptions that are recorded as a failure and thus increase the failure rate. Any exception matching or inheriting from one of the list counts as a failure, unless explicitly ignored via ignoreExceptions.",
+            "items" : {
+              "type" : "string"
+            }
           },
           "slidingWindowSize" : {
             "type" : "number",
@@ -5090,6 +5187,12 @@
             "type" : "boolean"
           },
           "description" : {
+            "type" : "string"
+          },
+          "errorHandler" : {
+            "$ref" : "#/items/definitions/org.apache.camel.ErrorHandlerFactory"
+          },
+          "errorHandlerRef" : {
             "type" : "string"
           },
           "from" : {
@@ -5925,7 +6028,7 @@
       },
       "org.apache.camel.model.SetHeadersDefinition" : {
         "title" : "Set Headers",
-        "description" : "Allows to set multiple headers on the message at the same time.",
+        "description" : "Allows setting multiple headers on the message at the same time.",
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
@@ -6912,10 +7015,23 @@
             "title" : "Id",
             "description" : "Sets the id of this node"
           },
+          "mode" : {
+            "type" : "string",
+            "title" : "Mode",
+            "description" : "Sets the throttling mode to one of the available modes enumerated in ThrottlingMode",
+            "default" : "TotalRequests",
+            "enum" : [ "TotalRequests", "ConcurrentRequests" ]
+          },
           "rejectExecution" : {
             "type" : "boolean",
             "title" : "Reject Execution",
             "description" : "Whether or not throttler throws the ThrottlerRejectedExecutionException when the exchange exceeds the request limit Is by default false"
+          },
+          "timePeriodMillis" : {
+            "type" : "string",
+            "title" : "Time Period Millis",
+            "description" : "Sets the time period during which the maximum request count is valid for",
+            "default" : "1000"
           },
           "constant" : { },
           "csimple" : { },
@@ -9790,7 +9906,7 @@
               "type" : "string",
               "title" : "Library",
               "description" : "Which Avro library to use.",
-              "default" : "ApacheAvro",
+              "default" : "avroJackson",
               "enum" : [ "ApacheAvro", "Jackson" ]
             },
             "moduleClassNames" : {
@@ -12670,11 +12786,6 @@
               "title" : "Expression",
               "description" : "The expression value in your chosen language syntax"
             },
-            "headerName" : {
-              "type" : "string",
-              "title" : "Header Name",
-              "description" : "Name of header to use as input, instead of the message body"
-            },
             "id" : {
               "type" : "string",
               "title" : "Id",
@@ -12685,25 +12796,20 @@
               "title" : "Output Media Type",
               "description" : "The String representation of the MediaType to output"
             },
-            "propertyName" : {
-              "type" : "string",
-              "title" : "Property Name",
-              "description" : "Name of property to use as input, instead of the message body."
-            },
             "resultType" : {
               "type" : "string",
               "title" : "Result Type",
               "description" : "Sets the class of the result type (type from output)"
             },
+            "source" : {
+              "type" : "string",
+              "title" : "Source",
+              "description" : "Source to use, instead of message body. You can prefix with variable:, header:, or property: to specify kind of source. Otherwise, the source is assumed to be a variable. Use empty or null to use default source, which is the message body."
+            },
             "trim" : {
               "type" : "boolean",
               "title" : "Trim",
               "description" : "Whether to trim the value to remove leading and trailing whitespaces and line breaks"
-            },
-            "variableName" : {
-              "type" : "string",
-              "title" : "Variable Name",
-              "description" : "Name of variable to use as input, instead of the message body"
             }
           }
         } ],
@@ -13054,35 +13160,25 @@
               "title" : "Expression",
               "description" : "The expression value in your chosen language syntax"
             },
-            "headerName" : {
-              "type" : "string",
-              "title" : "Header Name",
-              "description" : "Name of header to use as input, instead of the message body"
-            },
             "id" : {
               "type" : "string",
               "title" : "Id",
               "description" : "Sets the id of this node"
-            },
-            "propertyName" : {
-              "type" : "string",
-              "title" : "Property Name",
-              "description" : "Name of property to use as input, instead of the message body."
             },
             "resultType" : {
               "type" : "string",
               "title" : "Result Type",
               "description" : "Sets the class of the result type (type from output)"
             },
+            "source" : {
+              "type" : "string",
+              "title" : "Source",
+              "description" : "Source to use, instead of message body. You can prefix with variable:, header:, or property: to specify kind of source. Otherwise, the source is assumed to be a variable. Use empty or null to use default source, which is the message body."
+            },
             "trim" : {
               "type" : "boolean",
               "title" : "Trim",
               "description" : "Whether to trim the value to remove leading and trailing whitespaces and line breaks"
-            },
-            "variableName" : {
-              "type" : "string",
-              "title" : "Variable Name",
-              "description" : "Name of variable to use as input, instead of the message body"
             }
           }
         } ],
@@ -13222,35 +13318,25 @@
               "title" : "Expression",
               "description" : "The expression value in your chosen language syntax"
             },
-            "headerName" : {
-              "type" : "string",
-              "title" : "Header Name",
-              "description" : "Name of header to use as input, instead of the message body"
-            },
             "id" : {
               "type" : "string",
               "title" : "Id",
               "description" : "Sets the id of this node"
-            },
-            "propertyName" : {
-              "type" : "string",
-              "title" : "Property Name",
-              "description" : "Name of property to use as input, instead of the message body."
             },
             "resultType" : {
               "type" : "string",
               "title" : "Result Type",
               "description" : "Sets the class of the result type (type from output)"
             },
+            "source" : {
+              "type" : "string",
+              "title" : "Source",
+              "description" : "Source to use, instead of message body. You can prefix with variable:, header:, or property: to specify kind of source. Otherwise, the source is assumed to be a variable. Use empty or null to use default source, which is the message body."
+            },
             "trim" : {
               "type" : "boolean",
               "title" : "Trim",
               "description" : "Whether to trim the value to remove leading and trailing whitespaces and line breaks"
-            },
-            "variableName" : {
-              "type" : "string",
-              "title" : "Variable Name",
-              "description" : "Name of variable to use as input, instead of the message body"
             }
           }
         } ],
@@ -13280,11 +13366,6 @@
               "title" : "Expression",
               "description" : "The expression value in your chosen language syntax"
             },
-            "headerName" : {
-              "type" : "string",
-              "title" : "Header Name",
-              "description" : "Name of header to use as input, instead of the message body"
-            },
             "id" : {
               "type" : "string",
               "title" : "Id",
@@ -13296,15 +13377,15 @@
               "description" : "To configure additional options on JSONPath. Multiple values can be separated by comma.",
               "enum" : [ "DEFAULT_PATH_LEAF_TO_NULL", "ALWAYS_RETURN_LIST", "AS_PATH_LIST", "SUPPRESS_EXCEPTIONS", "REQUIRE_PROPERTIES" ]
             },
-            "propertyName" : {
-              "type" : "string",
-              "title" : "Property Name",
-              "description" : "Name of property to use as input, instead of the message body."
-            },
             "resultType" : {
               "type" : "string",
               "title" : "Result Type",
               "description" : "Sets the class of the result type (type from output)"
+            },
+            "source" : {
+              "type" : "string",
+              "title" : "Source",
+              "description" : "Source to use, instead of message body. You can prefix with variable:, header:, or property: to specify kind of source. Otherwise, the source is assumed to be a variable. Use empty or null to use default source, which is the message body."
             },
             "suppressExceptions" : {
               "type" : "boolean",
@@ -13320,11 +13401,6 @@
               "type" : "boolean",
               "title" : "Unpack Array",
               "description" : "Whether to unpack a single element json-array into an object."
-            },
-            "variableName" : {
-              "type" : "string",
-              "title" : "Variable Name",
-              "description" : "Name of variable to use as input, instead of the message body"
             },
             "writeAsString" : {
               "type" : "boolean",
@@ -13640,11 +13716,6 @@
               "title" : "Group Delimiter",
               "description" : "Sets the delimiter to use when grouping. If this has not been set then token will be used as the delimiter."
             },
-            "headerName" : {
-              "type" : "string",
-              "title" : "Header Name",
-              "description" : "Name of header to use as input, instead of the message body"
-            },
             "id" : {
               "type" : "string",
               "title" : "Id",
@@ -13659,11 +13730,6 @@
               "type" : "string",
               "title" : "Inherit Namespace Tag Name",
               "description" : "To inherit namespaces from a root/parent tag name when using XML You can use simple language as the tag name to support dynamic names."
-            },
-            "propertyName" : {
-              "type" : "string",
-              "title" : "Property Name",
-              "description" : "Name of property to use as input, instead of the message body."
             },
             "regex" : {
               "type" : "boolean",
@@ -13680,6 +13746,11 @@
               "title" : "Skip First",
               "description" : "To skip the very first element"
             },
+            "source" : {
+              "type" : "string",
+              "title" : "Source",
+              "description" : "Source to use, instead of message body. You can prefix with variable:, header:, or property: to specify kind of source. Otherwise, the source is assumed to be a variable. Use empty or null to use default source, which is the message body."
+            },
             "token" : {
               "type" : "string",
               "title" : "Token",
@@ -13689,11 +13760,6 @@
               "type" : "boolean",
               "title" : "Trim",
               "description" : "Whether to trim the value to remove leading and trailing whitespaces and line breaks"
-            },
-            "variableName" : {
-              "type" : "string",
-              "title" : "Variable Name",
-              "description" : "Name of variable to use as input, instead of the message body"
             },
             "xml" : {
               "type" : "boolean",
@@ -13789,11 +13855,6 @@
               "title" : "Group",
               "description" : "To group N parts together"
             },
-            "headerName" : {
-              "type" : "string",
-              "title" : "Header Name",
-              "description" : "Name of header to use as input, instead of the message body"
-            },
             "id" : {
               "type" : "string",
               "title" : "Id",
@@ -13814,25 +13875,20 @@
                 "$ref" : "#/items/definitions/org.apache.camel.model.PropertyDefinition"
               }
             },
-            "propertyName" : {
-              "type" : "string",
-              "title" : "Property Name",
-              "description" : "Name of property to use as input, instead of the message body."
-            },
             "resultType" : {
               "type" : "string",
               "title" : "Result Type",
               "description" : "Sets the class of the result type (type from output)"
             },
+            "source" : {
+              "type" : "string",
+              "title" : "Source",
+              "description" : "Source to use, instead of message body. You can prefix with variable:, header:, or property: to specify kind of source. Otherwise, the source is assumed to be a variable. Use empty or null to use default source, which is the message body."
+            },
             "trim" : {
               "type" : "boolean",
               "title" : "Trim",
               "description" : "Whether to trim the value to remove leading and trailing whitespaces and line breaks"
-            },
-            "variableName" : {
-              "type" : "string",
-              "title" : "Variable Name",
-              "description" : "Name of variable to use as input, instead of the message body"
             }
           }
         } ],
@@ -13862,11 +13918,6 @@
               "title" : "Factory Ref",
               "description" : "References to a custom XPathFactory to lookup in the registry"
             },
-            "headerName" : {
-              "type" : "string",
-              "title" : "Header Name",
-              "description" : "Name of header to use as input, instead of the message body"
-            },
             "id" : {
               "type" : "string",
               "title" : "Id",
@@ -13895,11 +13946,6 @@
               "title" : "Pre Compile",
               "description" : "Whether to enable pre-compiling the xpath expression during initialization phase. pre-compile is enabled by default. This can be used to turn off, for example in cases the compilation phase is desired at the starting phase, such as if the application is ahead of time compiled (for example with camel-quarkus) which would then load the xpath factory of the built operating system, and not a JVM runtime."
             },
-            "propertyName" : {
-              "type" : "string",
-              "title" : "Property Name",
-              "description" : "Name of property to use as input, instead of the message body."
-            },
             "resultQName" : {
               "type" : "string",
               "title" : "Result QName",
@@ -13917,6 +13963,11 @@
               "title" : "Saxon",
               "description" : "Whether to use Saxon."
             },
+            "source" : {
+              "type" : "string",
+              "title" : "Source",
+              "description" : "Source to use, instead of message body. You can prefix with variable:, header:, or property: to specify kind of source. Otherwise, the source is assumed to be a variable. Use empty or null to use default source, which is the message body."
+            },
             "threadSafety" : {
               "type" : "boolean",
               "title" : "Thread Safety",
@@ -13926,11 +13977,6 @@
               "type" : "boolean",
               "title" : "Trim",
               "description" : "Whether to trim the value to remove leading and trailing whitespaces and line breaks"
-            },
-            "variableName" : {
-              "type" : "string",
-              "title" : "Variable Name",
-              "description" : "Name of variable to use as input, instead of the message body"
             }
           }
         } ],
@@ -13955,11 +14001,6 @@
               "title" : "Expression",
               "description" : "The expression value in your chosen language syntax"
             },
-            "headerName" : {
-              "type" : "string",
-              "title" : "Header Name",
-              "description" : "Name of header to use as input, instead of the message body"
-            },
             "id" : {
               "type" : "string",
               "title" : "Id",
@@ -13973,25 +14014,20 @@
                 "$ref" : "#/items/definitions/org.apache.camel.model.PropertyDefinition"
               }
             },
-            "propertyName" : {
-              "type" : "string",
-              "title" : "Property Name",
-              "description" : "Name of property to use as input, instead of the message body."
-            },
             "resultType" : {
               "type" : "string",
               "title" : "Result Type",
               "description" : "Sets the class of the result type (type from output)"
             },
+            "source" : {
+              "type" : "string",
+              "title" : "Source",
+              "description" : "Source to use, instead of message body. You can prefix with variable:, header:, or property: to specify kind of source. Otherwise, the source is assumed to be a variable. Use empty or null to use default source, which is the message body."
+            },
             "trim" : {
               "type" : "boolean",
               "title" : "Trim",
               "description" : "Whether to trim the value to remove leading and trailing whitespaces and line breaks"
-            },
-            "variableName" : {
-              "type" : "string",
-              "title" : "Variable Name",
-              "description" : "Name of variable to use as input, instead of the message body"
             }
           }
         } ],
@@ -14059,7 +14095,7 @@
       },
       "org.apache.camel.model.loadbalancer.RandomLoadBalancerDefinition" : {
         "title" : "Random",
-        "description" : "The destination endpoints are selected by random.",
+        "description" : "The destination endpoints are selected randomly.",
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
@@ -14072,7 +14108,7 @@
       },
       "org.apache.camel.model.loadbalancer.RoundRobinLoadBalancerDefinition" : {
         "title" : "Round Robin",
-        "description" : "The destination endpoints are selected in a round-robin fashion. This is a well known and classic policy, which spreads the load evenly.",
+        "description" : "The destination endpoints are selected in a round-robin fashion. This is a well-known and classic policy, which spreads the load evenly.",
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
@@ -14631,6 +14667,53 @@
           }
         },
         "required" : [ "key" ]
+      },
+      "org.apache.camel.model.rest.OpenApiDefinition" : {
+        "title" : "Open Api",
+        "description" : "To use OpenApi as contract-first with Camel Rest DSL.",
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "description" : {
+            "type" : "string",
+            "title" : "Description",
+            "description" : "Sets the description of this node"
+          },
+          "disabled" : {
+            "type" : "boolean",
+            "title" : "Disabled",
+            "description" : "Whether to disable all the REST services from the OpenAPI contract from the route during build time. Once an REST service has been disabled then it cannot be enabled later at runtime."
+          },
+          "id" : {
+            "type" : "string",
+            "title" : "Id",
+            "description" : "Sets the id of this node"
+          },
+          "missingOperation" : {
+            "type" : "string",
+            "title" : "Missing Operation",
+            "description" : "Whether to fail, ignore or return a mock response for OpenAPI operations that are not mapped to a corresponding route.",
+            "default" : "fail",
+            "enum" : [ "fail", "ignore", "mock" ]
+          },
+          "mockIncludePattern" : {
+            "type" : "string",
+            "title" : "Mock Include Pattern",
+            "description" : "Used for inclusive filtering of mock data from directories. The pattern is using Ant-path style pattern. Multiple patterns can be specified separated by comma.",
+            "default" : "classpath:camel-mock/**"
+          },
+          "routeId" : {
+            "type" : "string",
+            "title" : "Route Id",
+            "description" : "Sets the id of the route"
+          },
+          "specification" : {
+            "type" : "string",
+            "title" : "Specification",
+            "description" : "Path to the OpenApi specification file."
+          }
+        },
+        "required" : [ "specification" ]
       },
       "org.apache.camel.model.rest.OpenIdConnectDefinition" : {
         "title" : "Open Id Connect",
@@ -15253,7 +15336,7 @@
           "apiContextPath" : {
             "type" : "string",
             "title" : "Api Context Path",
-            "description" : "Sets a leading API context-path the REST API services will be using. This can be used when using components such as camel-servlet where the deployed web application is deployed using a context-path."
+            "description" : "Sets a leading context-path the REST API will be using. This can be used when using components such as camel-servlet where the deployed web application is deployed using a context-path."
           },
           "apiContextRouteId" : {
             "type" : "string",
@@ -15284,6 +15367,11 @@
             "description" : "Sets the binding mode to use. The default value is off",
             "default" : "off",
             "enum" : [ "auto", "json", "json_xml", "off", "xml" ]
+          },
+          "bindingPackageScan" : {
+            "type" : "string",
+            "title" : "Binding Package Scan",
+            "description" : "Package name to use as base (offset) for classpath scanning of POJO classes are located when using binding mode is enabled for JSon or XML. Multiple package names can be separated by comma."
           },
           "clientRequestValidation" : {
             "type" : "boolean",
@@ -15366,7 +15454,7 @@
           "inlineRoutes" : {
             "type" : "boolean",
             "title" : "Inline Routes",
-            "description" : "Inline routes in rest-dsl which are linked using direct endpoints. By default, each service in Rest DSL is an individual route, meaning that you would have at least two routes per service (rest-dsl, and the route linked from rest-dsl). Enabling this allows Camel to optimize and inline this as a single route, however this requires to use direct endpoints, which must be unique per service. This option is default false."
+            "description" : "Inline routes in rest-dsl which are linked using direct endpoints. Each service in Rest DSL is an individual route, meaning that you would have at least two routes per service (rest-dsl, and the route linked from rest-dsl). By inlining (default) allows Camel to optimize and inline this as a single route, however this requires to use direct endpoints, which must be unique per service. If a route is not using direct endpoint then the rest-dsl is not inlined, and will become an individual route. This option is default true."
           },
           "jsonDataFormat" : {
             "type" : "string",
@@ -15402,7 +15490,7 @@
           "useXForwardHeaders" : {
             "type" : "boolean",
             "title" : "Use XForward Headers",
-            "description" : "Whether to use X-Forward headers for Host and related setting. The default value is true."
+            "description" : "Whether to use X-Forward headers to set host etc. for OpenApi. This may be needed in special cases involving reverse-proxy and networking going from HTTP to HTTPS etc. Then the proxy can send X-Forward headers (X-Forwarded-Proto) that influences the host names in the OpenAPI schema that camel-openapi-java generates from Rest DSL routes."
           },
           "xmlDataFormat" : {
             "type" : "string",
@@ -15481,6 +15569,11 @@
             "type" : "string",
             "title" : "Id",
             "description" : "Sets the id of this node"
+          },
+          "openApi" : {
+            "title" : "Open Api",
+            "description" : "To use an existing OpenAPI specification as contract-first for Camel Rest DSL.",
+            "$ref" : "#/items/definitions/org.apache.camel.model.rest.OpenApiDefinition"
           },
           "patch" : {
             "type" : "array",
@@ -16271,7 +16364,7 @@
         "$ref" : "#/items/definitions/org.apache.camel.dsl.yaml.deserializers.BeansDeserializer"
       },
       "errorHandler" : {
-        "$ref" : "#/items/definitions/org.apache.camel.dsl.yaml.deserializers.ErrorHandlerBuilderDeserializer"
+        "$ref" : "#/items/definitions/org.apache.camel.dsl.yaml.deserializers.ErrorHandlerDeserializer"
       },
       "from" : {
         "$ref" : "#/items/definitions/org.apache.camel.dsl.yaml.deserializers.RouteFromDefinitionDeserializer"

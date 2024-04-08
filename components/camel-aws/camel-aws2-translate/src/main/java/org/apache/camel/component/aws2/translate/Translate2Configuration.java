@@ -37,6 +37,8 @@ public class Translate2Configuration implements Cloneable {
     private String accessKey;
     @UriParam(label = "security", secret = true)
     private String secretKey;
+    @UriParam(label = "security", secret = true)
+    private String sessionToken;
     @UriParam(defaultValue = "translateText")
     @Metadata(required = true)
     private Translate2Operations operation = Translate2Operations.translateText;
@@ -67,6 +69,8 @@ public class Translate2Configuration implements Cloneable {
     @UriParam(label = "security")
     private boolean useProfileCredentialsProvider;
     @UriParam(label = "security")
+    private boolean useSessionCredentials;
+    @UriParam(label = "security")
     private String profileCredentialsName;
 
     public TranslateClient getTranslateClient() {
@@ -74,7 +78,7 @@ public class Translate2Configuration implements Cloneable {
     }
 
     /**
-     * To use a existing configured AWS Translate as client
+     * To use an existing configured AWS Translate client
      */
     public void setTranslateClient(TranslateClient translateClient) {
         this.translateClient = translateClient;
@@ -100,6 +104,17 @@ public class Translate2Configuration implements Cloneable {
      */
     public void setSecretKey(String secretKey) {
         this.secretKey = secretKey;
+    }
+
+    public String getSessionToken() {
+        return sessionToken;
+    }
+
+    /**
+     * Amazon AWS Session Token used when the user needs to assume an IAM role
+     */
+    public void setSessionToken(String sessionToken) {
+        this.sessionToken = sessionToken;
     }
 
     public Translate2Operations getOperation() {
@@ -151,8 +166,8 @@ public class Translate2Configuration implements Cloneable {
     }
 
     /**
-     * The region in which Translate client needs to work. When using this parameter, the configuration will expect the
-     * lowercase name of the region (for example ap-east-1) You'll need to use the name Region.EU_WEST_1.id()
+     * The region in which the Translate client needs to work. When using this parameter, the configuration will expect
+     * the lowercase name of the region (for example, ap-east-1) You'll need to use the name Region.EU_WEST_1.id()
      */
     public void setRegion(String region) {
         this.region = region;
@@ -218,8 +233,8 @@ public class Translate2Configuration implements Cloneable {
     }
 
     /**
-     * Set the need for overidding the endpoint. This option needs to be used in combination with uriEndpointOverride
-     * option
+     * Set the need for overriding the endpoint. This option needs to be used in combination with the
+     * uriEndpointOverride option
      */
     public void setOverrideEndpoint(boolean overrideEndpoint) {
         this.overrideEndpoint = overrideEndpoint;
@@ -259,12 +274,24 @@ public class Translate2Configuration implements Cloneable {
         this.useProfileCredentialsProvider = useProfileCredentialsProvider;
     }
 
+    public boolean isUseSessionCredentials() {
+        return useSessionCredentials;
+    }
+
+    /**
+     * Set whether the Translate client should expect to use Session Credentials. This is useful in a situation in which
+     * the user needs to assume an IAM role for doing operations in Translate.
+     */
+    public void setUseSessionCredentials(boolean useSessionCredentials) {
+        this.useSessionCredentials = useSessionCredentials;
+    }
+
     public String getProfileCredentialsName() {
         return profileCredentialsName;
     }
 
     /**
-     * If using a profile credentials provider this parameter will set the profile name
+     * If using a profile credentials provider, this parameter will set the profile name
      */
     public void setProfileCredentialsName(String profileCredentialsName) {
         this.profileCredentialsName = profileCredentialsName;

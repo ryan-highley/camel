@@ -47,9 +47,9 @@ public interface KafkaEndpointBuilderFactory {
         /**
          * Sets additional properties for either kafka consumer or kafka
          * producer in case they can't be set directly on the camel
-         * configurations (e.g: new Kafka properties that are not reflected yet
+         * configurations (e.g.: new Kafka properties that are not reflected yet
          * in Camel configurations), the properties have to be prefixed with
-         * additionalProperties.. E.g:
+         * additionalProperties.., e.g.:
          * additionalProperties.transactional.id=12345&amp;amp;additionalProperties.schema.registry.url=http://localhost:8811/avro.
          * 
          * The option is a: &lt;code&gt;java.util.Map&amp;lt;java.lang.String,
@@ -73,9 +73,9 @@ public interface KafkaEndpointBuilderFactory {
         /**
          * Sets additional properties for either kafka consumer or kafka
          * producer in case they can't be set directly on the camel
-         * configurations (e.g: new Kafka properties that are not reflected yet
+         * configurations (e.g.: new Kafka properties that are not reflected yet
          * in Camel configurations), the properties have to be prefixed with
-         * additionalProperties.. E.g:
+         * additionalProperties.., e.g.:
          * additionalProperties.transactional.id=12345&amp;amp;additionalProperties.schema.registry.url=http://localhost:8811/avro.
          * 
          * The option is a: &lt;code&gt;java.util.Map&amp;lt;java.lang.String,
@@ -204,8 +204,100 @@ public interface KafkaEndpointBuilderFactory {
             return this;
         }
         /**
+         * The maximum amount of time in milliseconds to wait when retrying a
+         * request to the broker that has repeatedly failed. If provided, the
+         * backoff per client will increase exponentially for each failed
+         * request, up to this maximum. To prevent all clients from being
+         * synchronized upon retry, a randomized jitter with a factor of 0.2
+         * will be applied to the backoff, resulting in the backoff falling
+         * within a range between 20% below and 20% above the computed value. If
+         * retry.backoff.ms is set to be higher than retry.backoff.max.ms, then
+         * retry.backoff.max.ms will be used as a constant backoff from the
+         * beginning without any exponential increase.
+         * 
+         * The option is a: &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
+         * 
+         * Default: 1000
+         * Group: common
+         * 
+         * @param retryBackoffMaxMs the value to set
+         * @return the dsl builder
+         */
+        default KafkaEndpointConsumerBuilder retryBackoffMaxMs(
+                Integer retryBackoffMaxMs) {
+            doSetProperty("retryBackoffMaxMs", retryBackoffMaxMs);
+            return this;
+        }
+        /**
+         * The maximum amount of time in milliseconds to wait when retrying a
+         * request to the broker that has repeatedly failed. If provided, the
+         * backoff per client will increase exponentially for each failed
+         * request, up to this maximum. To prevent all clients from being
+         * synchronized upon retry, a randomized jitter with a factor of 0.2
+         * will be applied to the backoff, resulting in the backoff falling
+         * within a range between 20% below and 20% above the computed value. If
+         * retry.backoff.ms is set to be higher than retry.backoff.max.ms, then
+         * retry.backoff.max.ms will be used as a constant backoff from the
+         * beginning without any exponential increase.
+         * 
+         * The option will be converted to a
+         * &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
+         * 
+         * Default: 1000
+         * Group: common
+         * 
+         * @param retryBackoffMaxMs the value to set
+         * @return the dsl builder
+         */
+        default KafkaEndpointConsumerBuilder retryBackoffMaxMs(
+                String retryBackoffMaxMs) {
+            doSetProperty("retryBackoffMaxMs", retryBackoffMaxMs);
+            return this;
+        }
+        /**
+         * The amount of time to wait before attempting to retry a failed
+         * request to a given topic partition. This avoids repeatedly sending
+         * requests in a tight loop under some failure scenarios. This value is
+         * the initial backoff value and will increase exponentially for each
+         * failed request, up to the retry.backoff.max.ms value.
+         * 
+         * The option is a: &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
+         * 
+         * Default: 100
+         * Group: common
+         * 
+         * @param retryBackoffMs the value to set
+         * @return the dsl builder
+         */
+        default KafkaEndpointConsumerBuilder retryBackoffMs(
+                Integer retryBackoffMs) {
+            doSetProperty("retryBackoffMs", retryBackoffMs);
+            return this;
+        }
+        /**
+         * The amount of time to wait before attempting to retry a failed
+         * request to a given topic partition. This avoids repeatedly sending
+         * requests in a tight loop under some failure scenarios. This value is
+         * the initial backoff value and will increase exponentially for each
+         * failed request, up to the retry.backoff.max.ms value.
+         * 
+         * The option will be converted to a
+         * &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
+         * 
+         * Default: 100
+         * Group: common
+         * 
+         * @param retryBackoffMs the value to set
+         * @return the dsl builder
+         */
+        default KafkaEndpointConsumerBuilder retryBackoffMs(
+                String retryBackoffMs) {
+            doSetProperty("retryBackoffMs", retryBackoffMs);
+            return this;
+        }
+        /**
          * Timeout in milliseconds to wait gracefully for the consumer or
-         * producer to shutdown and terminate its worker threads.
+         * producer to shut down and terminate its worker threads.
          * 
          * The option is a: &lt;code&gt;int&lt;/code&gt; type.
          * 
@@ -221,7 +313,7 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * Timeout in milliseconds to wait gracefully for the consumer or
-         * producer to shutdown and terminate its worker threads.
+         * producer to shut down and terminate its worker threads.
          * 
          * The option will be converted to a &lt;code&gt;int&lt;/code&gt; type.
          * 
@@ -352,7 +444,7 @@ public interface KafkaEndpointBuilderFactory {
         /**
          * What to do when there is no initial offset in ZooKeeper or if an
          * offset is out of range: earliest : automatically reset the offset to
-         * the earliest offset latest : automatically reset the offset to the
+         * the earliest offset latest: automatically reset the offset to the
          * latest offset fail: throw exception to the consumer.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
@@ -409,12 +501,12 @@ public interface KafkaEndpointBuilderFactory {
          * will cause the consumer to not commit the offset so that the message
          * is re-attempted. The consumer should use the KafkaManualCommit to
          * determine the best way to handle the message. Using either the
-         * SynchCommitManager or the AsynchCommitManager the consumer will seek
+         * SyncCommitManager or the AsyncCommitManager, the consumer will seek
          * back to the offset of the message that caused a failure, and then
-         * re-attempt to process this message. However this can lead to endless
-         * processing of the same message if its bound to fail every time, eg a
-         * poison message. Therefore its recommended to deal with that for
-         * example by using Camel's error handler.
+         * re-attempt to process this message. However, this can lead to endless
+         * processing of the same message if it's bound to fail every time,
+         * e.g., a poison message. Therefore, it's recommended to deal with
+         * that, for example, by using Camel's error handler.
          * 
          * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
          * 
@@ -437,12 +529,12 @@ public interface KafkaEndpointBuilderFactory {
          * will cause the consumer to not commit the offset so that the message
          * is re-attempted. The consumer should use the KafkaManualCommit to
          * determine the best way to handle the message. Using either the
-         * SynchCommitManager or the AsynchCommitManager the consumer will seek
+         * SyncCommitManager or the AsyncCommitManager, the consumer will seek
          * back to the offset of the message that caused a failure, and then
-         * re-attempt to process this message. However this can lead to endless
-         * processing of the same message if its bound to fail every time, eg a
-         * poison message. Therefore its recommended to deal with that for
-         * example by using Camel's error handler.
+         * re-attempt to process this message. However, this can lead to endless
+         * processing of the same message if it's bound to fail every time,
+         * e.g., a poison message. Therefore, it's recommended to deal with
+         * that, for example, by using Camel's error handler.
          * 
          * The option will be converted to a &lt;code&gt;boolean&lt;/code&gt;
          * type.
@@ -533,7 +625,7 @@ public interface KafkaEndpointBuilderFactory {
         /**
          * The configuration controls the maximum amount of time the client will
          * wait for the response of a request. If the response is not received
-         * before the timeout elapses the client will resend the request if
+         * before the timeout elapsed, the client will resend the request if
          * necessary or fail the request if retries are exhausted.
          * 
          * The option is a: &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
@@ -552,7 +644,7 @@ public interface KafkaEndpointBuilderFactory {
         /**
          * The configuration controls the maximum amount of time the client will
          * wait for the response of a request. If the response is not received
-         * before the timeout elapses the client will resend the request if
+         * before the timeout elapsed, the client will resend the request if
          * necessary or fail the request if retries are exhausted.
          * 
          * The option will be converted to a
@@ -571,7 +663,7 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * The number of consumers that connect to kafka server. Each consumer
-         * is run on a separate thread, that retrieves and process the incoming
+         * is run on a separate thread that retrieves and process the incoming
          * data.
          * 
          * The option is a: &lt;code&gt;int&lt;/code&gt; type.
@@ -588,7 +680,7 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * The number of consumers that connect to kafka server. Each consumer
-         * is run on a separate thread, that retrieves and process the incoming
+         * is run on a separate thread that retrieves and process the incoming
          * data.
          * 
          * The option will be converted to a &lt;code&gt;int&lt;/code&gt; type.
@@ -651,7 +743,7 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * The minimum amount of data the server should return for a fetch
-         * request. If insufficient data is available the request will wait for
+         * request. If insufficient data is available, the request will wait for
          * that much data to accumulate before answering the request.
          * 
          * The option is a: &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
@@ -668,7 +760,7 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * The minimum amount of data the server should return for a fetch
-         * request. If insufficient data is available the request will wait for
+         * request. If insufficient data is available, the request will wait for
          * that much data to accumulate before answering the request.
          * 
          * The option will be converted to a
@@ -723,9 +815,9 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * A string that uniquely identifies the group of consumer processes to
-         * which this consumer belongs. By setting the same group id multiple
-         * processes indicate that they are all part of the same consumer group.
-         * This option is required for consumers.
+         * which this consumer belongs. By setting the same group id, multiple
+         * processes can indicate that they are all part of the same consumer
+         * group. This option is required for consumers.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
          * 
@@ -744,7 +836,7 @@ public interface KafkaEndpointBuilderFactory {
          * treated as a static member, which means that only one instance with
          * this ID is allowed in the consumer group at any time. This can be
          * used in combination with a larger session timeout to avoid group
-         * rebalances caused by transient unavailability (e.g. process
+         * rebalances caused by transient unavailability (e.g., process
          * restarts). If not set, the consumer will join the group as a dynamic
          * member, which is the traditional behavior.
          * 
@@ -906,8 +998,8 @@ public interface KafkaEndpointBuilderFactory {
          * group management. This places an upper bound on the amount of time
          * that the consumer can be idle before fetching more records. If poll()
          * is not called before expiration of this timeout, then the consumer is
-         * considered failed and the group will rebalance in order to reassign
-         * the partitions to another member.
+         * considered failed, and the group will re-balance to reassign the
+         * partitions to another member.
          * 
          * The option is a: &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
          * 
@@ -926,8 +1018,8 @@ public interface KafkaEndpointBuilderFactory {
          * group management. This places an upper bound on the amount of time
          * that the consumer can be idle before fetching more records. If poll()
          * is not called before expiration of this timeout, then the consumer is
-         * considered failed and the group will rebalance in order to reassign
-         * the partitions to another member.
+         * considered failed, and the group will re-balance to reassign the
+         * partitions to another member.
          * 
          * The option will be converted to a
          * &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
@@ -976,9 +1068,8 @@ public interface KafkaEndpointBuilderFactory {
             return this;
         }
         /**
-         * The offset repository to use in order to locally store the offset of
-         * each partition of the topic. Defining one will disable the
-         * autocommit.
+         * The offset repository to use to locally store the offset of each
+         * partition of the topic. Defining one will disable the autocommit.
          * 
          * The option is a:
          * &lt;code&gt;org.apache.camel.spi.StateRepository&amp;lt;java.lang.String, java.lang.String&amp;gt;&lt;/code&gt; type.
@@ -994,9 +1085,8 @@ public interface KafkaEndpointBuilderFactory {
             return this;
         }
         /**
-         * The offset repository to use in order to locally store the offset of
-         * each partition of the topic. Defining one will disable the
-         * autocommit.
+         * The offset repository to use to locally store the offset of each
+         * partition of the topic. Defining one will disable the autocommit.
          * 
          * The option will be converted to a
          * &lt;code&gt;org.apache.camel.spi.StateRepository&amp;lt;java.lang.String, java.lang.String&amp;gt;&lt;/code&gt; type.
@@ -1034,12 +1124,13 @@ public interface KafkaEndpointBuilderFactory {
          * messages. Will by default use the value from the component
          * configuration unless an explicit value has been configured on the
          * endpoint level. DISCARD will discard the message and continue to poll
-         * next message. ERROR_HANDLER will use Camel's error handler to process
-         * the exception, and afterwards continue to poll next message.
-         * RECONNECT will re-connect the consumer and try poll the message again
-         * RETRY will let the consumer retry polling the same message again STOP
-         * will stop the consumer (have to be manually started/restarted if the
-         * consumer should be able to consume messages again).
+         * the next message. ERROR_HANDLER will use Camel's error handler to
+         * process the exception, and afterwards continue to poll the next
+         * message. RECONNECT will re-connect the consumer and try polling the
+         * message again. RETRY will let the consumer retry poll the same
+         * message again. STOP will stop the consumer (it has to be manually
+         * started/restarted if the consumer should be able to consume messages
+         * again).
          * 
          * The option is a:
          * &lt;code&gt;org.apache.camel.component.kafka.PollOnError&lt;/code&gt;
@@ -1061,12 +1152,13 @@ public interface KafkaEndpointBuilderFactory {
          * messages. Will by default use the value from the component
          * configuration unless an explicit value has been configured on the
          * endpoint level. DISCARD will discard the message and continue to poll
-         * next message. ERROR_HANDLER will use Camel's error handler to process
-         * the exception, and afterwards continue to poll next message.
-         * RECONNECT will re-connect the consumer and try poll the message again
-         * RETRY will let the consumer retry polling the same message again STOP
-         * will stop the consumer (have to be manually started/restarted if the
-         * consumer should be able to consume messages again).
+         * the next message. ERROR_HANDLER will use Camel's error handler to
+         * process the exception, and afterwards continue to poll the next
+         * message. RECONNECT will re-connect the consumer and try polling the
+         * message again. RETRY will let the consumer retry poll the same
+         * message again. STOP will stop the consumer (it has to be manually
+         * started/restarted if the consumer should be able to consume messages
+         * again).
          * 
          * The option will be converted to a
          * &lt;code&gt;org.apache.camel.component.kafka.PollOnError&lt;/code&gt;
@@ -1116,7 +1208,7 @@ public interface KafkaEndpointBuilderFactory {
         /**
          * Whether to eager validate that broker host:port is valid and can be
          * DNS resolved to known host during starting this consumer. If the
-         * validation fails then an exception is thrown which makes Camel fail
+         * validation fails, then an exception is thrown, which makes Camel fail
          * fast. Disabling this will postpone the validation after the consumer
          * is started, and Camel will keep re-connecting in case of validation
          * or DNS resolution error.
@@ -1137,7 +1229,7 @@ public interface KafkaEndpointBuilderFactory {
         /**
          * Whether to eager validate that broker host:port is valid and can be
          * DNS resolved to known host during starting this consumer. If the
-         * validation fails then an exception is thrown which makes Camel fail
+         * validation fails, then an exception is thrown, which makes Camel fail
          * fast. Disabling this will postpone the validation after the consumer
          * is started, and Camel will keep re-connecting in case of validation
          * or DNS resolution error.
@@ -1157,7 +1249,7 @@ public interface KafkaEndpointBuilderFactory {
             return this;
         }
         /**
-         * Set if KafkaConsumer will read from the beginning or the end on
+         * Set if KafkaConsumer should read from the beginning or the end on
          * startup: SeekPolicy.BEGINNING: read from the beginning.
          * SeekPolicy.END: read from the end.
          * 
@@ -1176,7 +1268,7 @@ public interface KafkaEndpointBuilderFactory {
             return this;
         }
         /**
-         * Set if KafkaConsumer will read from the beginning or the end on
+         * Set if KafkaConsumer should read from the beginning or the end on
          * startup: SeekPolicy.BEGINNING: read from the beginning.
          * SeekPolicy.END: read from the end.
          * 
@@ -1425,12 +1517,12 @@ public interface KafkaEndpointBuilderFactory {
         /**
          * A list of rules for mapping from principal names to short names
          * (typically operating system usernames). The rules are evaluated in
-         * order and the first rule that matches a principal name is used to map
-         * it to a short name. Any later rules in the list are ignored. By
+         * order, and the first rule that matches a principal name is used to
+         * map it to a short name. Any later rules in the list are ignored. By
          * default, principal names of the form {username}/{hostname}{REALM} are
-         * mapped to {username}. For more details on the format please see the
-         * security authorization and acls documentation (at the Apache Kafka
-         * project). Multiple values can be separated by comma.
+         * mapped to {username}. For more details on the format, please see the
+         * Security Authorization and ACLs documentation (at the Apache Kafka
+         * project website). Multiple values can be separated by comma.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
          * 
@@ -1586,7 +1678,7 @@ public interface KafkaEndpointBuilderFactory {
          * A list of cipher suites. This is a named combination of
          * authentication, encryption, MAC and key exchange algorithm used to
          * negotiate the security settings for a network connection using TLS or
-         * SSL network protocol. By default all the available cipher suites are
+         * SSL network protocol. By default, all the available cipher suites are
          * supported.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
@@ -1603,7 +1695,7 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * SSL configuration using a Camel SSLContextParameters object. If
-         * configured it's applied before the other SSL endpoint parameters.
+         * configured, it's applied before the other SSL endpoint parameters.
          * NOTE: Kafka only supports loading keystore from file locations, so
          * prefix the location with file: in the KeyStoreParameters.resource
          * option.
@@ -1623,7 +1715,7 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * SSL configuration using a Camel SSLContextParameters object. If
-         * configured it's applied before the other SSL endpoint parameters.
+         * configured, it's applied before the other SSL endpoint parameters.
          * NOTE: Kafka only supports loading keystore from file locations, so
          * prefix the location with file: in the KeyStoreParameters.resource
          * option.
@@ -1733,7 +1825,7 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * The store password for the key store file. This is optional for the
-         * client and only needed if sslKeystoreLocation' is configured. Key
+         * client and only needed if sslKeystoreLocation is configured. Key
          * store password is not supported for PEM format.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
@@ -1749,8 +1841,8 @@ public interface KafkaEndpointBuilderFactory {
             return this;
         }
         /**
-         * The file format of the key store file. This is optional for client.
-         * Default value is JKS.
+         * The file format of the key store file. This is optional for the
+         * client. The default value is JKS.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
          * 
@@ -1855,7 +1947,7 @@ public interface KafkaEndpointBuilderFactory {
             return this;
         }
         /**
-         * The file format of the trust store file. Default value is JKS.
+         * The file format of the trust store file. The default value is JKS.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
          * 
@@ -2016,7 +2108,7 @@ public interface KafkaEndpointBuilderFactory {
          * will always be returned in offset order. Hence, in read_committed
          * mode, consumer.poll() will only return messages up to the last stable
          * offset (LSO), which is the one less than the offset of the first open
-         * transaction. In particular any messages appearing after messages
+         * transaction. In particular, any messages appearing after messages
          * belonging to ongoing transactions will be withheld until the relevant
          * transaction has been completed. As a result, read_committed consumers
          * will not be able to read up to the high watermark when there are in
@@ -2163,9 +2255,9 @@ public interface KafkaEndpointBuilderFactory {
         /**
          * Sets additional properties for either kafka consumer or kafka
          * producer in case they can't be set directly on the camel
-         * configurations (e.g: new Kafka properties that are not reflected yet
+         * configurations (e.g.: new Kafka properties that are not reflected yet
          * in Camel configurations), the properties have to be prefixed with
-         * additionalProperties.. E.g:
+         * additionalProperties.., e.g.:
          * additionalProperties.transactional.id=12345&amp;amp;additionalProperties.schema.registry.url=http://localhost:8811/avro.
          * 
          * The option is a: &lt;code&gt;java.util.Map&amp;lt;java.lang.String,
@@ -2189,9 +2281,9 @@ public interface KafkaEndpointBuilderFactory {
         /**
          * Sets additional properties for either kafka consumer or kafka
          * producer in case they can't be set directly on the camel
-         * configurations (e.g: new Kafka properties that are not reflected yet
+         * configurations (e.g.: new Kafka properties that are not reflected yet
          * in Camel configurations), the properties have to be prefixed with
-         * additionalProperties.. E.g:
+         * additionalProperties.., e.g.:
          * additionalProperties.transactional.id=12345&amp;amp;additionalProperties.schema.registry.url=http://localhost:8811/avro.
          * 
          * The option is a: &lt;code&gt;java.util.Map&amp;lt;java.lang.String,
@@ -2320,8 +2412,100 @@ public interface KafkaEndpointBuilderFactory {
             return this;
         }
         /**
+         * The maximum amount of time in milliseconds to wait when retrying a
+         * request to the broker that has repeatedly failed. If provided, the
+         * backoff per client will increase exponentially for each failed
+         * request, up to this maximum. To prevent all clients from being
+         * synchronized upon retry, a randomized jitter with a factor of 0.2
+         * will be applied to the backoff, resulting in the backoff falling
+         * within a range between 20% below and 20% above the computed value. If
+         * retry.backoff.ms is set to be higher than retry.backoff.max.ms, then
+         * retry.backoff.max.ms will be used as a constant backoff from the
+         * beginning without any exponential increase.
+         * 
+         * The option is a: &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
+         * 
+         * Default: 1000
+         * Group: common
+         * 
+         * @param retryBackoffMaxMs the value to set
+         * @return the dsl builder
+         */
+        default KafkaEndpointProducerBuilder retryBackoffMaxMs(
+                Integer retryBackoffMaxMs) {
+            doSetProperty("retryBackoffMaxMs", retryBackoffMaxMs);
+            return this;
+        }
+        /**
+         * The maximum amount of time in milliseconds to wait when retrying a
+         * request to the broker that has repeatedly failed. If provided, the
+         * backoff per client will increase exponentially for each failed
+         * request, up to this maximum. To prevent all clients from being
+         * synchronized upon retry, a randomized jitter with a factor of 0.2
+         * will be applied to the backoff, resulting in the backoff falling
+         * within a range between 20% below and 20% above the computed value. If
+         * retry.backoff.ms is set to be higher than retry.backoff.max.ms, then
+         * retry.backoff.max.ms will be used as a constant backoff from the
+         * beginning without any exponential increase.
+         * 
+         * The option will be converted to a
+         * &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
+         * 
+         * Default: 1000
+         * Group: common
+         * 
+         * @param retryBackoffMaxMs the value to set
+         * @return the dsl builder
+         */
+        default KafkaEndpointProducerBuilder retryBackoffMaxMs(
+                String retryBackoffMaxMs) {
+            doSetProperty("retryBackoffMaxMs", retryBackoffMaxMs);
+            return this;
+        }
+        /**
+         * The amount of time to wait before attempting to retry a failed
+         * request to a given topic partition. This avoids repeatedly sending
+         * requests in a tight loop under some failure scenarios. This value is
+         * the initial backoff value and will increase exponentially for each
+         * failed request, up to the retry.backoff.max.ms value.
+         * 
+         * The option is a: &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
+         * 
+         * Default: 100
+         * Group: common
+         * 
+         * @param retryBackoffMs the value to set
+         * @return the dsl builder
+         */
+        default KafkaEndpointProducerBuilder retryBackoffMs(
+                Integer retryBackoffMs) {
+            doSetProperty("retryBackoffMs", retryBackoffMs);
+            return this;
+        }
+        /**
+         * The amount of time to wait before attempting to retry a failed
+         * request to a given topic partition. This avoids repeatedly sending
+         * requests in a tight loop under some failure scenarios. This value is
+         * the initial backoff value and will increase exponentially for each
+         * failed request, up to the retry.backoff.max.ms value.
+         * 
+         * The option will be converted to a
+         * &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
+         * 
+         * Default: 100
+         * Group: common
+         * 
+         * @param retryBackoffMs the value to set
+         * @return the dsl builder
+         */
+        default KafkaEndpointProducerBuilder retryBackoffMs(
+                String retryBackoffMs) {
+            doSetProperty("retryBackoffMs", retryBackoffMs);
+            return this;
+        }
+        /**
          * Timeout in milliseconds to wait gracefully for the consumer or
-         * producer to shutdown and terminate its worker threads.
+         * producer to shut down and terminate its worker threads.
          * 
          * The option is a: &lt;code&gt;int&lt;/code&gt; type.
          * 
@@ -2337,7 +2521,7 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * Timeout in milliseconds to wait gracefully for the consumer or
-         * producer to shutdown and terminate its worker threads.
+         * producer to shut down and terminate its worker threads.
          * 
          * The option will be converted to a &lt;code&gt;int&lt;/code&gt; type.
          * 
@@ -2356,7 +2540,7 @@ public interface KafkaEndpointBuilderFactory {
          * If this feature is enabled and a single element of a batch is an
          * Exchange or Message, the producer will generate individual kafka
          * header values for it by using the batch Message to determine the
-         * values. Normal behaviour consists in always using the same header
+         * values. Normal behavior consists of always using the same header
          * values (which are determined by the parent Exchange which contains
          * the Iterable or Iterator).
          * 
@@ -2377,7 +2561,7 @@ public interface KafkaEndpointBuilderFactory {
          * If this feature is enabled and a single element of a batch is an
          * Exchange or Message, the producer will generate individual kafka
          * header values for it by using the batch Message to determine the
-         * values. Normal behaviour consists in always using the same header
+         * values. Normal behavior consists of always using the same header
          * values (which are determined by the parent Exchange which contains
          * the Iterable or Iterator).
          * 
@@ -2398,8 +2582,8 @@ public interface KafkaEndpointBuilderFactory {
         /**
          * The total bytes of memory the producer can use to buffer records
          * waiting to be sent to the server. If records are sent faster than
-         * they can be delivered to the server the producer will either block or
-         * throw an exception based on the preference specified by
+         * they can be delivered to the server, the producer will either block
+         * or throw an exception based on the preference specified by
          * block.on.buffer.full.This setting should correspond roughly to the
          * total memory the producer will use, but is not a hard bound since not
          * all memory the producer uses is used for buffering. Some additional
@@ -2422,8 +2606,8 @@ public interface KafkaEndpointBuilderFactory {
         /**
          * The total bytes of memory the producer can use to buffer records
          * waiting to be sent to the server. If records are sent faster than
-         * they can be delivered to the server the producer will either block or
-         * throw an exception based on the preference specified by
+         * they can be delivered to the server, the producer will either block
+         * or throw an exception based on the preference specified by
          * block.on.buffer.full.This setting should correspond roughly to the
          * total memory the producer will use, but is not a hard bound since not
          * all memory the producer uses is used for buffering. Some additional
@@ -2659,21 +2843,21 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * The producer groups together any records that arrive in between
-         * request transmissions into a single batched request. Normally this
+         * request transmissions into a single, batched, request. Normally, this
          * occurs only under load when records arrive faster than they can be
-         * sent out. However in some circumstances the client may want to reduce
-         * the number of requests even under moderate load. This setting
-         * accomplishes this by adding a small amount of artificial delay that
-         * is, rather than immediately sending out a record the producer will
-         * wait for up to the given delay to allow other records to be sent so
-         * that they can be batched together. This can be thought of as
-         * analogous to Nagle's algorithm in TCP. This setting gives the upper
-         * bound on the delay for batching: once we get batch.size worth of
-         * records for a partition it will be sent immediately regardless of
-         * this setting, however if we have fewer than this many bytes
-         * accumulated for this partition we will 'linger' for the specified
+         * sent out. However, in some circumstances, the client may want to
+         * reduce the number of requests even under a moderate load. This
+         * setting accomplishes this by adding a small amount of artificial
+         * delay. That is, rather than immediately sending out a record, the
+         * producer will wait for up to the given delay to allow other records
+         * to be sent so that they can be batched together. This can be thought
+         * of as analogous to Nagle's algorithm in TCP. This setting gives the
+         * upper bound on the delay for batching: once we get batch.size worth
+         * of records for a partition, it will be sent immediately regardless of
+         * this setting, however, if we have fewer than this many bytes
+         * accumulated for this partition, we will 'linger' for the specified
          * time waiting for more records to show up. This setting defaults to 0
-         * (i.e. no delay). Setting linger.ms=5, for example, would have the
+         * (i.e., no delay). Setting linger.ms=5, for example, would have the
          * effect of reducing the number of requests sent but would add up to
          * 5ms of latency to records sent in the absence of load.
          * 
@@ -2691,21 +2875,21 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * The producer groups together any records that arrive in between
-         * request transmissions into a single batched request. Normally this
+         * request transmissions into a single, batched, request. Normally, this
          * occurs only under load when records arrive faster than they can be
-         * sent out. However in some circumstances the client may want to reduce
-         * the number of requests even under moderate load. This setting
-         * accomplishes this by adding a small amount of artificial delay that
-         * is, rather than immediately sending out a record the producer will
-         * wait for up to the given delay to allow other records to be sent so
-         * that they can be batched together. This can be thought of as
-         * analogous to Nagle's algorithm in TCP. This setting gives the upper
-         * bound on the delay for batching: once we get batch.size worth of
-         * records for a partition it will be sent immediately regardless of
-         * this setting, however if we have fewer than this many bytes
-         * accumulated for this partition we will 'linger' for the specified
+         * sent out. However, in some circumstances, the client may want to
+         * reduce the number of requests even under a moderate load. This
+         * setting accomplishes this by adding a small amount of artificial
+         * delay. That is, rather than immediately sending out a record, the
+         * producer will wait for up to the given delay to allow other records
+         * to be sent so that they can be batched together. This can be thought
+         * of as analogous to Nagle's algorithm in TCP. This setting gives the
+         * upper bound on the delay for batching: once we get batch.size worth
+         * of records for a partition, it will be sent immediately regardless of
+         * this setting, however, if we have fewer than this many bytes
+         * accumulated for this partition, we will 'linger' for the specified
          * time waiting for more records to show up. This setting defaults to 0
-         * (i.e. no delay). Setting linger.ms=5, for example, would have the
+         * (i.e., no delay). Setting linger.ms=5, for example, would have the
          * effect of reducing the number of requests sent but would add up to
          * 5ms of latency to records sent in the absence of load.
          * 
@@ -2729,7 +2913,7 @@ public interface KafkaEndpointBuilderFactory {
          * send() this timeout bounds the total time waiting for both metadata
          * fetch and buffer allocation (blocking in the user-supplied
          * serializers or partitioner is not counted against this timeout). For
-         * partitionsFor() this timeout bounds the time spent waiting for
+         * partitionsFor() this time out bounds the time spent waiting for
          * metadata if it is unavailable. The transaction-related methods always
          * block, but may time out if the transaction coordinator could not be
          * discovered or did not respond within the timeout.
@@ -2753,7 +2937,7 @@ public interface KafkaEndpointBuilderFactory {
          * send() this timeout bounds the total time waiting for both metadata
          * fetch and buffer allocation (blocking in the user-supplied
          * serializers or partitioner is not counted against this timeout). For
-         * partitionsFor() this timeout bounds the time spent waiting for
+         * partitionsFor() this time out bounds the time spent waiting for
          * metadata if it is unavailable. The transaction-related methods always
          * block, but may time out if the transaction coordinator could not be
          * discovered or did not respond within the timeout.
@@ -2988,8 +3172,8 @@ public interface KafkaEndpointBuilderFactory {
             return this;
         }
         /**
-         * Whether the message keys should be ignored when computing partition.
-         * This setting has effect only when partitioner is not set.
+         * Whether the message keys should be ignored when computing the
+         * partition. This setting has effect only when partitioner is not set.
          * 
          * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
          * 
@@ -3005,8 +3189,8 @@ public interface KafkaEndpointBuilderFactory {
             return this;
         }
         /**
-         * Whether the message keys should be ignored when computing partition.
-         * This setting has effect only when partitioner is not set.
+         * Whether the message keys should be ignored when computing the
+         * partition. This setting has effect only when partitioner is not set.
          * 
          * The option will be converted to a &lt;code&gt;boolean&lt;/code&gt;
          * type.
@@ -3262,25 +3446,25 @@ public interface KafkaEndpointBuilderFactory {
          * The number of acknowledgments the producer requires the leader to
          * have received before considering a request complete. This controls
          * the durability of records that are sent. The following settings are
-         * allowed: acks=0 If set to zero then the producer will not wait for
+         * allowed: acks=0 If set to zero, then the producer will not wait for
          * any acknowledgment from the server at all. The record will be
          * immediately added to the socket buffer and considered sent. No
          * guarantee can be made that the server has received the record in this
-         * case, and the retries configuration will not take effect (as the
-         * client won't generally know of any failures). The offset given back
-         * for each record will always be set to -1. acks=1 This will mean the
-         * leader will write the record to its local log but will respond
-         * without awaiting full acknowledgement from all followers. In this
-         * case should the leader fail immediately after acknowledging the
-         * record but before the followers have replicated it then the record
-         * will be lost. acks=all This means the leader will wait for the full
-         * set of in-sync replicas to acknowledge the record. This guarantees
-         * that the record will not be lost as long as at least one in-sync
-         * replica remains alive. This is the strongest available guarantee.
-         * This is equivalent to the acks=-1 setting. Note that enabling
-         * idempotence requires this config value to be 'all'. If conflicting
-         * configurations are set and idempotence is not explicitly enabled,
-         * idempotence is disabled.
+         * case, and the retry configuration will not take effect (as the client
+         * won't generally know of any failures). The offset given back for each
+         * record will always be set to -1. acks=1 This will mean the leader
+         * will write the record to its local log but will respond without
+         * awaiting full acknowledgment from all followers. In this case should
+         * the leader fail immediately after acknowledging the record, but
+         * before the followers have replicated it, then the record will be
+         * lost. acks=all This means the leader will wait for the full set of
+         * in-sync replicas to acknowledge the record. This guarantees that the
+         * record will not be lost as long as at least one in-sync replica
+         * remains alive. This is the strongest available guarantee. This is
+         * equivalent to the acks=-1 setting. Note that enabling idempotence
+         * requires this config value to be 'all'. If conflicting configurations
+         * are set and idempotence is not explicitly enabled, idempotence is
+         * disabled.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
          * 
@@ -3334,21 +3518,21 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * Setting a value greater than zero will cause the client to resend any
-         * record whose send fails with a potentially transient error. Note that
-         * this retry is no different than if the client resent the record upon
-         * receiving the error. Produce requests will be failed before the
-         * number of retries has been exhausted if the timeout configured by
-         * delivery.timeout.ms expires first before successful acknowledgement.
-         * Users should generally prefer to leave this config unset and instead
-         * use delivery.timeout.ms to control retry behavior. Enabling
-         * idempotence requires this config value to be greater than 0. If
-         * conflicting configurations are set and idempotence is not explicitly
-         * enabled, idempotence is disabled. Allowing retries while setting
-         * enable.idempotence to false and max.in.flight.requests.per.connection
-         * to 1 will potentially change the ordering of records because if two
-         * batches are sent to a single partition, and the first fails and is
-         * retried but the second succeeds, then the records in the second batch
-         * may appear first.
+         * record that has failed to be sent due to a potentially transient
+         * error. Note that this retry is no different from if the client
+         * re-sending the record upon receiving the error. Produce requests will
+         * be failed before the number of retries has been exhausted if the
+         * timeout configured by delivery.timeout.ms expires first before
+         * successful acknowledgement. Users should generally prefer to leave
+         * this config unset and instead use delivery.timeout.ms to control
+         * retry behavior. Enabling idempotence requires this config value to be
+         * greater than 0. If conflicting configurations are set and idempotence
+         * is not explicitly enabled, idempotence is disabled. Allowing retries
+         * while setting enable.idempotence to false and
+         * max.in.flight.requests.per.connection to 1 will potentially change
+         * the ordering of records because if two batches are sent to a single
+         * partition, and the first fails and is retried but the second
+         * succeeds, then the records in the second batch may appear first.
          * 
          * The option is a: &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
          * 
@@ -3363,21 +3547,21 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * Setting a value greater than zero will cause the client to resend any
-         * record whose send fails with a potentially transient error. Note that
-         * this retry is no different than if the client resent the record upon
-         * receiving the error. Produce requests will be failed before the
-         * number of retries has been exhausted if the timeout configured by
-         * delivery.timeout.ms expires first before successful acknowledgement.
-         * Users should generally prefer to leave this config unset and instead
-         * use delivery.timeout.ms to control retry behavior. Enabling
-         * idempotence requires this config value to be greater than 0. If
-         * conflicting configurations are set and idempotence is not explicitly
-         * enabled, idempotence is disabled. Allowing retries while setting
-         * enable.idempotence to false and max.in.flight.requests.per.connection
-         * to 1 will potentially change the ordering of records because if two
-         * batches are sent to a single partition, and the first fails and is
-         * retried but the second succeeds, then the records in the second batch
-         * may appear first.
+         * record that has failed to be sent due to a potentially transient
+         * error. Note that this retry is no different from if the client
+         * re-sending the record upon receiving the error. Produce requests will
+         * be failed before the number of retries has been exhausted if the
+         * timeout configured by delivery.timeout.ms expires first before
+         * successful acknowledgement. Users should generally prefer to leave
+         * this config unset and instead use delivery.timeout.ms to control
+         * retry behavior. Enabling idempotence requires this config value to be
+         * greater than 0. If conflicting configurations are set and idempotence
+         * is not explicitly enabled, idempotence is disabled. Allowing retries
+         * while setting enable.idempotence to false and
+         * max.in.flight.requests.per.connection to 1 will potentially change
+         * the ordering of records because if two batches are sent to a single
+         * partition, and the first fails and is retried but the second
+         * succeeds, then the records in the second batch may appear first.
          * 
          * The option will be converted to a
          * &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
@@ -3389,45 +3573,6 @@ public interface KafkaEndpointBuilderFactory {
          */
         default KafkaEndpointProducerBuilder retries(String retries) {
             doSetProperty("retries", retries);
-            return this;
-        }
-        /**
-         * Before each retry, the producer refreshes the metadata of relevant
-         * topics to see if a new leader has been elected. Since the leader
-         * election takes a bit of time, this property specifies the amount of
-         * time that the producer waits before refreshing the metadata.
-         * 
-         * The option is a: &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
-         * 
-         * Default: 100
-         * Group: producer
-         * 
-         * @param retryBackoffMs the value to set
-         * @return the dsl builder
-         */
-        default KafkaEndpointProducerBuilder retryBackoffMs(
-                Integer retryBackoffMs) {
-            doSetProperty("retryBackoffMs", retryBackoffMs);
-            return this;
-        }
-        /**
-         * Before each retry, the producer refreshes the metadata of relevant
-         * topics to see if a new leader has been elected. Since the leader
-         * election takes a bit of time, this property specifies the amount of
-         * time that the producer waits before refreshing the metadata.
-         * 
-         * The option will be converted to a
-         * &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
-         * 
-         * Default: 100
-         * Group: producer
-         * 
-         * @param retryBackoffMs the value to set
-         * @return the dsl builder
-         */
-        default KafkaEndpointProducerBuilder retryBackoffMs(
-                String retryBackoffMs) {
-            doSetProperty("retryBackoffMs", retryBackoffMs);
             return this;
         }
         /**
@@ -3481,9 +3626,9 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * To use a custom worker pool for continue routing Exchange after kafka
-         * server has acknowledge the message that was sent to it from
+         * server has acknowledged the message that was sent to it from
          * KafkaProducer using asynchronous non-blocking processing. If using
-         * this option then you must handle the lifecycle of the thread pool to
+         * this option, then you must handle the lifecycle of the thread pool to
          * shut the pool down when no longer needed.
          * 
          * The option is a:
@@ -3501,9 +3646,9 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * To use a custom worker pool for continue routing Exchange after kafka
-         * server has acknowledge the message that was sent to it from
+         * server has acknowledged the message that was sent to it from
          * KafkaProducer using asynchronous non-blocking processing. If using
-         * this option then you must handle the lifecycle of the thread pool to
+         * this option, then you must handle the lifecycle of the thread pool to
          * shut the pool down when no longer needed.
          * 
          * The option will be converted to a
@@ -3520,8 +3665,9 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * Number of core threads for the worker pool for continue routing
-         * Exchange after kafka server has acknowledge the message that was sent
-         * to it from KafkaProducer using asynchronous non-blocking processing.
+         * Exchange after kafka server has acknowledged the message that was
+         * sent to it from KafkaProducer using asynchronous non-blocking
+         * processing.
          * 
          * The option is a: &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
          * 
@@ -3538,8 +3684,9 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * Number of core threads for the worker pool for continue routing
-         * Exchange after kafka server has acknowledge the message that was sent
-         * to it from KafkaProducer using asynchronous non-blocking processing.
+         * Exchange after kafka server has acknowledged the message that was
+         * sent to it from KafkaProducer using asynchronous non-blocking
+         * processing.
          * 
          * The option will be converted to a
          * &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
@@ -3557,8 +3704,9 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * Maximum number of threads for the worker pool for continue routing
-         * Exchange after kafka server has acknowledge the message that was sent
-         * to it from KafkaProducer using asynchronous non-blocking processing.
+         * Exchange after kafka server has acknowledged the message that was
+         * sent to it from KafkaProducer using asynchronous non-blocking
+         * processing.
          * 
          * The option is a: &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
          * 
@@ -3575,8 +3723,9 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * Maximum number of threads for the worker pool for continue routing
-         * Exchange after kafka server has acknowledge the message that was sent
-         * to it from KafkaProducer using asynchronous non-blocking processing.
+         * Exchange after kafka server has acknowledged the message that was
+         * sent to it from KafkaProducer using asynchronous non-blocking
+         * processing.
          * 
          * The option will be converted to a
          * &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
@@ -3698,12 +3847,12 @@ public interface KafkaEndpointBuilderFactory {
         /**
          * A list of rules for mapping from principal names to short names
          * (typically operating system usernames). The rules are evaluated in
-         * order and the first rule that matches a principal name is used to map
-         * it to a short name. Any later rules in the list are ignored. By
+         * order, and the first rule that matches a principal name is used to
+         * map it to a short name. Any later rules in the list are ignored. By
          * default, principal names of the form {username}/{hostname}{REALM} are
-         * mapped to {username}. For more details on the format please see the
-         * security authorization and acls documentation (at the Apache Kafka
-         * project). Multiple values can be separated by comma.
+         * mapped to {username}. For more details on the format, please see the
+         * Security Authorization and ACLs documentation (at the Apache Kafka
+         * project website). Multiple values can be separated by comma.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
          * 
@@ -3859,7 +4008,7 @@ public interface KafkaEndpointBuilderFactory {
          * A list of cipher suites. This is a named combination of
          * authentication, encryption, MAC and key exchange algorithm used to
          * negotiate the security settings for a network connection using TLS or
-         * SSL network protocol. By default all the available cipher suites are
+         * SSL network protocol. By default, all the available cipher suites are
          * supported.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
@@ -3876,7 +4025,7 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * SSL configuration using a Camel SSLContextParameters object. If
-         * configured it's applied before the other SSL endpoint parameters.
+         * configured, it's applied before the other SSL endpoint parameters.
          * NOTE: Kafka only supports loading keystore from file locations, so
          * prefix the location with file: in the KeyStoreParameters.resource
          * option.
@@ -3896,7 +4045,7 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * SSL configuration using a Camel SSLContextParameters object. If
-         * configured it's applied before the other SSL endpoint parameters.
+         * configured, it's applied before the other SSL endpoint parameters.
          * NOTE: Kafka only supports loading keystore from file locations, so
          * prefix the location with file: in the KeyStoreParameters.resource
          * option.
@@ -4006,7 +4155,7 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * The store password for the key store file. This is optional for the
-         * client and only needed if sslKeystoreLocation' is configured. Key
+         * client and only needed if sslKeystoreLocation is configured. Key
          * store password is not supported for PEM format.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
@@ -4022,8 +4171,8 @@ public interface KafkaEndpointBuilderFactory {
             return this;
         }
         /**
-         * The file format of the key store file. This is optional for client.
-         * Default value is JKS.
+         * The file format of the key store file. This is optional for the
+         * client. The default value is JKS.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
          * 
@@ -4128,7 +4277,7 @@ public interface KafkaEndpointBuilderFactory {
             return this;
         }
         /**
-         * The file format of the trust store file. Default value is JKS.
+         * The file format of the trust store file. The default value is JKS.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
          * 
@@ -4291,9 +4440,9 @@ public interface KafkaEndpointBuilderFactory {
         /**
          * Sets additional properties for either kafka consumer or kafka
          * producer in case they can't be set directly on the camel
-         * configurations (e.g: new Kafka properties that are not reflected yet
+         * configurations (e.g.: new Kafka properties that are not reflected yet
          * in Camel configurations), the properties have to be prefixed with
-         * additionalProperties.. E.g:
+         * additionalProperties.., e.g.:
          * additionalProperties.transactional.id=12345&amp;amp;additionalProperties.schema.registry.url=http://localhost:8811/avro.
          * 
          * The option is a: &lt;code&gt;java.util.Map&amp;lt;java.lang.String,
@@ -4317,9 +4466,9 @@ public interface KafkaEndpointBuilderFactory {
         /**
          * Sets additional properties for either kafka consumer or kafka
          * producer in case they can't be set directly on the camel
-         * configurations (e.g: new Kafka properties that are not reflected yet
+         * configurations (e.g.: new Kafka properties that are not reflected yet
          * in Camel configurations), the properties have to be prefixed with
-         * additionalProperties.. E.g:
+         * additionalProperties.., e.g.:
          * additionalProperties.transactional.id=12345&amp;amp;additionalProperties.schema.registry.url=http://localhost:8811/avro.
          * 
          * The option is a: &lt;code&gt;java.util.Map&amp;lt;java.lang.String,
@@ -4448,8 +4597,96 @@ public interface KafkaEndpointBuilderFactory {
             return this;
         }
         /**
+         * The maximum amount of time in milliseconds to wait when retrying a
+         * request to the broker that has repeatedly failed. If provided, the
+         * backoff per client will increase exponentially for each failed
+         * request, up to this maximum. To prevent all clients from being
+         * synchronized upon retry, a randomized jitter with a factor of 0.2
+         * will be applied to the backoff, resulting in the backoff falling
+         * within a range between 20% below and 20% above the computed value. If
+         * retry.backoff.ms is set to be higher than retry.backoff.max.ms, then
+         * retry.backoff.max.ms will be used as a constant backoff from the
+         * beginning without any exponential increase.
+         * 
+         * The option is a: &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
+         * 
+         * Default: 1000
+         * Group: common
+         * 
+         * @param retryBackoffMaxMs the value to set
+         * @return the dsl builder
+         */
+        default KafkaEndpointBuilder retryBackoffMaxMs(Integer retryBackoffMaxMs) {
+            doSetProperty("retryBackoffMaxMs", retryBackoffMaxMs);
+            return this;
+        }
+        /**
+         * The maximum amount of time in milliseconds to wait when retrying a
+         * request to the broker that has repeatedly failed. If provided, the
+         * backoff per client will increase exponentially for each failed
+         * request, up to this maximum. To prevent all clients from being
+         * synchronized upon retry, a randomized jitter with a factor of 0.2
+         * will be applied to the backoff, resulting in the backoff falling
+         * within a range between 20% below and 20% above the computed value. If
+         * retry.backoff.ms is set to be higher than retry.backoff.max.ms, then
+         * retry.backoff.max.ms will be used as a constant backoff from the
+         * beginning without any exponential increase.
+         * 
+         * The option will be converted to a
+         * &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
+         * 
+         * Default: 1000
+         * Group: common
+         * 
+         * @param retryBackoffMaxMs the value to set
+         * @return the dsl builder
+         */
+        default KafkaEndpointBuilder retryBackoffMaxMs(String retryBackoffMaxMs) {
+            doSetProperty("retryBackoffMaxMs", retryBackoffMaxMs);
+            return this;
+        }
+        /**
+         * The amount of time to wait before attempting to retry a failed
+         * request to a given topic partition. This avoids repeatedly sending
+         * requests in a tight loop under some failure scenarios. This value is
+         * the initial backoff value and will increase exponentially for each
+         * failed request, up to the retry.backoff.max.ms value.
+         * 
+         * The option is a: &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
+         * 
+         * Default: 100
+         * Group: common
+         * 
+         * @param retryBackoffMs the value to set
+         * @return the dsl builder
+         */
+        default KafkaEndpointBuilder retryBackoffMs(Integer retryBackoffMs) {
+            doSetProperty("retryBackoffMs", retryBackoffMs);
+            return this;
+        }
+        /**
+         * The amount of time to wait before attempting to retry a failed
+         * request to a given topic partition. This avoids repeatedly sending
+         * requests in a tight loop under some failure scenarios. This value is
+         * the initial backoff value and will increase exponentially for each
+         * failed request, up to the retry.backoff.max.ms value.
+         * 
+         * The option will be converted to a
+         * &lt;code&gt;java.lang.Integer&lt;/code&gt; type.
+         * 
+         * Default: 100
+         * Group: common
+         * 
+         * @param retryBackoffMs the value to set
+         * @return the dsl builder
+         */
+        default KafkaEndpointBuilder retryBackoffMs(String retryBackoffMs) {
+            doSetProperty("retryBackoffMs", retryBackoffMs);
+            return this;
+        }
+        /**
          * Timeout in milliseconds to wait gracefully for the consumer or
-         * producer to shutdown and terminate its worker threads.
+         * producer to shut down and terminate its worker threads.
          * 
          * The option is a: &lt;code&gt;int&lt;/code&gt; type.
          * 
@@ -4465,7 +4702,7 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * Timeout in milliseconds to wait gracefully for the consumer or
-         * producer to shutdown and terminate its worker threads.
+         * producer to shut down and terminate its worker threads.
          * 
          * The option will be converted to a &lt;code&gt;int&lt;/code&gt; type.
          * 
@@ -4583,12 +4820,12 @@ public interface KafkaEndpointBuilderFactory {
         /**
          * A list of rules for mapping from principal names to short names
          * (typically operating system usernames). The rules are evaluated in
-         * order and the first rule that matches a principal name is used to map
-         * it to a short name. Any later rules in the list are ignored. By
+         * order, and the first rule that matches a principal name is used to
+         * map it to a short name. Any later rules in the list are ignored. By
          * default, principal names of the form {username}/{hostname}{REALM} are
-         * mapped to {username}. For more details on the format please see the
-         * security authorization and acls documentation (at the Apache Kafka
-         * project). Multiple values can be separated by comma.
+         * mapped to {username}. For more details on the format, please see the
+         * Security Authorization and ACLs documentation (at the Apache Kafka
+         * project website). Multiple values can be separated by comma.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
          * 
@@ -4742,7 +4979,7 @@ public interface KafkaEndpointBuilderFactory {
          * A list of cipher suites. This is a named combination of
          * authentication, encryption, MAC and key exchange algorithm used to
          * negotiate the security settings for a network connection using TLS or
-         * SSL network protocol. By default all the available cipher suites are
+         * SSL network protocol. By default, all the available cipher suites are
          * supported.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
@@ -4758,7 +4995,7 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * SSL configuration using a Camel SSLContextParameters object. If
-         * configured it's applied before the other SSL endpoint parameters.
+         * configured, it's applied before the other SSL endpoint parameters.
          * NOTE: Kafka only supports loading keystore from file locations, so
          * prefix the location with file: in the KeyStoreParameters.resource
          * option.
@@ -4778,7 +5015,7 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * SSL configuration using a Camel SSLContextParameters object. If
-         * configured it's applied before the other SSL endpoint parameters.
+         * configured, it's applied before the other SSL endpoint parameters.
          * NOTE: Kafka only supports loading keystore from file locations, so
          * prefix the location with file: in the KeyStoreParameters.resource
          * option.
@@ -4887,7 +5124,7 @@ public interface KafkaEndpointBuilderFactory {
         }
         /**
          * The store password for the key store file. This is optional for the
-         * client and only needed if sslKeystoreLocation' is configured. Key
+         * client and only needed if sslKeystoreLocation is configured. Key
          * store password is not supported for PEM format.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
@@ -4903,8 +5140,8 @@ public interface KafkaEndpointBuilderFactory {
             return this;
         }
         /**
-         * The file format of the key store file. This is optional for client.
-         * Default value is JKS.
+         * The file format of the key store file. This is optional for the
+         * client. The default value is JKS.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
          * 
@@ -5008,7 +5245,7 @@ public interface KafkaEndpointBuilderFactory {
             return this;
         }
         /**
-         * The file format of the trust store file. Default value is JKS.
+         * The file format of the trust store file. The default value is JKS.
          * 
          * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
          * 

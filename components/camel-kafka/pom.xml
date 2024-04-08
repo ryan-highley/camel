@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>components</artifactId>
-        <version>4.4.0-SNAPSHOT</version>
+        <version>4.6.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-kafka</artifactId>
@@ -223,7 +223,7 @@
                                 <configuration>
                                     <reuseForks>false</reuseForks>
                                     <groups>health,idempotent,breakOnFirstError</groups>
-                                    <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
+                                    <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
                                 </configuration>
                             </execution>
                         </executions>

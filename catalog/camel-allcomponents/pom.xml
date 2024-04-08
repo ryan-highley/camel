@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>catalog</artifactId>
-        <version>4.4.0-SNAPSHOT</version>
+        <version>4.6.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-allcomponents</artifactId>
@@ -115,6 +115,11 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-avro-rpc-spi</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-aws-bedrock</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -709,6 +714,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
+            <artifactId>camel-google-pubsub-lite</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
             <artifactId>camel-google-secret-manager</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -1089,6 +1099,16 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
+            <artifactId>camel-langchain4j-chat</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-langchain4j-embeddings</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
             <artifactId>camel-language</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -1180,6 +1200,11 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-microprofile-health</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-milvus</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -1344,6 +1369,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
+            <artifactId>camel-platform-http-jolokia</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
             <artifactId>camel-platform-http-main</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -1380,6 +1410,11 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-python</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-qdrant</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

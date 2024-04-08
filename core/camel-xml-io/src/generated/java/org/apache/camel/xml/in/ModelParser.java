@@ -250,7 +250,7 @@ public class ModelParser extends BaseParser {
     }
     protected Resilience4jConfigurationDefinition doParseResilience4jConfigurationDefinition() throws IOException, XmlPullParserException {
         return doParse(new Resilience4jConfigurationDefinition(),
-            resilience4jConfigurationCommonAttributeHandler(), noElementHandler(), noValueHandler());
+            resilience4jConfigurationCommonAttributeHandler(), resilience4jConfigurationCommonElementHandler(), noValueHandler());
     }
     protected FaultToleranceConfigurationDefinition doParseFaultToleranceConfigurationDefinition() throws IOException, XmlPullParserException {
         return doParse(new FaultToleranceConfigurationDefinition(),
@@ -937,8 +937,18 @@ public class ModelParser extends BaseParser {
             return true;
         };
     }
+    protected <T extends Resilience4jConfigurationCommon> ElementHandler<T> resilience4jConfigurationCommonElementHandler() {
+        return (def, key) -> {
+            switch (key) {
+                case "ignoreException": doAdd(doParseText(), def.getIgnoreExceptions(), def::setIgnoreExceptions); break;
+                case "recordException": doAdd(doParseText(), def.getRecordExceptions(), def::setRecordExceptions); break;
+                default: return false;
+            }
+            return true;
+        };
+    }
     protected Resilience4jConfigurationCommon doParseResilience4jConfigurationCommon() throws IOException, XmlPullParserException {
-        return doParse(new Resilience4jConfigurationCommon(), resilience4jConfigurationCommonAttributeHandler(),  noElementHandler(), noValueHandler());
+        return doParse(new Resilience4jConfigurationCommon(), resilience4jConfigurationCommonAttributeHandler(), resilience4jConfigurationCommonElementHandler(), noValueHandler());
     }
     protected RestContextRefDefinition doParseRestContextRefDefinition() throws IOException, XmlPullParserException {
         return doParse(new RestContextRefDefinition(), (def, key, val) -> {
@@ -1077,6 +1087,7 @@ public class ModelParser extends BaseParser {
                 case "from": def.setInput(doParseFromDefinition()); break;
                 case "inputType": def.setInputType(doParseInputTypeDefinition()); break;
                 case "outputType": def.setOutputType(doParseOutputTypeDefinition()); break;
+                case "kamelet": def.setKamelet(Boolean.valueOf(doParseText())); break;
                 case "rest": def.setRest(Boolean.valueOf(doParseText())); break;
                 case "routeProperty": doAdd(doParsePropertyDefinition(), def.getRouteProperties(), def::setRouteProperties); break;
                 case "template": def.setTemplate(Boolean.valueOf(doParseText())); break;
@@ -1110,6 +1121,7 @@ public class ModelParser extends BaseParser {
                 case "patch": doAdd(doParsePatchDefinition(), def.getVerbs(), def::setVerbs); break;
                 case "post": doAdd(doParsePostDefinition(), def.getVerbs(), def::setVerbs); break;
                 case "put": doAdd(doParsePutDefinition(), def.getVerbs(), def::setVerbs); break;
+                case "openApi": def.setOpenApi(doParseOpenApiDefinition()); break;
                 case "securityDefinitions": def.setSecurityDefinitions(doParseRestSecuritiesDefinition()); break;
                 case "securityRequirements": doAdd(doParseSecurityDefinition(), def.getSecurityRequirements(), def::setSecurityRequirements); break;
                 default: return optionalIdentifiedDefinitionElementHandler().accept(def, key);
@@ -1512,7 +1524,9 @@ public class ModelParser extends BaseParser {
                 case "asyncDelayed": def.setAsyncDelayed(val); break;
                 case "callerRunsWhenRejected": def.setCallerRunsWhenRejected(val); break;
                 case "executorService": def.setExecutorService(val); break;
+                case "mode": def.setMode(val); break;
                 case "rejectExecution": def.setRejectExecution(val); break;
+                case "timePeriodMillis": def.setTimePeriodMillis(val); break;
                 default: return processorDefinitionAttributeHandler().accept(def, key, val);
             }
             return true;
@@ -1738,6 +1752,7 @@ public class ModelParser extends BaseParser {
                 case "apiHost": def.setApiHost(val); break;
                 case "apiVendorExtension": def.setApiVendorExtension(val); break;
                 case "bindingMode": def.setBindingMode(RestBindingMode.valueOf(val)); break;
+                case "bindingPackageScan": def.setBindingPackageScan(val); break;
                 case "clientRequestValidation": def.setClientRequestValidation(val); break;
                 case "component": def.setComponent(val); break;
                 case "contextPath": def.setContextPath(val); break;
@@ -2876,13 +2891,11 @@ public class ModelParser extends BaseParser {
     }
     protected <T extends SingleInputTypedExpressionDefinition> AttributeHandler<T> singleInputTypedExpressionDefinitionAttributeHandler() {
         return (def, key, val) -> {
-            switch (key) {
-                case "headerName": def.setHeaderName(val); break;
-                case "propertyName": def.setPropertyName(val); break;
-                case "variableName": def.setVariableName(val); break;
-                default: return typedExpressionDefinitionAttributeHandler().accept(def, key, val);
+            if ("source".equals(key)) {
+                def.setSource(val);
+                return true;
             }
-            return true;
+            return typedExpressionDefinitionAttributeHandler().accept(def, key, val);
         };
     }
     protected ExchangePropertyExpression doParseExchangePropertyExpression() throws IOException, XmlPullParserException {
@@ -3286,6 +3299,25 @@ public class ModelParser extends BaseParser {
             }
             return true;
         }, noElementHandler(), noValueHandler());
+    }
+    protected OpenApiDefinition doParseOpenApiDefinition() throws IOException, XmlPullParserException {
+        return doParse(new OpenApiDefinition(), (def, key, val) -> {
+            switch (key) {
+                case "disabled": def.setDisabled(val); break;
+                case "missingOperation": def.setMissingOperation(val); break;
+                case "mockIncludePattern": def.setMockIncludePattern(val); break;
+                case "routeId": def.setRouteId(val); break;
+                case "specification": def.setSpecification(val); break;
+                default: return optionalIdentifiedDefinitionAttributeHandler().accept(def, key, val);
+            }
+            return true;
+        }, (def, key) -> {
+            if ("apiContextPath".equals(key)) {
+                def.setApiContextPath(doParseText());
+                return true;
+            }
+            return optionalIdentifiedDefinitionElementHandler().accept(def, key);
+        }, noValueHandler());
     }
     protected OpenIdConnectDefinition doParseOpenIdConnectDefinition() throws IOException, XmlPullParserException {
         return doParse(new OpenIdConnectDefinition(), (def, key, val) -> {
