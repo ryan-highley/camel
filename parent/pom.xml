@@ -447,12 +447,8 @@
         <swagger-request-validator-version>2.40.0</swagger-request-validator-version>
         <stax-api-version>1.0.1</stax-api-version>
         <stringtemplate-version>4.3.4</stringtemplate-version>
-<<<<<<< HEAD
         <tahu-version>1.0.7</tahu-version>
-        <testcontainers-version>1.19.3</testcontainers-version>
-=======
         <testcontainers-version>1.19.4</testcontainers-version>
->>>>>>> 398c43afc98 (Bump testcontainers-version from 1.19.3 to 1.19.4 (#12912))
         <thymeleaf-version>3.1.2.RELEASE</thymeleaf-version>
         <tika-version>2.9.1</tika-version>
         <twilio-version>9.16.0</twilio-version>
