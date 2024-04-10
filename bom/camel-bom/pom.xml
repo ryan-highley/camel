@@ -1820,7 +1820,7 @@
       <dependency>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-sparkplug-b</artifactId>
-        <version>${project.version}</version>
+        <version>4.6.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.apache.camel</groupId>
@@ -1940,7 +1940,7 @@
       <dependency>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-tahu</artifactId>
-        <version>${project.version}</version>
+        <version>4.6.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.apache.camel</groupId>

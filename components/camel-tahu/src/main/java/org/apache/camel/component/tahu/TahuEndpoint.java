@@ -296,7 +296,7 @@ public class TahuEndpoint extends DefaultEndpoint implements HeaderFilterStrateg
 
             strategy.setFilterOnMatch(false);
 
-            strategy.setOutFilter(null);
+            strategy.setOutFilter((String) null);
             strategy.setOutFilterPattern((String) null);
             strategy.setOutFilterStartsWith(TahuConstants.METRIC_HEADER_PREFIX);
 
