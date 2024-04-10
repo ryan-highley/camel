@@ -42,7 +42,14 @@
         <camel.surefire.parallel>false</camel.surefire.parallel>
         <camel.surefire.parallel.factor>1</camel.surefire.parallel.factor>
         <camel.surefire.parallel.strategy>dynamic</camel.surefire.parallel.strategy>
+        <camel.failsafe.fork.vmargs>-XX:+ExitOnOutOfMemoryError -Xmx3G</camel.failsafe.fork.vmargs>
+        <camel.failsafe.forkCount>1</camel.failsafe.forkCount>
         <camel.failsafe.forkTimeout>600</camel.failsafe.forkTimeout>
+        <camel.failsafe.reuseForks>true</camel.failsafe.reuseForks>
+        <camel.failsafe.parallel>false</camel.failsafe.parallel>
+        <camel.failsafe.parallel.factor>0.5</camel.failsafe.parallel.factor>
+        <camel.failsafe.parallel.strategy>dynamic</camel.failsafe.parallel.strategy>
+
         <cxf.xjc.jvmArgs />
         <trimStackTrace>false</trimStackTrace>
         <sourcecheckExcludes />
@@ -68,12 +75,13 @@
         <avro-ipc-jetty-version>1.11.3</avro-ipc-jetty-version>
         <avro-ipc-netty-version>1.11.3</avro-ipc-netty-version>
         <awaitility-version>4.2.0</awaitility-version>
-        <aws-java-sdk2-version>2.25.26</aws-java-sdk2-version>
+        <aws-java-sdk2-version>2.25.27</aws-java-sdk2-version>
         <aws-xray-version>2.15.2</aws-xray-version>
         <azure-sdk-bom-version>1.2.21</azure-sdk-bom-version>
         <azure-storage-blob-changefeed-version>12.0.0-beta.19</azure-storage-blob-changefeed-version>
         <beanio-version>3.0.0</beanio-version>
-        <bouncycastle-version>1.78</bouncycastle-version>
+        <!-- Please check CAMEL-20661 before upgrading -->
+        <bouncycastle-version>1.77</bouncycastle-version>
         <box-java-sdk-version>4.8.0</box-java-sdk-version>
         <braintree-gateway-version>3.34.0</braintree-gateway-version>
         <build-helper-maven-plugin-version>3.5.0</build-helper-maven-plugin-version>
@@ -186,7 +194,7 @@
         <google-cloud-http-client-version>1.44.1</google-cloud-http-client-version>
         <google-cloud-secretmanager-bom-version>2.36.0</google-cloud-secretmanager-bom-version>
         <graaljs-version>24.0.0</graaljs-version>
-        <graphql-java-version>21.4</graphql-java-version>
+        <graphql-java-version>21.5</graphql-java-version>
         <greenmail-version>2.0.1</greenmail-version>
         <grizzly-websockets-version>2.4.4</grizzly-websockets-version>
         <groovy-version>4.0.20</groovy-version>
@@ -216,7 +224,7 @@
         <httpclient4-version>4.5.14</httpclient4-version>
         <httpasyncclient-version>4.1.5</httpasyncclient-version>
         <huaweicloud-obs-version>3.23.9.1</huaweicloud-obs-version>
-        <huaweicloud-sdk-version>3.1.89</huaweicloud-sdk-version>
+        <huaweicloud-sdk-version>3.1.90</huaweicloud-sdk-version>
         <ical4j-version>3.2.17</ical4j-version>
         <icu4j-version>74.2</icu4j-version>
         <ignite-version>2.16.0</ignite-version>
@@ -237,7 +245,7 @@
         <java-grok-version>0.1.9</java-grok-version>
         <java-util-version>2.4.6</java-util-version>
         <jnats-version>2.17.3</jnats-version>
-        <javacc-maven-plugin-version>3.0.1</javacc-maven-plugin-version>
+        <javacc-maven-plugin-version>3.1.0</javacc-maven-plugin-version>
         <javacrumbs-version>0.22</javacrumbs-version>
         <javaparser-version>3.13.10</javaparser-version>
         <javapoet-version>1.13.0</javapoet-version>
@@ -265,7 +273,7 @@
         <jcr-version>2.0</jcr-version>
         <jedis-client-version>5.1.2</jedis-client-version>
         <jetcd-version>0.7.7</jetcd-version>
-        <jetty-version>12.0.7</jetty-version>
+        <jetty-version>12.0.8</jetty-version>
         <jetty-plugin-version>${jetty-version}</jetty-plugin-version>
         <jetty-runner-groupId>org.eclipse.jetty</jetty-runner-groupId>
         <jettison-version>1.5.4</jettison-version>
@@ -388,7 +396,7 @@
         <parquet-common-version>1.13.1</parquet-common-version>
         <parquet-avro-version>1.13.1</parquet-avro-version>
         <pdfbox-version>3.0.2</pdfbox-version>
-        <pgjdbc-driver-version>42.7.2</pgjdbc-driver-version>
+        <pgjdbc-driver-version>42.7.3</pgjdbc-driver-version>
         <pgjdbc-ng-driver-version>0.8.9</pgjdbc-ng-driver-version>
         <picocli-version>4.7.5</picocli-version>
         <plc4x-version>0.12.0</plc4x-version>
@@ -452,13 +460,13 @@
         <swagger-java-version>1.6.10</swagger-java-version>
         <swagger-openapi3-version>2.2.21</swagger-openapi3-version>
         <swagger-java-parser-version>1.0.65</swagger-java-parser-version>
-        <swagger-openapi3-java-parser-version>2.1.21</swagger-openapi3-java-parser-version>
+        <swagger-openapi3-java-parser-version>2.1.22</swagger-openapi3-java-parser-version>
         <stax-api-version>1.0.1</stax-api-version>
         <stringtemplate-version>4.3.4</stringtemplate-version>
         <tahu-version>1.0.8</tahu-version>
         <testcontainers-version>1.19.7</testcontainers-version>
         <thymeleaf-version>3.1.2.RELEASE</thymeleaf-version>
-        <tika-version>2.9.1</tika-version>
+        <tika-version>2.9.2</tika-version>
         <twilio-version>10.1.2</twilio-version>
         <twitter4j-version>4.1.2</twitter4j-version>
         <undertow-version>2.3.12.Final</undertow-version>
