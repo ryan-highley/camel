@@ -34,8 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DisabledOnOs(OS.AIX)
 public class AddEventNotifierTest extends ContextTestSupport {
 
-    private static List<CamelEvent> events = new ArrayList<>();
-    private EventNotifier notifier;
+    private static final List<CamelEvent> events = new ArrayList<>();
 
     @Override
     @BeforeEach
@@ -53,7 +52,7 @@ public class AddEventNotifierTest extends ContextTestSupport {
         assertEquals(0, events.size());
 
         // we should be able to add after CamelContext has been started
-        notifier = new EventNotifierSupport() {
+        EventNotifier notifier = new EventNotifierSupport() {
             public void notify(CamelEvent event) throws Exception {
                 events.add(event);
             }

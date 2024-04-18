@@ -29,11 +29,13 @@ import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Isolated;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Isolated("Creates lots of threads")
 public class AggregatorConcurrencyTest extends ContextTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(AggregatorConcurrencyTest.class);
@@ -41,7 +43,6 @@ public class AggregatorConcurrencyTest extends ContextTestSupport {
     private static final AtomicInteger COUNTER = new AtomicInteger();
     private static final AtomicInteger SUM = new AtomicInteger();
 
-    private final int size = 100;
     private final String uri = "direct:start";
 
     @Test
@@ -49,6 +50,7 @@ public class AggregatorConcurrencyTest extends ContextTestSupport {
         int total = 0;
         ExecutorService service = Executors.newFixedThreadPool(20);
         List<Callable<Object>> tasks = new ArrayList<>();
+        int size = 100;
         for (int i = 0; i < size; i++) {
             final int count = i;
             total += i;

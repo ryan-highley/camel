@@ -120,7 +120,7 @@ public class DefaultSupervisingRouteControllerTest extends ContextTestSupport {
         assertEquals("Stopped", context.getRouteController().getRouteStatus("bar").toString());
     }
 
-    private class MyRoute extends RouteBuilder {
+    private static class MyRoute extends RouteBuilder {
         @Override
         public void configure() throws Exception {
             getContext().addComponent("jms", new MyJmsComponent());
@@ -145,7 +145,7 @@ public class DefaultSupervisingRouteControllerTest extends ContextTestSupport {
 
     private static class MyJmsEndpoint extends SedaEndpoint {
 
-        private String name;
+        private final String name;
 
         public MyJmsEndpoint(String name) {
             this.name = name;

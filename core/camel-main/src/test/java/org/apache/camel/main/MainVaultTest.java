@@ -55,16 +55,7 @@ public class MainVaultTest {
 
     @Test
     public void testMainProfileAws() throws Exception {
-        Main main = new Main();
-
-        main.addInitialProperty("camel.vault.aws.accessKey", "myKey");
-        main.addInitialProperty("camel.vault.aws.secretKey", "mySecret");
-        main.addInitialProperty("camel.vault.aws.region", "myRegion");
-        main.addInitialProperty("camel.vault.aws.defaultCredentialsProvider", "false");
-        main.addInitialProperty("camel.vault.aws.profileCredentialsProvider", "true");
-        main.addInitialProperty("camel.vault.aws.profileName", "jack");
-
-        main.start();
+        final Main main = getMain();
 
         CamelContext context = main.getCamelContext();
         assertNotNull(context);
@@ -80,6 +71,20 @@ public class MainVaultTest {
         Assertions.assertEquals("jack", cfg.getProfileName());
 
         main.stop();
+    }
+
+    private static Main getMain() {
+        Main main = new Main();
+
+        main.addInitialProperty("camel.vault.aws.accessKey", "myKey");
+        main.addInitialProperty("camel.vault.aws.secretKey", "mySecret");
+        main.addInitialProperty("camel.vault.aws.region", "myRegion");
+        main.addInitialProperty("camel.vault.aws.defaultCredentialsProvider", "false");
+        main.addInitialProperty("camel.vault.aws.profileCredentialsProvider", "true");
+        main.addInitialProperty("camel.vault.aws.profileName", "jack");
+
+        main.start();
+        return main;
     }
 
     @Test
@@ -201,7 +206,7 @@ public class MainVaultTest {
         Assertions.assertEquals("id1", cfg.getClientId());
         Assertions.assertEquals("secret1", cfg.getClientSecret());
         Assertions.assertEquals("tenant1", cfg.getTenantId());
-        Assertions.assertEquals(false, cfg.isAzureIdentityEnabled());
+        Assertions.assertFalse(cfg.isAzureIdentityEnabled());
         main.stop();
     }
 
@@ -227,7 +232,7 @@ public class MainVaultTest {
         Assertions.assertEquals("id1", cfg.getClientId());
         Assertions.assertEquals("secret1", cfg.getClientSecret());
         Assertions.assertEquals("tenant1", cfg.getTenantId());
-        Assertions.assertEquals(false, cfg.isAzureIdentityEnabled());
+        Assertions.assertFalse(cfg.isAzureIdentityEnabled());
         main.stop();
     }
 

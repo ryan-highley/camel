@@ -77,7 +77,6 @@ public class MDCSplitParallelProcessingTest extends ContextTestSupport {
      */
     private static class MdcCheckerProcessor implements Processor {
 
-        private String routeId = "route-async";
         private String exchangeId;
         private String messageId;
         private String breadcrumbId;
@@ -105,6 +104,7 @@ public class MDCSplitParallelProcessingTest extends ContextTestSupport {
                 threadId = Thread.currentThread().getId();
             }
 
+            String routeId = "route-async";
             if (routeId != null) {
                 assertEquals(routeId, MDC.get("camel.routeId"));
             }
@@ -113,28 +113,28 @@ public class MDCSplitParallelProcessingTest extends ContextTestSupport {
                 assertNotEquals(exchangeId, MDC.get("camel.exchangeId"));
             } else {
                 exchangeId = MDC.get("camel.exchangeId");
-                assertTrue(exchangeId != null && exchangeId.length() > 0);
+                assertTrue(exchangeId != null && !exchangeId.isEmpty());
             }
 
             if (messageId != null) {
                 assertNotEquals(messageId, MDC.get("camel.messageId"));
             } else {
                 messageId = MDC.get("camel.messageId");
-                assertTrue(messageId != null && messageId.length() > 0);
+                assertTrue(messageId != null && !messageId.isEmpty());
             }
 
             if (breadcrumbId != null) {
                 assertEquals(breadcrumbId, MDC.get("camel.breadcrumbId"));
             } else {
                 breadcrumbId = MDC.get("camel.breadcrumbId");
-                assertTrue(breadcrumbId != null && breadcrumbId.length() > 0);
+                assertTrue(breadcrumbId != null && !breadcrumbId.isEmpty());
             }
 
             if (contextId != null) {
                 assertEquals(contextId, MDC.get("camel.contextId"));
             } else {
                 contextId = MDC.get("camel.contextId");
-                assertTrue(contextId != null && contextId.length() > 0);
+                assertTrue(contextId != null && !contextId.isEmpty());
             }
 
         }

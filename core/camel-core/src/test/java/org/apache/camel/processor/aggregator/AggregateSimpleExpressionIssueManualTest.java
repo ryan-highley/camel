@@ -39,8 +39,8 @@ public class AggregateSimpleExpressionIssueManualTest extends ContextTestSupport
     private static final Logger LOG = LoggerFactory.getLogger(AggregateSimpleExpressionIssueManualTest.class);
     private static final String DATA = "100,200,1,123456,2010-03-01T12:13:14,100,USD,Best Buy,5045,Santa Monica,CA,Type\n";
 
-    private MyBean myBean = new MyBean();
-    private AggStrategy aggStrategy = new AggStrategy();
+    private final MyBean myBean = new MyBean();
+    private final AggStrategy aggStrategy = new AggStrategy();
 
     @Test
     public void testAggregateSimpleExpression() throws Exception {
@@ -96,14 +96,13 @@ public class AggregateSimpleExpressionIssueManualTest extends ContextTestSupport
 
     public static final class AggStrategy implements AggregationStrategy {
 
-        private final int batchSize = 1000;
-
         @Override
         @SuppressWarnings("unchecked")
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
             String str = newExchange.getIn().getBody(String.class);
 
             if (oldExchange == null) {
+                int batchSize = 1000;
                 List<String> list = new ArrayList<>(batchSize);
                 list.add(str);
                 newExchange.getIn().setBody(list);

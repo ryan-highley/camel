@@ -62,3 +62,73 @@ If you are migrating from Camel 4.5, please ensure the following
 
 The `PlatformHttpEngine` class has changed the `createConsumer` method to return a `org.apache.camel.component.platform.http.spi.PlatformHttpConsumer` type,
 instead of `org.apache.camel.Consumer`.
+
+=== camel-platform-http-vertx
+
+The id used for multipart file upload attachments on `AttachmentMessage` has changed from being the name of the uploaded file, to the value specifed on the `name` field of the `Content-Disposition` header sent in the request body.
+
+=== camel-google-sheets
+
+The option `scopes` is changed from a `Collection` to be a `String` type to make it easy to configure in endpoint URI from all DSLs and tooling.
+Multiple scopes can be separated by comma.
+
+=== camel-kafka
+
+The Kafka component now supports custom subscription adapters for applications with very complex subscription logic.
+
+=== camel-yaml-dsl
+
+Renamed `streamCaching` to `streamCache` on the `route`
+
+Before:
+
+[source,yaml]
+----
+route:
+  streamCaching: false
+  from:
+    uri: "direct:foo"
+    steps:
+      - to: "mock:bar"
+----
+
+After:
+
+[source,yaml]
+----
+route:
+  streamCache: false
+  from:
+    uri: "direct:foo"
+    steps:
+      - to: "mock:bar"
+----
+
+=== camel-jbang
+
+When running using `camel run --source-dir=mydir` then Camel JBang will now preload existing files on startup, such as `application.properties`,
+and beans and routes (same as if you run with `cd mydir; camel run *`). This allows to configure settings on Camel on startup, which was not possible beforehand.
+
+=== camel-spring-boot
+
+The auto configuration of xref:clustering.adoc[Cluster Service] implementations has been moved to dedicated starters:
+
+[%header, cols="1,2"]
+|===
+| Type         | Starter
+| Consul       | camel-consul-cluster-service-starter
+| File         | camel-file-cluster-service-starter
+| Infinispan   | camel-infinispan-cluster-service-starter
+| JGroups Lock | camel-jgroups-cluster-service-starter
+| JGroups Raft | camel-jgroups-raft-cluster-service-starter
+| Kubernetes   | camel-kubernetes-cluster-service-starter
+| Zookeeper    | camel-zookeeper-cluster-service-starter
+|===
+
+
+The Cluster Services are turned on by default unless they are explicit disabled, as example:
+
+[source, properties]
+----
+camel.cluster.consul.enabled = false
+----

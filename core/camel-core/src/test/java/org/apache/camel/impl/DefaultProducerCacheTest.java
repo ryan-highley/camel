@@ -234,18 +234,7 @@ public class DefaultProducerCacheTest extends ContextTestSupport {
 
         for (int i = 0; i < 500; i++) {
             int index = i % 3;
-            callables.add(() -> {
-                Producer producer = cache.acquireProducer(endpoints.get(index));
-                boolean isEqual
-                        = producer.getEndpoint().getEndpointUri().equalsIgnoreCase(endpoints.get(index).getEndpointUri());
-
-                if (!isEqual) {
-                    log.info("Endpoint uri to acquire: {}, returned producer (uri): {}", endpoints.get(index).getEndpointUri(),
-                            producer.getEndpoint().getEndpointUri());
-                }
-
-                return isEqual;
-            });
+            callables.add(() -> isEqualTask(cache, endpoints, index));
         }
 
         for (int i = 1; i <= 100; i++) {
@@ -255,6 +244,19 @@ public class DefaultProducerCacheTest extends ContextTestSupport {
                 assertEquals(true, future.get());
             }
         }
+    }
+
+    private boolean isEqualTask(DefaultProducerCache cache, List<Endpoint> endpoints, int index) {
+        Producer producer = cache.acquireProducer(endpoints.get(index));
+        boolean isEqual
+                = producer.getEndpoint().getEndpointUri().equalsIgnoreCase(endpoints.get(index).getEndpointUri());
+
+        if (!isEqual) {
+            log.info("Endpoint uri to acquire: {}, returned producer (uri): {}", endpoints.get(index).getEndpointUri(),
+                    producer.getEndpoint().getEndpointUri());
+        }
+
+        return isEqual;
     }
 
     private static class MyProducerCache extends DefaultProducerCache {
@@ -316,12 +318,10 @@ public class DefaultProducerCacheTest extends ContextTestSupport {
     private final class MyEndpoint extends DefaultEndpoint {
 
         private final boolean isSingleton;
-        private final int number;
 
         private MyEndpoint(MyComponent component, boolean isSingleton, int number) {
             super("my://" + number, component);
             this.isSingleton = isSingleton;
-            this.number = number;
         }
 
         @Override
@@ -342,7 +342,7 @@ public class DefaultProducerCacheTest extends ContextTestSupport {
 
     private final class MyProducer extends DefaultProducer {
 
-        private int id;
+        private final int id;
 
         MyProducer(Endpoint endpoint) {
             super(endpoint);
