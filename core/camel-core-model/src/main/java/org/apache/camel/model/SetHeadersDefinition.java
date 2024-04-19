@@ -80,7 +80,6 @@ public class SetHeadersDefinition extends ProcessorDefinition<SetHeadersDefiniti
         for (Entry<?, ?> entry : headerMap.entrySet()) {
             addHeader(entry.getKey(), entry.getValue());
         }
-
     }
 
     public List<SetHeaderDefinition> getHeaders() {
