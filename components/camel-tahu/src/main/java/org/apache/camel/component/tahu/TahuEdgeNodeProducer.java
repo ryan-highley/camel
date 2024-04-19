@@ -16,9 +16,7 @@
  */
 package org.apache.camel.component.tahu;
 
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -27,15 +25,14 @@ import java.util.concurrent.ExecutorService;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
-import org.apache.camel.component.tahu.TahuEdgeNodeHandler.PayloadBuilder;
-import org.apache.camel.spi.HeaderFilterStrategy;
+// import org.apache.camel.spi.HeaderFilterStrategy;
 import org.apache.camel.support.DefaultProducer;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.eclipse.tahu.message.BdSeqManager;
 import org.eclipse.tahu.message.model.DeviceDescriptor;
 import org.eclipse.tahu.message.model.EdgeNodeDescriptor;
-import org.eclipse.tahu.message.model.Metric;
+import org.eclipse.tahu.message.model.SparkplugBPayload;
 import org.eclipse.tahu.model.MqttServerDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +45,7 @@ public class TahuEdgeNodeProducer extends DefaultProducer {  // implements Camel
 
     private static final ConcurrentMap<EdgeNodeDescriptor, TahuEdgeNodeHandler> descriptorHandlers = new ConcurrentHashMap<>();
 
-    private final HeaderFilterStrategy headerFilterStrategy;
+    // private final HeaderFilterStrategy headerFilterStrategy;
 
     private final TahuEdgeNodeHandler tahuEdgeNodeHandler;
     private ExecutorService clientExecutorService;
@@ -78,7 +75,7 @@ public class TahuEdgeNodeProducer extends DefaultProducer {  // implements Camel
 
         TahuConfiguration configuration = endpoint.getConfiguration();
 
-        headerFilterStrategy = endpoint.getHeaderFilterStrategy();
+        // headerFilterStrategy = endpoint.getHeaderFilterStrategy();
 
         // A TahuEdgeNodeHandler is created for each Edge Node, not Devices
         EdgeNodeDescriptor handlerDescriptor = edgeNodeDescriptor;
@@ -94,7 +91,6 @@ public class TahuEdgeNodeProducer extends DefaultProducer {  // implements Camel
 
             String primaryHostId = endpoint.getPrimaryHostId();
             boolean useAliases = endpoint.isUseAliases();
-            Map<String, Map<String, Object>> metricDataTypeMap = endpoint.getMetricDataTypeMap();
 
             clientExecutorService
                     = camelContext.getExecutorServiceManager().newSingleThreadExecutor(this, end.getDescriptorString());
@@ -103,13 +99,15 @@ public class TahuEdgeNodeProducer extends DefaultProducer {  // implements Camel
                     = Optional.ofNullable(endpoint.getBdSeqManager()).orElseGet(() -> new CamelBdSeqManager(end));
 
             TahuEdgeNodeHandler tenh = new TahuEdgeNodeHandler(
-                    end, serverDefinitions, primaryHostId, useAliases, rebirthDebounceDelay, metricDataTypeMap,
-                    clientExecutorService, bdSeqManager);
+                    end, serverDefinitions, primaryHostId, useAliases, rebirthDebounceDelay, clientExecutorService, bdSeqManager);
 
             ServiceHelper.initService(tenh);
 
             return tenh;
         });
+
+        // Add the SparkplugBPayloadMap Metrics configuration
+        tahuEdgeNodeHandler.addDeviceMetricDataPayloadMap(edgeNodeDescriptor, endpoint.getMetricDataTypePayloadMap());
 
         LOG.trace(loggingMarker, "TahuEdgeNodeProducer constructor complete");
     }
@@ -152,41 +150,10 @@ public class TahuEdgeNodeProducer extends DefaultProducer {  // implements Camel
 
         try {
             Message message = exchange.getMessage();
-            long messageTimestamp = message.getMessageTimestamp();
 
-            PayloadBuilder dataPayloadBuilder = tahuEdgeNodeHandler.new PayloadBuilder(edgeNodeDescriptor);
+            SparkplugBPayload dataPayload = message.getMandatoryBody(SparkplugBPayload.class);
 
-            if (messageTimestamp != 0L) {
-                dataPayloadBuilder.setTimestamp(new Date(messageTimestamp));
-            }
-
-            Object body = message.getBody();
-            if (body != null) {
-                byte[] bodyBytes = camelContext.getTypeConverter().mandatoryConvertTo(byte[].class, body);
-
-                dataPayloadBuilder.setBody(bodyBytes);
-            }
-
-            message.getHeaders().forEach((metricName, metricValue) -> {
-                // Skip headers where the headerFilterStrategy returns true, per
-                // HeaderFilterStrategy.applyFilterToCamelHeaders
-                if (headerFilterStrategy.applyFilterToCamelHeaders(metricName, metricValue, exchange)) {
-                    return;
-                }
-
-                // If using the default headerFilterStrategy, strip off the header name prefix
-                if (metricName.startsWith(TahuConstants.METRIC_HEADER_PREFIX)) {
-                    metricName = metricName.substring(TahuConstants.METRIC_HEADER_PREFIX.length());
-                }
-
-                if (metricValue instanceof Metric) {
-                    dataPayloadBuilder.addMetric((Metric) metricValue);
-                } else {
-                    dataPayloadBuilder.addMetric(metricName, metricValue);
-                }
-            });
-
-            dataPayloadBuilder.publish();
+            tahuEdgeNodeHandler.publishData(dataPayload);
 
         } catch (Exception e) {
             exchange.setException(e);

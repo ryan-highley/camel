@@ -103,27 +103,33 @@ public class TahuHostAppConsumerTest extends TahuTestSupport {
                     }
                 });
 
-                SparkplugBPayloadMap nBirthPayload = dataSimulator.getNodeBirthPayload(edgeNodeDescriptor);
+                // SparkplugBPayloadMap nBirthPayload = dataSimulator.getNodeBirthPayload(edgeNodeDescriptor);
 
-                Map<String, Object> nodeMetricDataTypes = nBirthPayload.getMetrics().stream()
-                        .map(m -> new Object[] {
-                                tahuEdgeNodeEndpoint.getEdgeNode() + TahuConstants.MAJOR_SEPARATOR + m.getName(),
-                                m.getDataType() })
-                        .collect(Collectors.toMap(arr -> (String) arr[0], arr -> arr[1]));
+                // Map<String, Object> nodeMetricDataTypes = nBirthPayload.getMetrics().stream()
+                //         .map(m -> new Object[] {
+                //                 tahuEdgeNodeEndpoint.getEdgeNode() + TahuConstants.MAJOR_SEPARATOR + m.getName(),
+                //                 m.getDataType() })
+                //         .collect(Collectors.toMap(arr -> (String) arr[0], arr -> arr[1]));
 
-                SparkplugBPayload dBirthPayload = dataSimulator.getDeviceBirthPayload(deviceDescriptor);
+                // SparkplugBPayload dBirthPayload = dataSimulator.getDeviceBirthPayload(deviceDescriptor);
 
-                Map<String, Object> deviceMetricDataTypes = dBirthPayload.getMetrics().stream()
-                        .map(m -> new Object[] {
-                                tahuDeviceEndpoint.getDeviceId() + TahuConstants.MAJOR_SEPARATOR + m.getName(),
-                                m.getDataType() })
-                        .collect(Collectors.toMap(arr -> (String) arr[0], arr -> arr[1]));
+                // Map<String, Object> deviceMetricDataTypes = dBirthPayload.getMetrics().stream()
+                //         .map(m -> new Object[] {
+                //                 tahuDeviceEndpoint.getDeviceId() + TahuConstants.MAJOR_SEPARATOR + m.getName(),
+                //                 m.getDataType() })
+                //         .collect(Collectors.toMap(arr -> (String) arr[0], arr -> arr[1]));
 
-                Map<String, Object> metricDataTypes = new HashMap<>();
-                metricDataTypes.putAll(nodeMetricDataTypes);
-                metricDataTypes.putAll(deviceMetricDataTypes);
-                tahuEdgeNodeEndpoint.setMetricDataTypes(Map.copyOf(metricDataTypes));
+                // Map<String, Object> metricDataTypes = new HashMap<>();
+                // metricDataTypes.putAll(nodeMetricDataTypes);
+                // metricDataTypes.putAll(deviceMetricDataTypes);
+                // tahuEdgeNodeEndpoint.setMetricDataTypes(Map.copyOf(metricDataTypes));
 
+                tahuEdgeNodeEndpoint.setMetricDataTypePayloadMap(dataSimulator.getNodeBirthPayload(edgeNodeDescriptor));
+
+                SparkplugBPayloadMap deviceMetricPayloadMap = new SparkplugBPayloadMap();
+                deviceMetricPayloadMap.setMetrics(dataSimulator.getDeviceBirthPayload(deviceDescriptor).getMetrics());
+                tahuDeviceEndpoint.setMetricDataTypePayloadMap(deviceMetricPayloadMap);
+        
                 from(tahuHostAppEndpoint)
                         .to(logEndpoint)
                         .to(sparkplugTckResultEndpoint);

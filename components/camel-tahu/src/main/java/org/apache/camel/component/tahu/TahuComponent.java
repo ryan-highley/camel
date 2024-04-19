@@ -29,7 +29,6 @@ import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
 import org.apache.camel.support.DefaultComponent;
 import org.apache.camel.util.ObjectHelper;
-import org.apache.camel.util.PropertiesHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,8 +112,8 @@ public class TahuComponent extends DefaultComponent implements SSLContextParamet
             } else {
                 answer = createEdgeNodeEndpoint(uri, remaining, endpointConfig);
 
-                Map<String, Object> metricDataTypes = PropertiesHelper.extractProperties(parameters, "metric.");
-                answer.setMetricDataTypes(metricDataTypes);
+                // Map<String, Object> metricDataTypes = PropertiesHelper.extractProperties(parameters, "metric.");
+                // answer.setMetricDataTypes(metricDataTypes);
             }
 
             setProperties(answer, parameters);
@@ -125,6 +124,7 @@ public class TahuComponent extends DefaultComponent implements SSLContextParamet
         }
     }
 
+    @SuppressWarnings("resource")
     private TahuEndpoint createHostAppEndpoint(
             String uri, String hostId, TahuConfiguration tahuConfig)
             throws Exception {

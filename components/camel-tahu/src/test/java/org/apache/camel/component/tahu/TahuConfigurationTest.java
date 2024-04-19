@@ -98,42 +98,42 @@ public class TahuConfigurationTest extends CamelTestSupport {
         }
     }
 
-    @Test
-    public void checkEdgeNodeMetricsOptions() throws Exception {
-        String uri
-                = "tahu://Basic/EdgeNodeMetrics?metric.EdgeNodeMetrics/NT-1/int8Data=Int8&metric.EdgeNodeMetrics/NT-1/stringData=String&metric.EdgeNodeMetrics/NT-1/int64Data=Int64&metric.EdgeNodeMetrics/NT-2/int16Data=Int16&metric.EdgeNodeMetrics/NT-2/textData=Text&metric.EdgeNodeMetrics/NT-2/uint32Data=UInt32&clientId=client1&primaryHostId=app1&username=amq&password=amq&useAliases=true&rebirthDebounceDelay=2000&keepAliveTimeout=20";
+    // @Test
+    // public void checkEdgeNodeMetricsOptions() throws Exception {
+    //     String uri
+    //             = "tahu://Basic/EdgeNodeMetrics?metric.EdgeNodeMetrics/NT-1/int8Data=Int8&metric.EdgeNodeMetrics/NT-1/stringData=String&metric.EdgeNodeMetrics/NT-1/int64Data=Int64&metric.EdgeNodeMetrics/NT-2/int16Data=Int16&metric.EdgeNodeMetrics/NT-2/textData=Text&metric.EdgeNodeMetrics/NT-2/uint32Data=UInt32&clientId=client1&primaryHostId=app1&username=amq&password=amq&useAliases=true&rebirthDebounceDelay=2000&keepAliveTimeout=20";
 
-        try (TahuEndpoint endpoint = resolveMandatoryEndpoint(uri, TahuEndpoint.class)) {
+    //     try (TahuEndpoint endpoint = resolveMandatoryEndpoint(uri, TahuEndpoint.class)) {
 
-            assertThat(endpoint, is(notNullValue()));
-            assertThat(endpoint,
-                    allOf(hasProperty("groupId", is("Basic")),
-                            hasProperty("edgeNode", is("EdgeNodeMetrics")),
-                            hasProperty("deviceId", is(nullValue())),
-                            hasProperty("primaryHostId", is("app1")),
-                            hasProperty("useAliases", is(true))));
+    //         assertThat(endpoint, is(notNullValue()));
+    //         assertThat(endpoint,
+    //                 allOf(hasProperty("groupId", is("Basic")),
+    //                         hasProperty("edgeNode", is("EdgeNodeMetrics")),
+    //                         hasProperty("deviceId", is(nullValue())),
+    //                         hasProperty("primaryHostId", is("app1")),
+    //                         hasProperty("useAliases", is(true))));
 
-            Map<String, Object> metricDataTypes = endpoint.getMetricDataTypes();
-            assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-1/int8Data", MetricDataType.Int8.name()));
-            assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-1/stringData", MetricDataType.String.name()));
-            assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-1/int64Data", MetricDataType.Int64.name()));
-            assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-2/int16Data", MetricDataType.Int16.name()));
-            assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-2/textData", MetricDataType.Text.name()));
-            assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-2/uint32Data", MetricDataType.UInt32.name()));
-            assertThat(metricDataTypes.size(), is(6));
+    //         Map<String, Object> metricDataTypes = endpoint.getMetricDataTypes();
+    //         assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-1/int8Data", MetricDataType.Int8.name()));
+    //         assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-1/stringData", MetricDataType.String.name()));
+    //         assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-1/int64Data", MetricDataType.Int64.name()));
+    //         assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-2/int16Data", MetricDataType.Int16.name()));
+    //         assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-2/textData", MetricDataType.Text.name()));
+    //         assertThat(metricDataTypes, hasEntry("EdgeNodeMetrics/NT-2/uint32Data", MetricDataType.UInt32.name()));
+    //         assertThat(metricDataTypes.size(), is(6));
 
-            TahuConfiguration configuration = endpoint.getConfiguration();
+    //         TahuConfiguration configuration = endpoint.getConfiguration();
 
-            assertThat(configuration, is(notNullValue()));
-            assertThat(configuration,
-                    allOf(hasProperty("clientId", is("client1")),
-                            hasProperty("checkClientIdLength", is(true)),
-                            hasProperty("username", is("amq")),
-                            hasProperty("password", is("amq")),
-                            hasProperty("rebirthDebounceDelay", is(2000L)),
-                            hasProperty("keepAliveTimeout", is(20))));
-        }
-    }
+    //         assertThat(configuration, is(notNullValue()));
+    //         assertThat(configuration,
+    //                 allOf(hasProperty("clientId", is("client1")),
+    //                         hasProperty("checkClientIdLength", is(true)),
+    //                         hasProperty("username", is("amq")),
+    //                         hasProperty("password", is("amq")),
+    //                         hasProperty("rebirthDebounceDelay", is(2000L)),
+    //                         hasProperty("keepAliveTimeout", is(20))));
+    //     }
+    // }
 
     @Test
     public void checkBasicHostAppOptions() throws Exception {

@@ -66,9 +66,7 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
     private final ExecutorService clientExecutorService;
 
     private final EdgeNodeDescriptor edgeNodeDescriptor;
-    private final ConcurrentMap<EdgeNodeDescriptor, ConcurrentMap<String, Metric>> descriptorMetricMap
-            = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, DeviceDescriptor> deviceDescriptorMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<EdgeNodeDescriptor, SparkplugBPayloadMap> descriptorMetricMap = new ConcurrentHashMap<>();
 
     private final Marker loggingMarker;
 
@@ -77,12 +75,10 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
     private final String primaryHostId;
     private final boolean useAliases;
     private final long rebirthDebounceDelay;
-    private final List<String> deviceIds;
 
     TahuEdgeNodeHandler(EdgeNodeDescriptor edgeNodeDescriptor, List<MqttServerDefinition> serverDefinitions,
-                        String primaryHostId, boolean useAliases, long rebirthDebounceDelay,
-                        Map<String, Map<String, Object>> metricDataTypeMap, ExecutorService clientExecutorService,
-                        BdSeqManager bdSeqManager) {
+            String primaryHostId, boolean useAliases, long rebirthDebounceDelay,
+            ExecutorService clientExecutorService, BdSeqManager bdSeqManager) {
 
         this.edgeNodeDescriptor = edgeNodeDescriptor;
 
@@ -97,11 +93,6 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
         this.useAliases = useAliases;
         this.rebirthDebounceDelay = rebirthDebounceDelay;
 
-        descriptorMetricMap.put(edgeNodeDescriptor, new ConcurrentHashMap<>());
-        addMetricDataTypes(metricDataTypeMap);
-
-        this.deviceIds = List.copyOf(deviceDescriptorMap.keySet());
-
         this.bdSeqManager = bdSeqManager;
 
         currentBirthBdSeq = currentDeathBdSeq = bdSeqManager.getNextDeathBdSeqNum();
@@ -115,9 +106,22 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
 
         LOG.trace(loggingMarker, "Camel doInit called");
 
+        LOG.trace(loggingMarker, "Camel doInit complete");
+    }
+
+    @Override
+    protected void doStart() throws Exception {
+        super.doStart();
+
+        LOG.trace(loggingMarker, "Camel doStart called");
+
+        List<String> deviceIds = descriptorMetricMap.keySet().stream()
+                .filter(end -> end.isDeviceDescriptor())
+                .map(dd -> ((DeviceDescriptor) dd).getDeviceId()).toList();
+
         EdgeClient edgeClient = client;
         if (edgeClient == null) {
-            LOG.debug(loggingMarker, "doInit() : currentBirthBdSeq = {}  currentDeathBdSeq = {}", currentBirthBdSeq,
+            LOG.debug(loggingMarker, "doStart() : currentBirthBdSeq = {}  currentDeathBdSeq = {}", currentBirthBdSeq,
                     currentDeathBdSeq);
 
             TahuEdgeNodeClientCallback tahuClientCallback = new TahuEdgeNodeClientCallback(edgeNodeDescriptor, this);
@@ -132,23 +136,7 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
 
         }
 
-        LOG.trace(loggingMarker, "Camel doInit complete");
-    }
-
-    @Override
-    protected void doStart() throws Exception {
-        super.doStart();
-
-        LOG.trace(loggingMarker, "Camel doStart called");
-
-        EdgeClient edgeClient = client;
-        if (edgeClient != null) {
-            edgeClientFuture = clientExecutorService.submit(edgeClient);
-        } else {
-            throw new TahuException(
-                    edgeNodeDescriptor, "Null EdgeClient found in doStart()",
-                    new IllegalStateException());
-        }
+        edgeClientFuture = clientExecutorService.submit(edgeClient);
 
         LOG.trace(loggingMarker, "Camel doStart complete");
     }
@@ -197,60 +185,8 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
         LOG.trace(loggingMarker, "Camel doStop complete");
     }
 
-    private void addMetricDataTypes(Map<String, Map<String, Object>> metricDataTypeMap) {
-        String edgeNodeId = edgeNodeDescriptor.getEdgeNodeId();
-
-        metricDataTypeMap.forEach((descriptorId, metricDataTypes) -> {
-
-            EdgeNodeDescriptor end;
-            if (descriptorId.equals(edgeNodeId)) {
-                end = edgeNodeDescriptor;
-            } else {
-                end = deviceDescriptorMap.computeIfAbsent(descriptorId,
-                        deviceId -> new DeviceDescriptor(edgeNodeDescriptor, deviceId));
-            }
-
-            metricDataTypes.forEach((metricName, rawMetricDataType) -> {
-
-                MetricDataType metricDataType;
-                if (rawMetricDataType instanceof MetricDataType) {
-                    metricDataType = (MetricDataType) rawMetricDataType;
-                } else if (rawMetricDataType instanceof String) {
-                    metricDataType = Enum.valueOf(MetricDataType.class, (String) rawMetricDataType);
-                } else {
-                    LOG.error(loggingMarker, "Invalid metricDataType type {} found for {}",
-                            rawMetricDataType.getClass().getName(), descriptorId);
-                    return;
-                }
-
-                if (end.isDeviceDescriptor()) {
-                    LOG.trace(loggingMarker, "Found Device Metric Data Types for {} named {} with type {}",
-                            descriptorId, metricName, metricDataType);
-                } else {
-                    LOG.trace(loggingMarker, "Found Edge Node Metric Data Type for {} named {} with type {}",
-                            edgeNodeId, metricName, metricDataType);
-                }
-
-                // Create each metric for the side effect of populating descriptorMetricMap
-                createMetric(end, metricName, metricDataType, null, new Date());
-            });
-
-        });
-
-        // Add all Edge Node Template Metrics to each Device
-        descriptorMetricMap.get(edgeNodeDescriptor).entrySet().stream()
-                .filter(e -> e.getValue().getDataType() == MetricDataType.Template)
-                .forEach(e -> {
-                    String metricName = e.getKey();
-                    Metric metric = e.getValue();
-
-                    descriptorMetricMap.keySet().stream()
-                            .filter(end -> !end.equals(edgeNodeDescriptor))
-                            .forEach(end -> {
-                                createMetric(end, metricName, metric.getDataType(), metric.getValue(),
-                                        metric.getTimestamp());
-                            });
-                });
+    SparkplugBPayloadMap addDeviceMetricDataPayloadMap(EdgeNodeDescriptor metricDescriptor, SparkplugBPayloadMap metricDataTypePayloadMap) {
+        return descriptorMetricMap.putIfAbsent(metricDescriptor, metricDataTypePayloadMap);
     }
 
     @Override
@@ -295,7 +231,7 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
                 sparkplugDescriptor, metricName);
 
         boolean metricFound = descriptorMetricMap.containsKey(sparkplugDescriptor)
-                && descriptorMetricMap.get(sparkplugDescriptor).containsKey(metricName);
+                && descriptorMetricMap.get(sparkplugDescriptor).getMetric(metricName) != null;
         try {
             return metricFound;
         } finally {
@@ -326,7 +262,10 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
 
             publishNodeBirth(nBirthPayload);
 
-            deviceDescriptorMap.forEach((deviceId, deviceDescriptor) -> {
+            descriptorMetricMap.keySet().stream().filter(end -> end.isDeviceDescriptor()).forEach(end -> {
+                DeviceDescriptor deviceDescriptor = (DeviceDescriptor) end;
+                String deviceId = deviceDescriptor.getDeviceId();
+
                 SparkplugBPayload dBirthPayload = new PayloadBuilder(deviceDescriptor)
                         .setTimestamp(timestamp)
                         .addMetrics(getCachedMetrics(deviceDescriptor, timestamp))
@@ -346,9 +285,9 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
     }
 
     private List<Metric> getCachedMetrics(EdgeNodeDescriptor metricDescriptor, Date timestamp) {
-        return descriptorMetricMap.get(edgeNodeDescriptor).entrySet().stream().map(entry -> {
+        return descriptorMetricMap.get(metricDescriptor).getMetrics().stream().map(entry -> {
             try {
-                Metric metric = new Metric(entry.getValue());
+                Metric metric = new Metric(entry);
                 metric.setTimestamp(timestamp);
                 return metric;
             } catch (SparkplugInvalidTypeException e) {
@@ -405,6 +344,23 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
         publishDeviceData(deviceId, ddataPayload);
     }
 
+    void publishData(SparkplugBPayload payload) {
+        publishData(edgeNodeDescriptor, payload);
+    }
+
+    void publishData(EdgeNodeDescriptor end, SparkplugBPayload payload) {
+        if (nBirthPublished) {
+            if (end.isDeviceDescriptor()) {
+                publishDeviceData(((DeviceDescriptor) end).getDeviceId(), payload);
+            } else {
+                publishNodeData(payload);
+            }
+        } else {
+            LOG.warn(loggingMarker,
+                    "Attempted to publish data payload before birth payloads - cached metric values updated instead");
+        }
+    }
+
     private List<Metric> processCMDMetrics(SparkplugBPayload payload, EdgeNodeDescriptor cmdDescriptor) {
         List<Metric> receivedMetrics = payload.getMetrics();
         if (receivedMetrics == null || receivedMetrics.isEmpty()) {
@@ -432,7 +388,7 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
             }
 
             try {
-                Metric responseMetric = new Metric(descriptorMetricMap.get(cmdDescriptor).get(m.getName()));
+                Metric responseMetric = new Metric(descriptorMetricMap.get(cmdDescriptor).getMetric(m.getName()));
 
                 responseMetric.setHistorical(true);
 
@@ -448,74 +404,60 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
         return responseMetrics;
     }
 
-    private Metric createMetric(
-            EdgeNodeDescriptor metricDescriptor, String metricName, Object metricValue,
-            Date timestamp) {
+    // private Metric createMetric(
+    //         EdgeNodeDescriptor metricDescriptor, String metricName, Object metricValue,
+    //         Date timestamp) {
 
-        if (!hasMetric(metricDescriptor, metricName)) {
-            String message = String.format(
-                    "Unable to create metric for %1$s with name %2$s and value %3$s due to no metric configuration found",
-                    metricDescriptor, metricName, metricValue);
-            LOG.error(loggingMarker, message);
-            throw new IllegalArgumentException(message);
-        }
+    //     boolean createSpecMetric = false;
+    //     MetricDataType metricType = null;
+    //     switch (metricName) {
+    //         case SparkplugMeta.SPARKPLUG_BD_SEQUENCE_NUMBER_KEY:
+    //             metricType = MetricDataType.Int64;
+    //             createSpecMetric = true;
+    //             break;
 
-        MetricDataType metricType = null;
-        switch (metricName) {
-            case SparkplugMeta.SPARKPLUG_BD_SEQUENCE_NUMBER_KEY:
-                metricType = MetricDataType.Int64;
-                break;
+    //         case SparkplugMeta.METRIC_NODE_REBIRTH:
+    //             metricType = MetricDataType.Boolean;
+    //             createSpecMetric = true;
+    //             break;
+    //     }
 
-            case SparkplugMeta.METRIC_NODE_REBIRTH:
-                metricType = MetricDataType.Boolean;
-                break;
+    //     if (createSpecMetric) {
+    //         try {
+    //             Metric specMetric = new Metric.MetricBuilder(metricName, metricType, metricValue).createMetric();
+    //             descriptorMetricMap.get(metricDescriptor).addMetric(specMetric);
+    //         } catch (SparkplugInvalidTypeException site) {
+    //             String message = String.format(
+    //                 "Unable to create Sparkplug B specification metric for %1$s with name %2$s and value %3$s due to an invalid value type",
+    //                 metricDescriptor, metricName, metricValue);
+    //             LOG.error(loggingMarker, message);
+    //             throw new IllegalArgumentException(message, site);
+    //         }
+    //     }
 
-            default:
-                metricType = descriptorMetricMap.get(metricDescriptor).get(metricName).getDataType();
-                break;
-        }
+    //     if (!hasMetric(metricDescriptor, metricName)) {
+    //         String message = String.format(
+    //                 "Unable to create metric for %1$s with name %2$s and value %3$s due to no metric configuration found",
+    //                 metricDescriptor, metricName, metricValue);
+    //         LOG.error(loggingMarker, message);
+    //         throw new IllegalArgumentException(message);
+    //     }
 
-        return createMetric(metricDescriptor, metricName, metricType, metricValue, timestamp);
-    }
+    //     Metric cachedMetric = descriptorMetricMap.get(metricDescriptor).getMetric(metricName);
+    //     cachedMetric.setValue(metricValue);
+    //     cachedMetric.setTimestamp(timestamp);
 
-    private Metric createMetric(
-            EdgeNodeDescriptor edgeNodeDescriptor, String metricName, MetricDataType metricDataType, Object metricValue,
-            Date timestamp) {
-        try {
-            ConcurrentMap<String, Metric> descriptorMetrics = descriptorMetricMap.computeIfAbsent(edgeNodeDescriptor,
-                    sd -> new ConcurrentHashMap<>());
-
-            Metric metric = new Metric.MetricBuilder(metricName, metricDataType, metricValue).createMetric();
-            metric.setTimestamp(timestamp);
-
-            Metric existingMetric = descriptorMetrics.putIfAbsent(metricName, metric);
-            if (existingMetric != null) {
-                // Use a copy of the existing metric instead of the new one
-                metric = new Metric(existingMetric);
-
-                // Update the cached metric value
-                existingMetric.setValue(metricValue);
-
-                // Update the cache metric timestamp as the last modified time
-                existingMetric.setTimestamp(timestamp);
-            }
-
-            return metric;
-        } catch (SparkplugInvalidTypeException e) {
-            LOG.error(loggingMarker, "Exception caught creating metric for name {} with type {} and value {}",
-                    metricName, metricDataType, metricValue);
-            throw new TahuException(edgeNodeDescriptor, e);
-        }
-    }
+    //     return cachedMetric;
+    // }
 
     private void ensureClientIsRunning() throws TahuException {
         // EdgeClient edgeClient = client;
         // if (edgeClient != null && !edgeClient.isDisconnectedOrDisconnecting()) {
-        //     edgeClientFuture = clientExecutorService.submit(edgeClient);
+        // edgeClientFuture = clientExecutorService.submit(edgeClient);
         // } else {
-        //     throw new TahuException(
-        //             edgeNodeDescriptor, "Null EdgeClient found in doStart()",
-        //             new IllegalStateException());
+        // throw new TahuException(
+        // edgeNodeDescriptor, "Null EdgeClient found in doStart()",
+        // new IllegalStateException());
         // }
     }
 
@@ -532,7 +474,7 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
         }
     }
 
-    private void publishNodeData(SparkplugBPayload ndataPayload) {
+    void publishNodeData(SparkplugBPayload ndataPayload) {
         LOG.trace(loggingMarker, "TahuMetricHandler publishNodeData called: ndataPayload {}", ndataPayload);
         try {
             ensureClientIsRunning();
@@ -559,37 +501,38 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
         }
     }
 
-    private void publishDeviceData(String deviceId, SparkplugBPayload ddataPayload) {
+    void publishDeviceData(String deviceId, SparkplugBPayload ddataPayload) {
         LOG.trace(loggingMarker, "TahuMetricHandler publishDeviceData called: deviceId {} ddataPayload {}", deviceId,
                 ddataPayload);
         try {
             ensureClientIsRunning();
             client.publishDeviceData(deviceId, ddataPayload);
         } catch (Exception e) {
-            LOG.error(loggingMarker, "Error publishing DDATA message for {}", deviceDescriptorMap.get(deviceId), e);
-            throw new TahuException(deviceDescriptorMap.get(deviceId), e);
+            DeviceDescriptor deviceDescriptor = new DeviceDescriptor(edgeNodeDescriptor, deviceId);
+            LOG.error(loggingMarker, "Error publishing DDATA message for {}", deviceDescriptor, e);
+            throw new TahuException(deviceDescriptor, e);
         } finally {
             LOG.trace(loggingMarker, "TahuMetricHandler publishDeviceData complete");
         }
     }
 
-    class PayloadBuilder {
+    static class PayloadBuilder {
 
         private final SparkplugBPayload.SparkplugBPayloadBuilder sparkplugBuilder;
-        private final EdgeNodeDescriptor payloadDescriptor;
+        // private final EdgeNodeDescriptor payloadDescriptor;
 
-        private Date timestamp;
+        // private Date timestamp;
 
         PayloadBuilder(EdgeNodeDescriptor payloadDescriptor) {
             sparkplugBuilder = new SparkplugBPayload.SparkplugBPayloadBuilder();
 
             setTimestamp(Date.from(Instant.now()));
 
-            this.payloadDescriptor = payloadDescriptor;
+            // this.payloadDescriptor = payloadDescriptor;
         }
 
         PayloadBuilder setTimestamp(Date timestamp) {
-            this.timestamp = timestamp;
+            // this.timestamp = timestamp;
             sparkplugBuilder.setTimestamp(timestamp);
             return this;
         }
@@ -609,9 +552,9 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
             return this;
         }
 
-        PayloadBuilder addMetric(String metricName, Object metricValue) {
-            return addMetric(createMetric(payloadDescriptor, metricName, metricValue, timestamp));
-        }
+        // PayloadBuilder addMetric(String metricName, Object metricValue) {
+        //     return addMetric(createMetric(payloadDescriptor, metricName, metricValue, timestamp));
+        // }
 
         PayloadBuilder addMetric(Metric metric) {
             sparkplugBuilder.addMetric(metric);
@@ -625,21 +568,6 @@ public class TahuEdgeNodeHandler extends ServiceSupport implements MetricHandler
 
         SparkplugBPayload createPayload() {
             return sparkplugBuilder.createPayload();
-        }
-
-        void publish() {
-            if (nBirthPublished) {
-                SparkplugBPayload payload = createPayload();
-
-                if (payloadDescriptor.isDeviceDescriptor()) {
-                    publishDeviceData(((DeviceDescriptor) payloadDescriptor).getDeviceId(), payload);
-                } else {
-                    publishNodeData(payload);
-                }
-            } else {
-                LOG.warn(loggingMarker,
-                        "Attempted to publish data payload before birth payloads - cached metric values updated instead");
-            }
         }
     }
 

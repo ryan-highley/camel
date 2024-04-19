@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.tahu;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.camel.Category;
@@ -36,6 +34,7 @@ import org.apache.camel.support.DefaultEndpoint;
 import org.apache.camel.support.DefaultHeaderFilterStrategy;
 import org.apache.camel.util.ObjectHelper;
 import org.eclipse.tahu.message.BdSeqManager;
+import org.eclipse.tahu.message.model.SparkplugBPayloadMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -71,23 +70,27 @@ public class TahuEndpoint extends DefaultEndpoint implements HeaderFilterStrateg
     @Metadata(applicableFor = TahuConstants.EDGE_NODE_SCHEME)
     private String primaryHostId;
 
-    @UriParam(label = "producer (edge node only)",
-              description = "Metric names and types for this edge node or device ID(s), as \"metric.[edgeNode,]deviceId[,deviceId...])"
-                            + TahuConstants.MAJOR_SEPARATOR
-                            + "<metricName> = <metricDataType>\"  NOTE: Uses only the FIRST '" + TahuConstants.MAJOR_SEPARATOR
-                            + "' character to separate the edge node ID or device ID(s) from the metric name, allowing the '"
-                            + TahuConstants.MAJOR_SEPARATOR
-                            + "' character to appear any number of times in the metric name. Comma characters also are only evaluated before the first '"
-                            + TahuConstants.MAJOR_SEPARATOR
-                            + "' character, meaning commas are allowed in metric names but NOT edge node or device IDs. The edge node ID and device IDs can be intermixed in the list to support configuring the same metric name and data type across both the edge node and devices.",
-              prefix = "metric.", multiValue = true,
-              enums = "Int8,Int16,Int32,Int64,UInt8,UInt16,UInt32,UInt64,Float,Double,Boolean,"
-                      + "String,DateTime,Text,UUID,DataSet,Bytes,File,Template,Int8Array,"
-                      + "Int16Array,Int32Array,Int64Array,UInt8Array,UInt16Array,UInt32Array,"
-                      + "UInt64Array,FloatArray,DoubleArray,BooleanArray,StringArray,"
-                      + "DateTimeArray,Unknown")
-    @Metadata(applicableFor = TahuConstants.EDGE_NODE_SCHEME)
-    private Map<String, Object> metricDataTypes = Map.of();
+    // @UriParam(label = "producer (edge node only)",
+    //           description = "Metric names and types for this edge node or device ID(s), as \"metric.[edgeNode,]deviceId[,deviceId...])"
+    //                         + TahuConstants.MAJOR_SEPARATOR
+    //                         + "<metricName> = <metricDataType>\"  NOTE: Uses only the FIRST '" + TahuConstants.MAJOR_SEPARATOR
+    //                         + "' character to separate the edge node ID or device ID(s) from the metric name, allowing the '"
+    //                         + TahuConstants.MAJOR_SEPARATOR
+    //                         + "' character to appear any number of times in the metric name. Comma characters also are only evaluated before the first '"
+    //                         + TahuConstants.MAJOR_SEPARATOR
+    //                         + "' character, meaning commas are allowed in metric names but NOT edge node or device IDs. The edge node ID and device IDs can be intermixed in the list to support configuring the same metric name and data type across both the edge node and devices.",
+    //           prefix = "metric.", multiValue = true,
+    //           enums = "Int8,Int16,Int32,Int64,UInt8,UInt16,UInt32,UInt64,Float,Double,Boolean,"
+    //                   + "String,DateTime,Text,UUID,DataSet,Bytes,File,Template,Int8Array,"
+    //                   + "Int16Array,Int32Array,Int64Array,UInt8Array,UInt16Array,UInt32Array,"
+    //                   + "UInt64Array,FloatArray,DoubleArray,BooleanArray,StringArray,"
+    //                   + "DateTimeArray,Unknown")
+    // @Metadata(applicableFor = TahuConstants.EDGE_NODE_SCHEME)
+    // private Map<String, Object> metricDataTypes = Map.of();
+
+    @UriParam(label = "producer", description = "Tahu SparkplugBPayloadMap to configure metric data types for this edge node or device  NOTE: This payload is used exclusively as a Sparkplug B spec-compliant configuration for all possible edge node or device metric names, aliases, and data types. This configuration is required to publish proper Sparkplug B NBIRTH and DBIRTH payloads.")
+    @Metadata(applicableFor = { TahuConstants.EDGE_NODE_SCHEME, TahuConstants.DEVICE_SCHEME }, required = true)
+    private SparkplugBPayloadMap metricDataTypePayloadMap;
 
     @UriParam
     private final TahuConfiguration configuration;
@@ -199,36 +202,36 @@ public class TahuEndpoint extends DefaultEndpoint implements HeaderFilterStrateg
                 return;
             }
 
-            Map<String, Map<String, Object>> newMetricDataTypeMap = new HashMap<>();
+            // Map<String, Map<String, Object>> newMetricDataTypeMap = new HashMap<>();
 
-            getMetricDataTypes().forEach((configName, metricDataTypeObj) -> {
-                int metricNameIdx = configName.indexOf(TahuConstants.MAJOR_SEPARATOR);
-                if (metricNameIdx <= 0) {
-                    LOG.error(loggingMarker, "Invalid metricDataType configuration found: {}", configName);
-                    return;
-                }
+            // getMetricDataTypes().forEach((configName, metricDataTypeObj) -> {
+            //     int metricNameIdx = configName.indexOf(TahuConstants.MAJOR_SEPARATOR);
+            //     if (metricNameIdx <= 0) {
+            //         LOG.error(loggingMarker, "Invalid metricDataType configuration found: {}", configName);
+            //         return;
+            //     }
 
-                if (metricDataTypeObj == null) {
-                    LOG.error(loggingMarker, "Null metricDataType configuration found for {}", configName);
-                    return;
-                }
+            //     if (metricDataTypeObj == null) {
+            //         LOG.error(loggingMarker, "Null metricDataType configuration found for {}", configName);
+            //         return;
+            //     }
 
-                String metricName = configName.substring(metricNameIdx + TahuConstants.MAJOR_SEPARATOR.length());
-                String[] descriptorNames = configName.substring(0, metricNameIdx)
-                        .split(TahuConstants.CONFIG_LIST_SEPARATOR);
+            //     String metricName = configName.substring(metricNameIdx + TahuConstants.MAJOR_SEPARATOR.length());
+            //     String[] descriptorNames = configName.substring(0, metricNameIdx)
+            //             .split(TahuConstants.CONFIG_LIST_SEPARATOR);
 
-                Arrays.stream(descriptorNames)
-                        .forEach(descriptorName -> {
-                            Map<String, Object> metricTypes = newMetricDataTypeMap.computeIfAbsent(descriptorName,
-                                    _x -> new HashMap<>());
+            //     Arrays.stream(descriptorNames)
+            //             .forEach(descriptorName -> {
+            //                 Map<String, Object> metricTypes = newMetricDataTypeMap.computeIfAbsent(descriptorName,
+            //                         _x -> new HashMap<>());
 
-                            metricTypes.put(metricName, metricDataTypeObj);
-                        });
-            });
+            //                 metricTypes.put(metricName, metricDataTypeObj);
+            //             });
+            // });
 
-            newMetricDataTypeMap.replaceAll((descriptorName, typeMap) -> Map.copyOf(typeMap));
+            // newMetricDataTypeMap.replaceAll((descriptorName, typeMap) -> Map.copyOf(typeMap));
 
-            metricDataTypeMap = Map.copyOf(newMetricDataTypeMap);
+            // metricDataTypeMap = Map.copyOf(newMetricDataTypeMap);
         } finally {
             LOG.trace(loggingMarker, "Camel doStart complete");
         }
@@ -255,12 +258,20 @@ public class TahuEndpoint extends DefaultEndpoint implements HeaderFilterStrateg
         this.primaryHostId = primaryHostId;
     }
 
-    public Map<String, Object> getMetricDataTypes() {
-        return metricDataTypes;
+    // public Map<String, Object> getMetricDataTypes() {
+    //     return metricDataTypes;
+    // }
+
+    // public void setMetricDataTypes(Map<String, Object> metricDataTypes) {
+    //     this.metricDataTypes = Map.copyOf(metricDataTypes);
+    // }
+
+    public SparkplugBPayloadMap getMetricDataTypePayloadMap() {
+        return metricDataTypePayloadMap;
     }
 
-    public void setMetricDataTypes(Map<String, Object> metricDataTypes) {
-        this.metricDataTypes = Map.copyOf(metricDataTypes);
+    public void setMetricDataTypePayloadMap(SparkplugBPayloadMap metricDataTypePayloadMap) {
+        this.metricDataTypePayloadMap = metricDataTypePayloadMap;
     }
 
     public boolean isUseAliases() {

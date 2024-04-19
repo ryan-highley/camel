@@ -162,7 +162,7 @@ public class TahuEdgeNodeHandlerTest {
 
         tahuEdgeNodeHandler = new TahuEdgeNodeHandler(
                 EDGE_NODE_DESCRIPTOR, mqttServerDefinitions, PRIMARY_HOST_ID,
-                USE_ALIASES, REBIRTH_DEBOUNCE_DELAY, metricDataTypeMap, handlerExecutorService, bdSeqManager);
+                USE_ALIASES, REBIRTH_DEBOUNCE_DELAY, handlerExecutorService, bdSeqManager);
 
         tahuEdgeNodeHandler.init();
 
@@ -227,14 +227,14 @@ public class TahuEdgeNodeHandlerTest {
             simPayload = dataSimulator.getNodeDataPayload(end);
         }
 
-        PayloadBuilder builder = tahuEdgeNodeHandler.new PayloadBuilder(end);
+        SparkplugBPayload.SparkplugBPayloadBuilder builder = new SparkplugBPayload.SparkplugBPayloadBuilder();
 
         builder.setTimestamp(simPayload.getTimestamp());
-        builder.setUUID(simPayload.getUuid());
+        builder.setUuid(simPayload.getUuid());
         builder.setBody(simPayload.getBody());
         builder.addMetrics(simPayload.getMetrics());
 
-        builder.publish();
+        tahuEdgeNodeHandler.publishData(end, simPayload);
     }
 
     private boolean pollForTestResults() throws Exception {

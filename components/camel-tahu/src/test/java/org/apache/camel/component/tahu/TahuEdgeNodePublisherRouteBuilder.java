@@ -17,9 +17,9 @@
 package org.apache.camel.component.tahu;
 
 import java.util.HashMap;
-import java.util.Map;
+// import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
+// import java.util.stream.Collectors;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
@@ -30,6 +30,7 @@ import org.eclipse.tahu.edge.sim.RandomDataSimulator;
 import org.eclipse.tahu.message.model.DeviceDescriptor;
 import org.eclipse.tahu.message.model.EdgeNodeDescriptor;
 import org.eclipse.tahu.message.model.SparkplugBPayload;
+import org.eclipse.tahu.message.model.SparkplugBPayloadMap;
 import org.eclipse.tahu.message.model.SparkplugDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,24 +74,30 @@ public class TahuEdgeNodePublisherRouteBuilder extends RouteBuilder {
         // data simulator.
         // This would normally be set on the Edge Node endpoint via "metrics."
         // parameters.
-        Map<String, Object> nodeMetricDataTypes = dataSimulator.getNodeBirthPayload(edgeNodeDescriptor)
-                .getMetrics().stream()
-                .map(m -> new Object[] {
-                        tahuEdgeNodeEndpoint.getEdgeNode() + TahuConstants.MAJOR_SEPARATOR + m.getName(),
-                        m.getDataType() })
-                .collect(Collectors.toMap(arr -> (String) arr[0], arr -> arr[1]));
+        // Map<String, Object> nodeMetricDataTypes = dataSimulator.getNodeBirthPayload(edgeNodeDescriptor)
+        //         .getMetrics().stream()
+        //         .map(m -> new Object[] {
+        //                 tahuEdgeNodeEndpoint.getEdgeNode() + TahuConstants.MAJOR_SEPARATOR + m.getName(),
+        //                 m.getDataType() })
+        //         .collect(Collectors.toMap(arr -> (String) arr[0], arr -> arr[1]));
 
-        Map<String, Object> deviceMetricDataTypes = dataSimulator.getDeviceBirthPayload(deviceDescriptor)
-                .getMetrics().stream()
-                .map(m -> new Object[] {
-                        tahuDeviceEndpoint.getDeviceId() + TahuConstants.MAJOR_SEPARATOR + m.getName(),
-                        m.getDataType() })
-                .collect(Collectors.toMap(arr -> (String) arr[0], arr -> arr[1]));
+        // Map<String, Object> deviceMetricDataTypes = dataSimulator.getDeviceBirthPayload(deviceDescriptor)
+        //         .getMetrics().stream()
+        //         .map(m -> new Object[] {
+        //                 tahuDeviceEndpoint.getDeviceId() + TahuConstants.MAJOR_SEPARATOR + m.getName(),
+        //                 m.getDataType() })
+        //         .collect(Collectors.toMap(arr -> (String) arr[0], arr -> arr[1]));
 
-        Map<String, Object> metricDataTypes = new HashMap<>();
-        metricDataTypes.putAll(nodeMetricDataTypes);
-        metricDataTypes.putAll(deviceMetricDataTypes);
-        tahuEdgeNodeEndpoint.setMetricDataTypes(metricDataTypes);
+        // Map<String, Object> metricDataTypes = new HashMap<>();
+        // metricDataTypes.putAll(nodeMetricDataTypes);
+        // metricDataTypes.putAll(deviceMetricDataTypes);
+        // tahuEdgeNodeEndpoint.setMetricDataTypes(metricDataTypes);
+
+        tahuEdgeNodeEndpoint.setMetricDataTypePayloadMap(dataSimulator.getNodeBirthPayload(edgeNodeDescriptor));
+
+        SparkplugBPayloadMap deviceMetricPayloadMap = new SparkplugBPayloadMap();
+        deviceMetricPayloadMap.setMetrics(dataSimulator.getDeviceBirthPayload(deviceDescriptor).getMetrics());
+        tahuDeviceEndpoint.setMetricDataTypePayloadMap(deviceMetricPayloadMap);
 
         from(NODE_DATA_URI)
                 .id("node-data-test-route")
