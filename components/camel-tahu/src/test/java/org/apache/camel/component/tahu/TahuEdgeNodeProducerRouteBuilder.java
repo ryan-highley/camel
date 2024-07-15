@@ -87,7 +87,8 @@ public class TahuEdgeNodeProducerRouteBuilder extends RouteBuilder {
         LOG.trace("RouteBuilder.configure complete");
     }
 
-    private void processPayload(Exchange exch, String messageType, SparkplugBPayload payload, EdgeNodeDescriptor edgeNodeDescriptor) {
+    private void processPayload(
+            Exchange exch, String messageType, SparkplugBPayload payload, EdgeNodeDescriptor edgeNodeDescriptor) {
         org.apache.camel.Message message = exch.getMessage();
 
         message.setHeader(TahuConstants.MESSAGE_TYPE, messageType);

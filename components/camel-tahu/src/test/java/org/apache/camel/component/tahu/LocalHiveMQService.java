@@ -29,8 +29,9 @@ public class LocalHiveMQService implements HiveMQService, ContainerService<HiveM
 
     private static final Logger LOG = LoggerFactory.getLogger(LocalHiveMQService.class);
 
+    @SuppressWarnings("resource")
     @Container
-    final HiveMQContainer container = new HiveMQContainer(DockerImageName.parse("hivemq/hivemq-ce").withTag("2023.9"))
+    final HiveMQContainer container = new HiveMQContainer(DockerImageName.parse("hivemq/hivemq-ce").withTag("2024.6"))
             .withLogLevel(Level.DEBUG)
             .withHiveMQConfig(MountableFile.forClasspathResource("/hivemq-ce/conf/config.xml"))
             .withCopyFileToContainer(MountableFile.forClasspathResource("/hivemq-ce/conf/logback.xml"),

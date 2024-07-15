@@ -51,8 +51,10 @@ public abstract class TahuTestSupport
     @RegisterExtension
     public static SparkplugTCKService spTckService = new SparkplugTCKService(new TahuTestMockEndpointListener());
 
-    MockEndpoint spTckLogMockEndpoint = camelContextExtension.getMockEndpoint("mock:" + SparkplugTCKService.SPARKPLUG_TCK_LOG_TOPIC);
-    MockEndpoint spTckResultMockEndpoint = camelContextExtension.getMockEndpoint("mock:" + SparkplugTCKService.SPARKPLUG_TCK_RESULT_TOPIC);
+    MockEndpoint spTckLogMockEndpoint
+            = camelContextExtension.getMockEndpoint("mock:" + SparkplugTCKService.SPARKPLUG_TCK_LOG_TOPIC);
+    MockEndpoint spTckResultMockEndpoint
+            = camelContextExtension.getMockEndpoint("mock:" + SparkplugTCKService.SPARKPLUG_TCK_RESULT_TOPIC);
 
     public void initiateTckTest(TestProfile profile) throws MqttException, InterruptedException {
         LOG.trace("initiateTckTest called");

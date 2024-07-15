@@ -16,26 +16,12 @@
  */
 package org.apache.camel.component.tahu;
 
-import java.util.HashMap;
-
 import org.apache.camel.CamelContext;
 import org.apache.camel.EndpointInject;
-import org.apache.camel.Exchange;
-import org.apache.camel.Message;
-import org.apache.camel.Processor;
-import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.direct.DirectEndpoint;
 import org.apache.camel.component.log.LogEndpoint;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.eclipse.tahu.edge.sim.DataSimulator;
-import org.eclipse.tahu.edge.sim.RandomDataSimulator;
-import org.eclipse.tahu.message.model.DeviceDescriptor;
-import org.eclipse.tahu.message.model.EdgeNodeDescriptor;
-import org.eclipse.tahu.message.model.SparkplugBPayload;
-import org.eclipse.tahu.message.model.SparkplugBPayloadMap;
-import org.eclipse.tahu.message.model.SparkplugDescriptor;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +50,6 @@ public class TahuHostAppConsumerTest extends TahuTestSupport {
 
     @EndpointInject("log:org.apache.camel.component.tahu.TahuHostAppConsumerTest?showAll=true&multiline=true&level=DEBUG&skipBodyLineSeparator=false")
     LogEndpoint logEndpoint;
-
 
     @Override
     public void configureContext(CamelContext context) throws Exception {

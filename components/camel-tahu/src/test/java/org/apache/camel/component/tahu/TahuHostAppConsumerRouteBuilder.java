@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.camel.component.tahu;
 
 import java.util.HashMap;
@@ -37,8 +53,9 @@ public class TahuHostAppConsumerRouteBuilder extends RouteBuilder {
         CamelContext context = getCamelContext();
 
         // MockEndpoint spTckLogMockEndpoint = context.getEndpoint("mock:" + SparkplugTCKService.SPARKPLUG_TCK_LOG_TOPIC, MockEndpoint.class);
-        MockEndpoint spTckResultMockEndpoint = context.getEndpoint("mock:" + SparkplugTCKService.SPARKPLUG_TCK_RESULT_TOPIC, MockEndpoint.class);
-    
+        MockEndpoint spTckResultMockEndpoint
+                = context.getEndpoint("mock:" + SparkplugTCKService.SPARKPLUG_TCK_RESULT_TOPIC, MockEndpoint.class);
+
         TahuEndpoint tahuHostAppEndpoint = context.getEndpoint("tahu:IamHost", TahuEndpoint.class);
 
         TahuEndpoint tahuEdgeNodeEndpoint = context.getEndpoint("tahu:G2/E2?clientId=TestProducerId",
@@ -78,7 +95,8 @@ public class TahuHostAppConsumerRouteBuilder extends RouteBuilder {
         LOG.trace("RouteBuilder.configure complete");
     }
 
-    private void processPayload(Exchange exch, String messageType, SparkplugBPayload payload, EdgeNodeDescriptor edgeNodeDescriptor) {
+    private void processPayload(
+            Exchange exch, String messageType, SparkplugBPayload payload, EdgeNodeDescriptor edgeNodeDescriptor) {
         org.apache.camel.Message message = exch.getMessage();
 
         message.setHeader(TahuConstants.MESSAGE_TYPE, messageType);
