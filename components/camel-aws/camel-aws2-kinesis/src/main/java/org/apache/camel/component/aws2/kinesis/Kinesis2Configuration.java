@@ -22,6 +22,8 @@ import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriParams;
 import org.apache.camel.spi.UriPath;
 import software.amazon.awssdk.core.Protocol;
+import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient;
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.ShardIteratorType;
 
@@ -38,7 +40,7 @@ public class Kinesis2Configuration implements Cloneable {
     @UriParam(label = "security", secret = true,
               description = "Amazon AWS Session Token used when the user needs to assume a IAM role")
     private String sessionToken;
-    @UriParam(enums = "ap-south-2,ap-south-1,eu-south-1,eu-south-2,us-gov-east-1,me-central-1,il-central-1,ca-central-1,eu-central-1,us-iso-west-1,eu-central-2,us-west-1,us-west-2,af-south-1,eu-north-1,eu-west-3,eu-west-2,eu-west-1,ap-northeast-3,ap-northeast-2,ap-northeast-1,me-south-1,sa-east-1,ap-east-1,cn-north-1,us-gov-west-1,ap-southeast-1,ap-southeast-2,us-iso-east-1,ap-southeast-3,ap-southeast-4,us-east-1,us-east-2,cn-northwest-1,us-isob-east-1,aws-global,aws-cn-global,aws-us-gov-global,aws-iso-global,aws-iso-b-global",
+    @UriParam(enums = "ap-south-2,ap-south-1,eu-south-1,eu-south-2,us-gov-east-1,me-central-1,il-central-1,ca-central-1,eu-central-1,us-iso-west-1,eu-central-2,eu-isoe-west-1,us-west-1,us-west-2,af-south-1,eu-north-1,eu-west-3,eu-west-2,eu-west-1,ap-northeast-3,ap-northeast-2,ap-northeast-1,me-south-1,sa-east-1,ap-east-1,cn-north-1,ca-west-1,us-gov-west-1,ap-southeast-1,ap-southeast-2,us-iso-east-1,ap-southeast-3,ap-southeast-4,us-east-1,us-east-2,cn-northwest-1,us-isob-east-1,aws-global,aws-cn-global,aws-us-gov-global,aws-iso-global,aws-iso-b-global",
               description = "The region in which Kinesis Firehose client needs to work. When using this parameter, the configuration will expect the lowercase name of the "
                             + "region (for example ap-east-1) You'll need to use the name Region.EU_WEST_1.id()")
     private String region;
@@ -100,6 +102,20 @@ public class Kinesis2Configuration implements Cloneable {
     @UriParam(label = "security",
               description = "If using a profile credentials provider this parameter will set the profile name.")
     private String profileCredentialsName;
+    @UriParam(label = "consumer,advanced", description = "The interval in milliseconds to wait between shard polling",
+              defaultValue = "10000")
+    private long shardMonitorInterval = 10000;
+
+    // KCL specific parameters
+    @UriParam(label = "advanced",
+              description = "If we want to a KCL Consumer set it to true")
+    private boolean useKclConsumers;
+    @UriParam(label = "advanced",
+              description = "If we want to a KCL Consumer, we can pass an instance of DynamoDbAsyncClient")
+    private DynamoDbAsyncClient dynamoDbAsyncClient;
+    @UriParam(label = "advanced",
+              description = "If we want to a KCL Consumer, we can pass an instance of CloudWatchAsyncClient")
+    private CloudWatchAsyncClient cloudWatchAsyncClient;
 
     public KinesisClient getAmazonKinesisClient() {
         return amazonKinesisClient;
@@ -283,6 +299,38 @@ public class Kinesis2Configuration implements Cloneable {
 
     public void setAsyncClient(boolean asyncClient) {
         this.asyncClient = asyncClient;
+    }
+
+    public long getShardMonitorInterval() {
+        return shardMonitorInterval;
+    }
+
+    public void setShardMonitorInterval(long shardMonitorInterval) {
+        this.shardMonitorInterval = shardMonitorInterval;
+    }
+
+    public boolean isUseKclConsumers() {
+        return useKclConsumers;
+    }
+
+    public void setUseKclConsumers(boolean useKclConsumers) {
+        this.useKclConsumers = useKclConsumers;
+    }
+
+    public DynamoDbAsyncClient getDynamoDbAsyncClient() {
+        return dynamoDbAsyncClient;
+    }
+
+    public void setDynamoDbAsyncClient(DynamoDbAsyncClient dynamoDbAsyncClient) {
+        this.dynamoDbAsyncClient = dynamoDbAsyncClient;
+    }
+
+    public CloudWatchAsyncClient getCloudWatchAsyncClient() {
+        return cloudWatchAsyncClient;
+    }
+
+    public void setCloudWatchAsyncClient(CloudWatchAsyncClient cloudWatchAsyncClient) {
+        this.cloudWatchAsyncClient = cloudWatchAsyncClient;
     }
 
     // *************************************************

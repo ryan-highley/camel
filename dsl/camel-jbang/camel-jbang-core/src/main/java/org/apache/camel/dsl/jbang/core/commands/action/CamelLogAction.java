@@ -54,6 +54,8 @@ public class CamelLogAction extends ActionBaseCommand {
     private static final int NAME_MAX_WIDTH = 25;
     private static final int NAME_MIN_WIDTH = 10;
 
+    private static final String TIMESTAMP_MAIN = "yyyy-MM-dd HH:mm:ss.SSS";
+
     public static class PrefixCompletionCandidates implements Iterable<String> {
 
         public PrefixCompletionCandidates() {
@@ -249,6 +251,7 @@ public class CamelLogAction extends ActionBaseCommand {
                     try {
                         line = row.reader.readLine();
                         if (line != null) {
+                            line = alignTimestamp(line);
                             boolean valid = true;
                             if (grep != null) {
                                 valid = isValidGrep(line);
@@ -290,7 +293,7 @@ public class CamelLogAction extends ActionBaseCommand {
         // only sort if there are multiple Camels running
         if (names.size() > 1) {
             // sort lines
-            final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+            final SimpleDateFormat sdf = new SimpleDateFormat(TIMESTAMP_MAIN);
             lines.sort((l1, l2) -> {
                 l1 = unescapeAnsi(l1);
                 l2 = unescapeAnsi(l2);
@@ -380,8 +383,13 @@ public class CamelLogAction extends ActionBaseCommand {
             }
         }
         if (find != null || grep != null) {
-            String before = StringHelper.before(line, "---");
-            String after = StringHelper.after(line, "---");
+            boolean dashes = line.contains(" --- ");
+            String before = null;
+            String after = line;
+            if (dashes) {
+                before = StringHelper.before(line, "---");
+                after = StringHelper.after(line, "---", line);
+            }
             if (find != null) {
                 for (String f : find) {
                     after = after.replaceAll("(?i)" + f, findAnsi);
@@ -392,7 +400,7 @@ public class CamelLogAction extends ActionBaseCommand {
                     after = after.replaceAll("(?i)" + g, findAnsi);
                 }
             }
-            line = before + "---" + after;
+            line = before != null ? before + "---" + after : after;
         }
         if (loggingColor) {
             AnsiConsole.out().println(line);
@@ -420,6 +428,7 @@ public class CamelLogAction extends ActionBaseCommand {
                 do {
                     line = row.reader.readLine();
                     if (line != null) {
+                        line = alignTimestamp(line);
                         boolean valid = isValidSince(limit, line);
                         if (valid && grep != null) {
                             valid = isValidGrep(line);
@@ -435,6 +444,23 @@ public class CamelLogAction extends ActionBaseCommand {
         }
     }
 
+    private String alignTimestamp(String line) {
+        // if using spring boot then adjust the timestamp to uniform camel-main style
+        String ts = StringHelper.before(line, "  ");
+        if (ts != null && ts.contains("T")) {
+            ts = ts.replace('T', ' ');
+            int dot = ts.indexOf('.');
+            if (dot != -1) {
+                int pos1 = dot + 3; // skip these 6 chars
+                int pos2 = dot + 9;
+                ts = ts.substring(0, pos1) + ts.substring(pos2);
+            }
+            String after = StringHelper.after(line, "  ");
+            return ts + "  " + after;
+        }
+        return line;
+    }
+
     private boolean isValidSince(Date limit, String line) {
         if (limit == null) {
             return true;
@@ -442,13 +468,14 @@ public class CamelLogAction extends ActionBaseCommand {
         // the log can be in color or not so we need to unescape always
         line = unescapeAnsi(line);
         String ts = StringHelper.before(line, "  ");
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-        try {
-            Date row = sdf.parse(ts);
-            return row.compareTo(limit) >= 0;
-        } catch (ParseException e) {
-            // ignore
+        if (ts != null && !ts.isBlank()) {
+            SimpleDateFormat sdf = new SimpleDateFormat(TIMESTAMP_MAIN);
+            try {
+                Date row = sdf.parse(ts);
+                return row.compareTo(limit) >= 0;
+            } catch (ParseException e) {
+                // ignore
+            }
         }
         return false;
     }
@@ -459,7 +486,7 @@ public class CamelLogAction extends ActionBaseCommand {
         }
         // the log can be in color or not so we need to unescape always
         line = unescapeAnsi(line);
-        String after = StringHelper.after(line, "---");
+        String after = StringHelper.after(line, "---", line);
         for (String g : grep) {
             boolean m = Pattern.compile("(?i)" + g).matcher(after).find();
             if (m) {
@@ -498,7 +525,6 @@ public class CamelLogAction extends ActionBaseCommand {
         String name;
         Queue<String> fifo;
         LineNumberReader reader;
-
     }
 
 }

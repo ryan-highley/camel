@@ -48,11 +48,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @Tags({ @Tag("breakOnFirstError") })
 @EnabledOnOs(value = { OS.LINUX, OS.MAC, OS.FREEBSD, OS.OPENBSD, OS.WINDOWS },
-             architectures = { "amd64", "aarch64", "s390x" },
-             disabledReason = "This test does not run reliably on ppc64le")
+             architectures = { "amd64", "aarch64" },
+             disabledReason = "This test does not run reliably on some platforms")
 class KafkaBreakOnFirstErrorWithBatchUsingSyncCommitManagerIT extends BaseKafkaTestSupport {
-    public static final String ROUTE_ID = "breakOnFirstErrorBatchIT";
-    public static final String TOPIC = "breakOnFirstErrorBatchIT";
+    public static final String ROUTE_ID = "breakOnFirstErrorBatchITSyncCommitManager";
+    public static final String TOPIC = "breakOnFirstErrorBatchITSyncCommitManager";
 
     private static final Logger LOG = LoggerFactory.getLogger(KafkaBreakOnFirstErrorWithBatchUsingSyncCommitManagerIT.class);
 
@@ -98,7 +98,7 @@ class KafkaBreakOnFirstErrorWithBatchUsingSyncCommitManagerIT extends BaseKafkaT
         contextExtension.getContext().getRouteController().startRoute(ROUTE_ID);
 
         Awaitility.await()
-                .atMost(3, TimeUnit.SECONDS)
+                .atMost(30, TimeUnit.SECONDS)   // changed to 30 sec for CAMEL-20722
                 .until(() -> errorPayloads.size() > 3);
 
         to.assertIsSatisfied();

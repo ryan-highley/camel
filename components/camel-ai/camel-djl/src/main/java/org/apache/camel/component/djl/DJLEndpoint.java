@@ -30,7 +30,7 @@ import org.apache.camel.support.DefaultEndpoint;
  * Infer Deep Learning models from message exchanges data using Deep Java Library (DJL).
  */
 @UriEndpoint(firstVersion = "3.3.0", scheme = "djl", title = "Deep Java Library", syntax = "djl:application",
-             remote = false, category = { Category.AI }, producerOnly = true)
+             remote = false, category = { Category.AI }, producerOnly = true, headersClass = DJLConstants.class)
 public class DJLEndpoint extends DefaultEndpoint {
 
     @UriPath
@@ -46,6 +46,11 @@ public class DJLEndpoint extends DefaultEndpoint {
     public DJLEndpoint(String uri, DJLComponent component, String application) {
         super(uri, component);
         this.application = application;
+    }
+
+    @Override
+    public boolean isRemote() {
+        return false;
     }
 
     public Producer createProducer() throws Exception {

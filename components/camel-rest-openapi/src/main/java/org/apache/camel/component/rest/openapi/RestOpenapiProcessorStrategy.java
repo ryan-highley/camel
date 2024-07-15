@@ -66,7 +66,9 @@ public interface RestOpenapiProcessorStrategy {
     /**
      * Strategy for processing the Rest DSL operation
      *
+     * @param  openAPI   the openapi specification
      * @param  operation the rest operation
+     * @param  verb      the HTTP verb (GET, POST etc.)
      * @param  path      the context-path
      * @param  binding   binding advice
      * @param  exchange  the exchange
@@ -77,7 +79,8 @@ public interface RestOpenapiProcessorStrategy {
      *                   asynchronously
      */
     boolean process(
-            Operation operation, String path,
+            OpenAPI openAPI,
+            Operation operation, String verb, String path,
             RestBindingAdvice binding,
             Exchange exchange, AsyncCallback callback);
 

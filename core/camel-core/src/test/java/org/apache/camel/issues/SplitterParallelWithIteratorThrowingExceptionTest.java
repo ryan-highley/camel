@@ -17,7 +17,6 @@
 package org.apache.camel.issues;
 
 import java.util.Iterator;
-import java.util.function.Consumer;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
@@ -54,7 +53,23 @@ public class SplitterParallelWithIteratorThrowingExceptionTest extends ContextTe
         getMockEndpoint("mock:end").expectedMessageCount(0);
 
         try {
-            template.sendBody("direct:start", new MyIterator(0));
+            template.sendBody("direct:start", new MyIterator(2));
+            fail("Should throw exception");
+        } catch (Exception e) {
+            IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
+            assertEquals("Forced error", iae.getMessage());
+        }
+
+        assertMockEndpointsSatisfied();
+    }
+
+    @Test
+    public void testIteratorThrowExceptionOnThird() throws Exception {
+        getMockEndpoint("mock:line").expectedMessageCount(2);
+        getMockEndpoint("mock:end").expectedMessageCount(0);
+
+        try {
+            template.sendBody("direct:start", new MyIterator(3));
             fail("Should throw exception");
         } catch (Exception e) {
             IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
@@ -86,27 +101,16 @@ public class SplitterParallelWithIteratorThrowingExceptionTest extends ContextTe
 
         @Override
         public boolean hasNext() {
-            return count < 2;
+            return true;
         }
 
         @Override
         public String next() {
-            count++;
-            if (count == 1) {
+            if (--count > 0) {
                 return "Hello";
             } else {
                 throw new IllegalArgumentException("Forced error");
             }
-        }
-
-        @Override
-        public void remove() {
-            // noop
-        }
-
-        @Override
-        public void forEachRemaining(Consumer<? super String> action) {
-            // noop
         }
     }
 }

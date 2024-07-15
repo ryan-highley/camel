@@ -214,7 +214,7 @@
         "type" : "array",
         "additionalProperties" : false,
         "items" : {
-          "$ref" : "#/items/definitions/org.apache.camel.model.app.RegistryBeanDefinition"
+          "$ref" : "#/items/definitions/org.apache.camel.model.BeanFactoryDefinition"
         }
       },
       "org.apache.camel.dsl.yaml.deserializers.ErrorHandlerDeserializer" : {
@@ -288,6 +288,11 @@
           } ]
         } ],
         "properties" : {
+          "id" : {
+            "type" : "string",
+            "title" : "Id",
+            "description" : "The id of this node"
+          },
           "deadLetterChannel" : { },
           "defaultErrorHandler" : { },
           "jtaTransactionErrorHandler" : { },
@@ -566,6 +571,76 @@
             }
           }
         } ]
+      },
+      "org.apache.camel.model.BeanFactoryDefinition" : {
+        "title" : "Bean Factory",
+        "description" : "Define custom beans that can be used in your Camel routes and in general.",
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "builderClass" : {
+            "type" : "string",
+            "title" : "Builder Class",
+            "description" : "Fully qualified class name of builder class to use for creating and configuring the bean. The builder will use the properties values to configure the bean."
+          },
+          "builderMethod" : {
+            "type" : "string",
+            "title" : "Builder Method",
+            "description" : "Name of method when using builder class. This method is invoked after configuring to create the actual bean. This method is often named build (used by default).",
+            "default" : "build"
+          },
+          "constructors" : {
+            "type" : "object",
+            "title" : "Constructors",
+            "description" : "Optional constructor arguments for creating the bean. Arguments correspond to specific index of the constructor argument list, starting from zero."
+          },
+          "destroyMethod" : {
+            "type" : "string",
+            "title" : "Destroy Method",
+            "description" : "The name of the custom destroy method to invoke on bean shutdown, such as when Camel is shutting down. The method must have no arguments, but may throw any exception."
+          },
+          "factoryBean" : {
+            "type" : "string",
+            "title" : "Factory Bean",
+            "description" : "Name of factory bean (bean id) to use for creating the bean."
+          },
+          "factoryMethod" : {
+            "type" : "string",
+            "title" : "Factory Method",
+            "description" : "Name of method to invoke when creating the bean via a factory bean."
+          },
+          "initMethod" : {
+            "type" : "string",
+            "title" : "Init Method",
+            "description" : "The name of the custom initialization method to invoke after setting bean properties. The method must have no arguments, but may throw any exception."
+          },
+          "name" : {
+            "type" : "string",
+            "title" : "Name",
+            "description" : "The name of the bean (bean id)"
+          },
+          "properties" : {
+            "type" : "object",
+            "title" : "Properties",
+            "description" : "Optional properties to set on the created bean."
+          },
+          "script" : {
+            "type" : "string",
+            "title" : "Script",
+            "description" : "The script to execute that creates the bean when using scripting languages. If the script use the prefix resource: such as resource:classpath:com/foo/myscript.groovy, resource:file:/var/myscript.groovy, then its loaded from the external resource."
+          },
+          "scriptLanguage" : {
+            "type" : "string",
+            "title" : "Script Language",
+            "description" : "The script language to use when using inlined script for creating the bean, such as groovy, java, javascript etc."
+          },
+          "type" : {
+            "type" : "string",
+            "title" : "Type",
+            "description" : "The class name (fully qualified) of the bean"
+          }
+        },
+        "required" : [ "name", "type" ]
       },
       "org.apache.camel.model.CatchDefinition" : {
         "title" : "Do Catch",
@@ -2421,64 +2496,64 @@
               "anyOf" : [ {
                 "required" : [ "customLoadBalancer" ]
               }, {
-                "required" : [ "failover" ]
+                "required" : [ "failoverLoadBalancer" ]
               }, {
-                "required" : [ "random" ]
+                "required" : [ "randomLoadBalancer" ]
               }, {
-                "required" : [ "roundRobin" ]
+                "required" : [ "roundRobinLoadBalancer" ]
               }, {
-                "required" : [ "sticky" ]
+                "required" : [ "stickyLoadBalancer" ]
               }, {
-                "required" : [ "topic" ]
+                "required" : [ "topicLoadBalancer" ]
               }, {
-                "required" : [ "weighted" ]
+                "required" : [ "weightedLoadBalancer" ]
               } ]
             }
           }, {
             "type" : "object",
-            "required" : [ "failover" ],
+            "required" : [ "failoverLoadBalancer" ],
             "properties" : {
-              "failover" : {
+              "failoverLoadBalancer" : {
                 "$ref" : "#/items/definitions/org.apache.camel.model.loadbalancer.FailoverLoadBalancerDefinition"
               }
             }
           }, {
             "type" : "object",
-            "required" : [ "random" ],
+            "required" : [ "randomLoadBalancer" ],
             "properties" : {
-              "random" : {
+              "randomLoadBalancer" : {
                 "$ref" : "#/items/definitions/org.apache.camel.model.loadbalancer.RandomLoadBalancerDefinition"
               }
             }
           }, {
             "type" : "object",
-            "required" : [ "roundRobin" ],
+            "required" : [ "roundRobinLoadBalancer" ],
             "properties" : {
-              "roundRobin" : {
+              "roundRobinLoadBalancer" : {
                 "$ref" : "#/items/definitions/org.apache.camel.model.loadbalancer.RoundRobinLoadBalancerDefinition"
               }
             }
           }, {
             "type" : "object",
-            "required" : [ "sticky" ],
+            "required" : [ "stickyLoadBalancer" ],
             "properties" : {
-              "sticky" : {
+              "stickyLoadBalancer" : {
                 "$ref" : "#/items/definitions/org.apache.camel.model.loadbalancer.StickyLoadBalancerDefinition"
               }
             }
           }, {
             "type" : "object",
-            "required" : [ "topic" ],
+            "required" : [ "topicLoadBalancer" ],
             "properties" : {
-              "topic" : {
+              "topicLoadBalancer" : {
                 "$ref" : "#/items/definitions/org.apache.camel.model.loadbalancer.TopicLoadBalancerDefinition"
               }
             }
           }, {
             "type" : "object",
-            "required" : [ "weighted" ],
+            "required" : [ "weightedLoadBalancer" ],
             "properties" : {
-              "weighted" : {
+              "weightedLoadBalancer" : {
                 "$ref" : "#/items/definitions/org.apache.camel.model.loadbalancer.WeightedLoadBalancerDefinition"
               }
             }
@@ -2512,17 +2587,17 @@
             }
           },
           "customLoadBalancer" : { },
-          "failover" : { },
-          "random" : { },
-          "roundRobin" : { },
-          "sticky" : { },
-          "topic" : { },
-          "weighted" : { }
+          "failoverLoadBalancer" : { },
+          "randomLoadBalancer" : { },
+          "roundRobinLoadBalancer" : { },
+          "stickyLoadBalancer" : { },
+          "topicLoadBalancer" : { },
+          "weightedLoadBalancer" : { }
         }
       },
       "org.apache.camel.model.LogDefinition" : {
-        "title" : "Log",
-        "description" : "Logs the defined message to the logger",
+        "title" : "Logger",
+        "description" : "Used for printing custom messages to the logger.",
         "oneOf" : [ {
           "type" : "string"
         }, {
@@ -2547,7 +2622,7 @@
             "logName" : {
               "type" : "string",
               "title" : "Log Name",
-              "description" : "Sets the name of the logger"
+              "description" : "Sets the name of the logger. The name is default the routeId or the source:line if source location is enabled. You can also specify the name using tokens: ${class} - the logger class name (org.apache.camel.processor.LogProcessor) ${contextId} - the camel context id ${routeId} - the route id ${groupId} - the route group id ${nodeId} - the node id ${nodePrefixId} - the node prefix id ${source} - the source:line (source location must be enabled) ${source.name} - the source filename (source location must be enabled) ${source.line} - the source line number (source location must be enabled) For example to use the route and node id you can specify the name as: ${routeId}/${nodeId}"
             },
             "logger" : {
               "type" : "string",
@@ -3259,7 +3334,8 @@
           "parallelAggregate" : {
             "type" : "boolean",
             "title" : "Parallel Aggregate",
-            "description" : "If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this would require the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false meaning that Camel synchronizes the call to the aggregate method. Though in some use-cases this can be used to archive higher performance when the AggregationStrategy is implemented as thread-safe."
+            "description" : "If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this would require the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false meaning that Camel synchronizes the call to the aggregate method. Though in some use-cases this can be used to archive higher performance when the AggregationStrategy is implemented as thread-safe.",
+            "deprecated" : true
           },
           "parallelProcessing" : {
             "type" : "boolean",
@@ -3924,7 +4000,7 @@
           "ref" : {
             "type" : "string",
             "title" : "Ref",
-            "description" : "Reference to the Processor to lookup in the registry to use. Can also be used for creating new beans by their class name by prefixing with #class, eg #class:com.foo.MyClassType. And it is also possible to refer to singleton beans by their type in the registry by prefixing with #type: syntax, eg #type:com.foo.MyClassType"
+            "description" : "Reference to the Processor to lookup in the registry to use. A Processor is a class of type org.apache.camel.Processor, which can are to be called by this EIP. In this processor you have custom Java code, that can work with the message, such as to do custom business logic, special message manipulations and so on. By default, the ref, will lookup the bean in the Camel registry. The ref can use prefix that controls how the processor is obtained. You can use #bean:myBean where myBean is the id of the Camel processor (lookup). Can also be used for creating new beans by their class name by prefixing with #class, eg #class:com.foo.MyClassType. And it is also possible to refer to singleton beans by their type in the registry by prefixing with #type: syntax, eg #type:com.foo.MyClassType"
           }
         },
         "required" : [ "ref" ]
@@ -4200,7 +4276,8 @@
           "parallelAggregate" : {
             "type" : "boolean",
             "title" : "Parallel Aggregate",
-            "description" : "If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this would require the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false meaning that Camel synchronizes the call to the aggregate method. Though in some use-cases this can be used to archive higher performance when the AggregationStrategy is implemented as thread-safe."
+            "description" : "If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this would require the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false meaning that Camel synchronizes the call to the aggregate method. Though in some use-cases this can be used to archive higher performance when the AggregationStrategy is implemented as thread-safe.",
+            "deprecated" : true
           },
           "parallelProcessing" : {
             "type" : "boolean",
@@ -5187,34 +5264,6 @@
         },
         "required" : [ "from" ]
       },
-      "org.apache.camel.model.RouteTemplateBeanDefinition" : {
-        "type" : "object",
-        "additionalProperties" : false,
-        "properties" : {
-          "name" : {
-            "type" : "string"
-          },
-          "properties" : {
-            "type" : "object"
-          },
-          "property" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/items/definitions/org.apache.camel.model.PropertyDefinition"
-            }
-          },
-          "script" : {
-            "type" : "string"
-          },
-          "scriptLanguage" : {
-            "type" : "string"
-          },
-          "type" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "name", "type" ]
-      },
       "org.apache.camel.model.RouteTemplateDefinition" : {
         "type" : "object",
         "additionalProperties" : false,
@@ -5222,7 +5271,7 @@
           "beans" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/items/definitions/org.apache.camel.model.RouteTemplateBeanDefinition"
+              "$ref" : "#/items/definitions/org.apache.camel.model.BeanFactoryDefinition"
             }
           },
           "description" : {
@@ -5979,6 +6028,8 @@
           },
           "headers" : {
             "type" : "array",
+            "title" : "Headers",
+            "description" : "Contains the headers to be set",
             "items" : {
               "$ref" : "#/items/definitions/org.apache.camel.model.SetHeaderDefinition"
             }
@@ -6271,6 +6322,8 @@
           },
           "variables" : {
             "type" : "array",
+            "title" : "Variables",
+            "description" : "Contains the variables to be set",
             "items" : {
               "$ref" : "#/items/definitions/org.apache.camel.model.SetVariableDefinition"
             }
@@ -6533,7 +6586,8 @@
           "parallelAggregate" : {
             "type" : "boolean",
             "title" : "Parallel Aggregate",
-            "description" : "If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this would require the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false meaning that Camel synchronizes the call to the aggregate method. Though in some use-cases this can be used to archive higher performance when the AggregationStrategy is implemented as thread-safe."
+            "description" : "If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this would require the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false meaning that Camel synchronizes the call to the aggregate method. Though in some use-cases this can be used to archive higher performance when the AggregationStrategy is implemented as thread-safe.",
+            "deprecated" : true
           },
           "parallelProcessing" : {
             "type" : "boolean",
@@ -6653,34 +6707,6 @@
           }
         }
       },
-      "org.apache.camel.model.TemplatedRouteBeanDefinition" : {
-        "type" : "object",
-        "additionalProperties" : false,
-        "properties" : {
-          "name" : {
-            "type" : "string"
-          },
-          "properties" : {
-            "type" : "object"
-          },
-          "property" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/items/definitions/org.apache.camel.model.PropertyDefinition"
-            }
-          },
-          "script" : {
-            "type" : "string"
-          },
-          "scriptLanguage" : {
-            "type" : "string"
-          },
-          "type" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "name", "type" ]
-      },
       "org.apache.camel.model.TemplatedRouteDefinition" : {
         "type" : "object",
         "additionalProperties" : false,
@@ -6688,7 +6714,7 @@
           "beans" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/items/definitions/org.apache.camel.model.TemplatedRouteBeanDefinition"
+              "$ref" : "#/items/definitions/org.apache.camel.model.BeanFactoryDefinition"
             }
           },
           "parameters" : {
@@ -8440,49 +8466,6 @@
             "type" : "string"
           }
         }
-      },
-      "org.apache.camel.model.app.RegistryBeanDefinition" : {
-        "type" : "object",
-        "additionalProperties" : false,
-        "properties" : {
-          "builderClass" : {
-            "type" : "string"
-          },
-          "builderMethod" : {
-            "type" : "string"
-          },
-          "constructors" : {
-            "type" : "object"
-          },
-          "destroyMethod" : {
-            "type" : "string"
-          },
-          "factoryBean" : {
-            "type" : "string"
-          },
-          "factoryMethod" : {
-            "type" : "string"
-          },
-          "initMethod" : {
-            "type" : "string"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "properties" : {
-            "type" : "object"
-          },
-          "script" : {
-            "type" : "string"
-          },
-          "scriptLanguage" : {
-            "type" : "string"
-          },
-          "type" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "name", "type" ]
       },
       "org.apache.camel.model.cloud.BlacklistServiceCallServiceFilterConfiguration" : {
         "title" : "Blacklist Service Filter",
@@ -14021,7 +14004,7 @@
         "required" : [ "ref" ]
       },
       "org.apache.camel.model.loadbalancer.FailoverLoadBalancerDefinition" : {
-        "title" : "Failover",
+        "title" : "Failover Load Balancer",
         "description" : "In case of failures the exchange will be tried on the next endpoint.",
         "type" : "object",
         "additionalProperties" : false,
@@ -14042,7 +14025,7 @@
           "maximumFailoverAttempts" : {
             "type" : "string",
             "title" : "Maximum Failover Attempts",
-            "description" : "A value to indicate after X failover attempts we should exhaust (give up). Use -1 to indicate never give up and continuously try to failover. Use 0 to never failover. And use e.g. 3 to failover at most 3 times before giving up. his option can be used whether or not roundRobin is enabled or not.",
+            "description" : "A value to indicate after X failover attempts we should exhaust (give up). Use -1 to indicate never give up and continuously try to failover. Use 0 to never failover. And use e.g. 3 to failover at most 3 times before giving up. This option can be used whether roundRobin is enabled or not.",
             "default" : "-1"
           },
           "roundRobin" : {
@@ -14058,7 +14041,7 @@
         }
       },
       "org.apache.camel.model.loadbalancer.RandomLoadBalancerDefinition" : {
-        "title" : "Random",
+        "title" : "Random Load Balancer",
         "description" : "The destination endpoints are selected randomly.",
         "type" : "object",
         "additionalProperties" : false,
@@ -14071,7 +14054,7 @@
         }
       },
       "org.apache.camel.model.loadbalancer.RoundRobinLoadBalancerDefinition" : {
-        "title" : "Round Robin",
+        "title" : "Round Robin Load Balancer",
         "description" : "The destination endpoints are selected in a round-robin fashion. This is a well-known and classic policy, which spreads the load evenly.",
         "type" : "object",
         "additionalProperties" : false,
@@ -14084,7 +14067,7 @@
         }
       },
       "org.apache.camel.model.loadbalancer.StickyLoadBalancerDefinition" : {
-        "title" : "Sticky",
+        "title" : "Sticky Load Balancer",
         "description" : "Sticky load balancing using an expression to calculate a correlation key to perform the sticky load balancing.",
         "type" : "object",
         "additionalProperties" : false,
@@ -14102,7 +14085,7 @@
         }
       },
       "org.apache.camel.model.loadbalancer.TopicLoadBalancerDefinition" : {
-        "title" : "Topic",
+        "title" : "Topic Load Balancer",
         "description" : "Topic which sends to all destinations.",
         "type" : "object",
         "additionalProperties" : false,
@@ -14115,7 +14098,7 @@
         }
       },
       "org.apache.camel.model.loadbalancer.WeightedLoadBalancerDefinition" : {
-        "title" : "Weighted",
+        "title" : "Weighted Load Balancer",
         "description" : "Uses a weighted load distribution ratio for each server with respect to others.",
         "type" : "object",
         "additionalProperties" : false,
@@ -14327,6 +14310,11 @@
             "title" : "Skip Binding On Error Code",
             "description" : "Whether to skip binding on output if there is a custom HTTP error code header. This allows to build custom error messages that do not bind to json / xml etc, as success messages otherwise will do. This option will override what may be configured on a parent level"
           },
+          "streamCache" : {
+            "type" : "boolean",
+            "title" : "Stream Cache",
+            "description" : "Whether stream caching is enabled on this rest operation."
+          },
           "to" : {
             "title" : "To",
             "description" : "The Camel endpoint this REST service will call, such as a direct endpoint to link to an existing route that handles this REST call.",
@@ -14440,6 +14428,11 @@
             "title" : "Skip Binding On Error Code",
             "description" : "Whether to skip binding on output if there is a custom HTTP error code header. This allows to build custom error messages that do not bind to json / xml etc, as success messages otherwise will do. This option will override what may be configured on a parent level"
           },
+          "streamCache" : {
+            "type" : "boolean",
+            "title" : "Stream Cache",
+            "description" : "Whether stream caching is enabled on this rest operation."
+          },
           "to" : {
             "title" : "To",
             "description" : "The Camel endpoint this REST service will call, such as a direct endpoint to link to an existing route that handles this REST call.",
@@ -14552,6 +14545,11 @@
             "type" : "boolean",
             "title" : "Skip Binding On Error Code",
             "description" : "Whether to skip binding on output if there is a custom HTTP error code header. This allows to build custom error messages that do not bind to json / xml etc, as success messages otherwise will do. This option will override what may be configured on a parent level"
+          },
+          "streamCache" : {
+            "type" : "boolean",
+            "title" : "Stream Cache",
+            "description" : "Whether stream caching is enabled on this rest operation."
           },
           "to" : {
             "title" : "To",
@@ -14880,6 +14878,11 @@
             "title" : "Skip Binding On Error Code",
             "description" : "Whether to skip binding on output if there is a custom HTTP error code header. This allows to build custom error messages that do not bind to json / xml etc, as success messages otherwise will do. This option will override what may be configured on a parent level"
           },
+          "streamCache" : {
+            "type" : "boolean",
+            "title" : "Stream Cache",
+            "description" : "Whether stream caching is enabled on this rest operation."
+          },
           "to" : {
             "title" : "To",
             "description" : "The Camel endpoint this REST service will call, such as a direct endpoint to link to an existing route that handles this REST call.",
@@ -14993,6 +14996,11 @@
             "title" : "Skip Binding On Error Code",
             "description" : "Whether to skip binding on output if there is a custom HTTP error code header. This allows to build custom error messages that do not bind to json / xml etc, as success messages otherwise will do. This option will override what may be configured on a parent level"
           },
+          "streamCache" : {
+            "type" : "boolean",
+            "title" : "Stream Cache",
+            "description" : "Whether stream caching is enabled on this rest operation."
+          },
           "to" : {
             "title" : "To",
             "description" : "The Camel endpoint this REST service will call, such as a direct endpoint to link to an existing route that handles this REST call.",
@@ -15105,6 +15113,11 @@
             "type" : "boolean",
             "title" : "Skip Binding On Error Code",
             "description" : "Whether to skip binding on output if there is a custom HTTP error code header. This allows to build custom error messages that do not bind to json / xml etc, as success messages otherwise will do. This option will override what may be configured on a parent level"
+          },
+          "streamCache" : {
+            "type" : "boolean",
+            "title" : "Stream Cache",
+            "description" : "Whether stream caching is enabled on this rest operation."
           },
           "to" : {
             "title" : "To",
@@ -15413,7 +15426,7 @@
             "title" : "Host Name Resolver",
             "description" : "If no hostname has been explicit configured, then this resolver is used to compute the hostname the REST service will be using.",
             "default" : "allLocalIp",
-            "enum" : [ "allLocalIp", "localHostName", "localIp" ]
+            "enum" : [ "allLocalIp", "localHostName", "localIp", "none" ]
           },
           "inlineRoutes" : {
             "type" : "boolean",

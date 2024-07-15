@@ -59,6 +59,7 @@ public class RecipientListDefinition<Type extends ProcessorDefinition<Type>> ext
     @XmlAttribute
     @Metadata(label = "advanced", javaType = "java.lang.Boolean")
     private String aggregationStrategyMethodAllowNull;
+    @Deprecated(since = "4.7.0")
     @XmlAttribute
     @Metadata(label = "advanced", javaType = "java.lang.Boolean")
     private String parallelAggregate;
@@ -96,12 +97,39 @@ public class RecipientListDefinition<Type extends ProcessorDefinition<Type>> ext
     public RecipientListDefinition() {
     }
 
+    public RecipientListDefinition(RecipientListDefinition source) {
+        super(source);
+        this.executorServiceBean = source.executorServiceBean;
+        this.aggregationStrategyBean = source.aggregationStrategyBean;
+        this.onPrepareProcessor = source.onPrepareProcessor;
+        this.delimiter = source.delimiter;
+        this.aggregationStrategy = source.aggregationStrategy;
+        this.aggregationStrategyMethodName = source.aggregationStrategyMethodName;
+        this.aggregationStrategyMethodAllowNull = source.aggregationStrategyMethodAllowNull;
+        this.parallelAggregate = source.parallelAggregate;
+        this.parallelProcessing = source.parallelProcessing;
+        this.synchronous = source.synchronous;
+        this.timeout = source.timeout;
+        this.executorService = source.executorService;
+        this.stopOnException = source.stopOnException;
+        this.ignoreInvalidEndpoints = source.ignoreInvalidEndpoints;
+        this.streaming = source.streaming;
+        this.onPrepare = source.onPrepare;
+        this.cacheSize = source.cacheSize;
+        this.shareUnitOfWork = source.shareUnitOfWork;
+    }
+
     public RecipientListDefinition(ExpressionDefinition expression) {
         super(expression);
     }
 
     public RecipientListDefinition(Expression expression) {
         super(expression);
+    }
+
+    @Override
+    public RecipientListDefinition copyDefinition() {
+        return new RecipientListDefinition(this);
     }
 
     @Override
@@ -250,6 +278,7 @@ public class RecipientListDefinition<Type extends ProcessorDefinition<Type>> ext
      *
      * @return the builder
      */
+    @Deprecated(since = "4.7.0")
     public RecipientListDefinition<Type> parallelAggregate() {
         return parallelAggregate(Boolean.toString(true));
     }
@@ -262,6 +291,7 @@ public class RecipientListDefinition<Type extends ProcessorDefinition<Type>> ext
      *
      * @return the builder
      */
+    @Deprecated(since = "4.7.0")
     public RecipientListDefinition<Type> parallelAggregate(boolean parallelAggregate) {
         setParallelAggregate(Boolean.toString(parallelAggregate));
         return this;
@@ -275,6 +305,7 @@ public class RecipientListDefinition<Type extends ProcessorDefinition<Type>> ext
      *
      * @return the builder
      */
+    @Deprecated(since = "4.7.0")
     public RecipientListDefinition<Type> parallelAggregate(String parallelAggregate) {
         setParallelAggregate(parallelAggregate);
         return this;
@@ -612,10 +643,12 @@ public class RecipientListDefinition<Type extends ProcessorDefinition<Type>> ext
         this.cacheSize = cacheSize;
     }
 
+    @Deprecated(since = "4.7.0")
     public String getParallelAggregate() {
         return parallelAggregate;
     }
 
+    @Deprecated(since = "4.7.0")
     public void setParallelAggregate(String parallelAggregate) {
         this.parallelAggregate = parallelAggregate;
     }

@@ -99,7 +99,7 @@ public class DefaultRoute extends ServiceSupport implements Route {
     private ConsumerListener<?, ?> consumerListener;
 
     // camel-core-model
-    @Deprecated
+    @Deprecated(since = "3.17.0")
     private ErrorHandlerFactory errorHandlerFactory;
     // camel-core-model: must be concurrent as error handlers can be mutated concurrently via multicast/recipientlist EIPs
     private final ConcurrentMap<ErrorHandlerFactory, Set<NamedNode>> errorHandlers = new ConcurrentHashMap<>();
@@ -107,6 +107,7 @@ public class DefaultRoute extends ServiceSupport implements Route {
     private final Endpoint endpoint;
     private final Map<String, Object> properties = new HashMap<>();
     private final List<Service> services = new ArrayList<>();
+    private final List<Service> servicesToStop = new ArrayList<>();
     private final StopWatch stopWatch = new StopWatch(false);
     private RouteError routeError;
     private Integer startupOrder;
@@ -237,6 +238,17 @@ public class DefaultRoute extends ServiceSupport implements Route {
     }
 
     @Override
+    public void addService(Service service, boolean forceStop) {
+        if (forceStop) {
+            if (!servicesToStop.contains(service)) {
+                servicesToStop.add(service);
+            }
+        } else {
+            addService(service);
+        }
+    }
+
+    @Override
     public void warmUp() {
         // noop
     }
@@ -274,6 +286,9 @@ public class DefaultRoute extends ServiceSupport implements Route {
     protected void doShutdown() throws Exception {
         // clear services when shutting down
         services.clear();
+        // shutdown forced services
+        ServiceHelper.stopAndShutdownService(servicesToStop);
+        servicesToStop.clear();
     }
 
     @Override

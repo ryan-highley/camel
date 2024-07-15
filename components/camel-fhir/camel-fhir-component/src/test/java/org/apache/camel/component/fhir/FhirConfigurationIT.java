@@ -30,7 +30,6 @@ import org.apache.camel.component.fhir.internal.FhirCreateApiMethod;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.support.PluginHelper;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -42,8 +41,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Test class for {@link FhirConfiguration} APIs.
  */
 @ExtendWith(MockitoExtension.class)
-@DisabledIfSystemProperty(named = "ci.env.name", matches = "apache.org",
-                          disabledReason = "Apache CI nodes are too resource constrained for this test - see CAMEL-19659")
 public class FhirConfigurationIT extends AbstractFhirTestSupport {
 
     private static final String PATH_PREFIX = FhirApiCollection.getCollection().getApiName(FhirCreateApiMethod.class).getName();
@@ -58,7 +55,8 @@ public class FhirConfigurationIT extends AbstractFhirTestSupport {
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
-        final CamelContext context = new DefaultCamelContext(createCamelRegistry());
+
+        final CamelContext context = new DefaultCamelContext();
 
         // add FhirComponent to Camel context but don't set up componentConfiguration
         final FhirComponent component = new FhirComponent(context);
@@ -86,7 +84,7 @@ public class FhirConfigurationIT extends AbstractFhirTestSupport {
     }
 
     @Test
-    public void testConfiguration() {
+    public void testComponentConfiguration() {
         FhirEndpoint endpoint = getMandatoryEndpoint(TEST_URI, FhirEndpoint.class);
         GenericClient client = (GenericClient) endpoint.getClient();
         FhirConfiguration configuration = endpoint.getConfiguration();

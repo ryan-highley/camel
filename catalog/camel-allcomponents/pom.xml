@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>catalog</artifactId>
-        <version>4.6.0-SNAPSHOT</version>
+        <version>4.8.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-allcomponents</artifactId>
@@ -50,6 +50,11 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-activemq</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-activemq6</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -425,6 +430,11 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-crypto</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-crypto-pgp</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -1104,6 +1114,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
+            <artifactId>camel-langchain4j-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
             <artifactId>camel-langchain4j-embeddings</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -1314,6 +1329,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
+            <artifactId>camel-openapi-validator</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
             <artifactId>camel-opensearch</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -1360,6 +1380,11 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-pgevent</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-pinecone</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -1575,6 +1600,11 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-smb</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-smooks</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

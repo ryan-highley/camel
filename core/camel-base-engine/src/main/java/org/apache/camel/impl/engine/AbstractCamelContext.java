@@ -109,6 +109,7 @@ import org.apache.camel.spi.DebuggerFactory;
 import org.apache.camel.spi.DeferServiceFactory;
 import org.apache.camel.spi.DumpRoutesStrategy;
 import org.apache.camel.spi.EndpointRegistry;
+import org.apache.camel.spi.EndpointServiceRegistry;
 import org.apache.camel.spi.EndpointStrategy;
 import org.apache.camel.spi.EventNotifier;
 import org.apache.camel.spi.ExchangeFactory;
@@ -133,6 +134,7 @@ import org.apache.camel.spi.ModelToXMLDumper;
 import org.apache.camel.spi.ModelToYAMLDumper;
 import org.apache.camel.spi.ModelineFactory;
 import org.apache.camel.spi.NodeIdFactory;
+import org.apache.camel.spi.NormalizedEndpointUri;
 import org.apache.camel.spi.PackageScanClassResolver;
 import org.apache.camel.spi.PackageScanResourceResolver;
 import org.apache.camel.spi.PeriodTaskResolver;
@@ -160,12 +162,14 @@ import org.apache.camel.spi.StartupStepRecorder;
 import org.apache.camel.spi.StreamCachingStrategy;
 import org.apache.camel.spi.Tracer;
 import org.apache.camel.spi.Transformer;
+import org.apache.camel.spi.TransformerKey;
 import org.apache.camel.spi.TransformerRegistry;
 import org.apache.camel.spi.TypeConverterRegistry;
 import org.apache.camel.spi.UnitOfWorkFactory;
 import org.apache.camel.spi.UriFactoryResolver;
 import org.apache.camel.spi.UuidGenerator;
 import org.apache.camel.spi.Validator;
+import org.apache.camel.spi.ValidatorKey;
 import org.apache.camel.spi.ValidatorRegistry;
 import org.apache.camel.spi.VariableRepository;
 import org.apache.camel.spi.VariableRepositoryFactory;
@@ -266,7 +270,7 @@ public abstract class AbstractCamelContext extends BaseService
     private Boolean autowiredEnabled = Boolean.TRUE;
     private Long delay;
     private Map<String, String> globalOptions = new HashMap<>();
-    private EndpointRegistry<NormalizedUri> endpoints;
+    private EndpointRegistry endpoints;
     private RuntimeEndpointRegistry runtimeEndpointRegistry;
     private ShutdownRoute shutdownRoute = ShutdownRoute.Default;
     private ShutdownRunningTask shutdownRunningTask = ShutdownRunningTask.CompleteCurrentTaskOnly;
@@ -611,7 +615,7 @@ public abstract class AbstractCamelContext extends BaseService
     }
 
     @Override
-    public EndpointRegistry<NormalizedUri> getEndpointRegistry() {
+    public EndpointRegistry getEndpointRegistry() {
         return endpoints;
     }
 
@@ -648,8 +652,8 @@ public abstract class AbstractCamelContext extends BaseService
     @Override
     public void removeEndpoint(Endpoint endpoint) {
         Endpoint oldEndpoint = null;
-        NormalizedUri oldKey = null;
-        for (Map.Entry<NormalizedUri, Endpoint> entry : endpoints.entrySet()) {
+        NormalizedEndpointUri oldKey = null;
+        for (Map.Entry<NormalizedEndpointUri, Endpoint> entry : endpoints.entrySet()) {
             if (endpoint == entry.getValue()) {
                 oldKey = entry.getKey();
                 oldEndpoint = endpoint;
@@ -701,8 +705,8 @@ public abstract class AbstractCamelContext extends BaseService
 
     private void tryMatchingEndpoints(String uri, Collection<Endpoint> answer) {
         Endpoint oldEndpoint;
-        List<NormalizedUri> toRemove = new ArrayList<>();
-        for (Map.Entry<NormalizedUri, Endpoint> entry : endpoints.entrySet()) {
+        List<NormalizedEndpointUri> toRemove = new ArrayList<>();
+        for (Map.Entry<NormalizedEndpointUri, Endpoint> entry : endpoints.entrySet()) {
             oldEndpoint = entry.getValue();
             if (EndpointHelper.matchEndpoint(this, oldEndpoint.getEndpointUri(), uri)) {
                 try {
@@ -714,7 +718,7 @@ public abstract class AbstractCamelContext extends BaseService
                 toRemove.add(entry.getKey());
             }
         }
-        for (NormalizedUri key : toRemove) {
+        for (NormalizedEndpointUri key : toRemove) {
             endpoints.remove(key);
         }
     }
@@ -923,7 +927,7 @@ public abstract class AbstractCamelContext extends BaseService
 
     @Override
     public List<Route> getRoutes() {
-        // lets return a copy of the collection as objects are removed later
+        // let's return a copy of the collection as objects are removed later
         // when services are stopped
         if (routes.isEmpty()) {
             return Collections.emptyList();
@@ -1389,14 +1393,11 @@ public abstract class AbstractCamelContext extends BaseService
 
     private String doLoadResource(String resourceName, String path, String resourceType) throws IOException {
         final ClassResolver resolver = getClassResolver();
-        InputStream inputStream = resolver.loadResourceAsStream(path);
-        LOG.debug("Loading {} JSON Schema for: {} using class resolver: {} -> {}", resourceType, resourceName, resolver,
-                inputStream);
-        if (inputStream != null) {
-            try {
+        try (InputStream inputStream = resolver.loadResourceAsStream(path)) {
+            LOG.debug("Loading {} JSON Schema for: {} using class resolver: {} -> {}", resourceType, resourceName, resolver,
+                    inputStream);
+            if (inputStream != null) {
                 return IOHelper.loadText(inputStream);
-            } finally {
-                IOHelper.close(inputStream);
             }
         }
         return null;
@@ -1495,11 +1496,7 @@ public abstract class AbstractCamelContext extends BaseService
     public String getPojoBeanParameterJsonSchema(String beanName) throws IOException {
         String name = sanitizeFileName(beanName) + ".json";
         String path = "META-INF/services/org/apache/camel/bean/" + name;
-        String inputStream = doLoadResource(beanName, path, "bean");
-        if (inputStream != null) {
-            return inputStream;
-        }
-        return null;
+        return doLoadResource(beanName, path, "bean");
     }
 
     // Helper methods
@@ -2293,10 +2290,12 @@ public abstract class AbstractCamelContext extends BaseService
             }
         }
         if (!debuggerDetected && (isDebugging() || isDebugStandby())) {
-            // debugging enabled but camel-debug was not auto-detected from classpath
-            // so install default debugger
-            BacklogDebugger backlog = DefaultBacklogDebugger.createDebugger(this);
-            addService(backlog, true, true);
+            if (hasService(BacklogDebugger.class) == null) {
+                // debugging enabled but camel-debug was not auto-detected from classpath
+                // so install default debugger
+                BacklogDebugger backlog = DefaultBacklogDebugger.createDebugger(this);
+                addService(backlog, true, true);
+            }
         }
 
         addService(getManagementStrategy(), false);
@@ -3335,10 +3334,6 @@ public abstract class AbstractCamelContext extends BaseService
         getShutdownStrategy();
         getUuidGenerator();
 
-        if (isTypeConverterStatisticsEnabled()) {
-            getTypeConverterRegistry().getStatistics().setStatisticsEnabled(isTypeConverterStatisticsEnabled());
-        }
-
         // resolve simple language to initialize it
         resolveLanguage("simple");
     }
@@ -4064,13 +4059,16 @@ public abstract class AbstractCamelContext extends BaseService
 
     protected abstract RestRegistryFactory createRestRegistryFactory();
 
-    protected abstract EndpointRegistry<NormalizedUri> createEndpointRegistry(Map<NormalizedUri, Endpoint> endpoints);
+    protected abstract EndpointRegistry createEndpointRegistry(
+            Map<NormalizedEndpointUri, Endpoint> endpoints);
 
-    protected abstract TransformerRegistry<TransformerKey> createTransformerRegistry();
+    protected abstract TransformerRegistry createTransformerRegistry();
 
-    protected abstract ValidatorRegistry<ValidatorKey> createValidatorRegistry();
+    protected abstract ValidatorRegistry createValidatorRegistry();
 
     protected abstract VariableRepositoryFactory createVariableRepositoryFactory();
+
+    protected abstract EndpointServiceRegistry createEndpointServiceRegistry();
 
     protected RestConfiguration createRestConfiguration() {
         // lookup a global which may have been on a container such spring-boot / CDI / etc.
@@ -4088,6 +4086,7 @@ public abstract class AbstractCamelContext extends BaseService
 
     public abstract Processor createErrorHandler(Route route, Processor processor) throws Exception;
 
+    @Deprecated
     public abstract void disposeModel();
 
     public abstract String getTestExcludeRoutes();

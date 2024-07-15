@@ -15,9 +15,66 @@ then the variable is no longer set. Also, if the route is marked for rollback, o
 
 This is the same logic that the routing engine uses, whether to continue routing the `Exchange` or not.
 
-=== camel-as2
+=== camel-core-model
 
-The `camel-as2` component has upgraded HTTP Client 4.x to 5.x and because of that, there are some options that have changed.
+Harmonized model for defining custom beans to be the same for Kamelets and generic beans in XML/YAML DSLs.
+Before there used to be 3 specialized model classes that has been refactored into a single class, offering the same capabilities
+for configuring beans (constructors, properties, builder classes, init/destroy methods etc.)
+
+=== XML DSL
+
+When using XML DSL to define properties on `<bean>` then `<property>` must now be declared inside `<properties>`.
+
+=== YAML DSL
+
+When using YAML DSL to define properties on `bean` then `property` has been removed in favour of using `properties`.
+
+Before:
+[source,yaml]
+----
+    beans:
+      - name: "myProcessor"
+        type: "#class:com.foo.MyClass"
+        property:
+          - key: "payload"
+            value: "test-payload"
+----
+
+After:
+[source,yaml]
+----
+    beans:
+      - name: "myProcessor"
+        type: "#class:com.foo.MyClass"
+        properties:
+          payload: "test-payload"
+----
+
+Renamed `streamCaching` to `streamCache` on the `route`
+
+Before:
+
+[source,yaml]
+----
+route:
+  streamCaching: false
+  from:
+    uri: "direct:foo"
+    steps:
+      - to: "mock:bar"
+----
+
+After:
+
+[source,yaml]
+----
+route:
+  streamCache: false
+  from:
+    uri: "direct:foo"
+    steps:
+      - to: "mock:bar"
+----
 
 === camel-elasticsearch
 
@@ -86,39 +143,23 @@ The Camel Azure ServiceBus consumer has been refactored to internally use the hi
 - The `receiverAsyncClient` option has been replaced with a `processorClient` option to enable use of a custom-configured client. The parameter type accepted by this option is `ServiceBusProcessorClient`.
 - The `reconnectDelay` option has been removed, since reconnection is now handled internally by the client.
 
-
-=== camel-yaml-dsl
-
-Renamed `streamCaching` to `streamCache` on the `route`
-
-Before:
-
-[source,yaml]
-----
-route:
-  streamCaching: false
-  from:
-    uri: "direct:foo"
-    steps:
-      - to: "mock:bar"
-----
-
-After:
-
-[source,yaml]
-----
-route:
-  streamCache: false
-  from:
-    uri: "direct:foo"
-    steps:
-      - to: "mock:bar"
-----
-
 === camel-jbang
 
 When running using `camel run --source-dir=mydir` then Camel JBang will now preload existing files on startup, such as `application.properties`,
 and beans and routes (same as if you run with `cd mydir; camel run *`). This allows to configure settings on Camel on startup, which was not possible beforehand.
+
+The `--open-api` option has changed from _code-first_ to use the new _contract-first_ Rest DSL style by using the specification file direct as-is.
+
+=== camel-as2
+
+The `camel-as2` component has upgraded HTTP Client 4.x to 5.x and because of that, there are some options that have changed.
+
+Changes for AS2-MDN asynchronous delivery:
+
+ - Added an option allowing clients to request an asynchronous receipt by including a 'Receipt-Delivery-Option' header specifying
+the return URL in the request that is sent to the server.
+ - Added a consumer capable of receiving signed or unsigned asynchronous message disposition notifications sent by the
+message receiver confirming receipt of the message.
 
 === camel-spring-boot
 
@@ -143,3 +184,4 @@ The Cluster Services are turned on by default unless they are explicit disabled,
 ----
 camel.cluster.consul.enabled = false
 ----
+

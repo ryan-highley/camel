@@ -16,6 +16,7 @@
  */
 package org.apache.camel.support.jndi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -45,12 +46,8 @@ import org.apache.camel.util.CastUtils;
  */
 public class JndiContext implements Context, Serializable {
     public static final String SEPARATOR = "/";
-    protected static final NameParser NAME_PARSER = new NameParser() {
-        public Name parse(String name) throws NamingException {
-            return new CompositeName(name);
-        }
-    };
-    private static final long serialVersionUID = -5754338187296859149L;
+    protected static final NameParser NAME_PARSER = CompositeName::new;
+    private static final @Serial long serialVersionUID = -5754338187296859149L;
 
     private final Hashtable<String, Object> environment; // environment for this context
     private final Map<String, Object> bindings; // bindings at my level
@@ -112,7 +109,7 @@ public class JndiContext implements Context, Serializable {
      * (the names are suitably extended by the segment originally lopped off).
      */
     protected Map<String, Object> internalBind(String name, Object value) throws NamingException {
-        org.apache.camel.util.ObjectHelper.isNotEmpty(name);
+        org.apache.camel.util.ObjectHelper.notNullOrEmpty(name, "name");
         org.apache.camel.util.ObjectHelper.notNull(frozen, "frozen");
 
         Map<String, Object> newBindings = new HashMap<>();
@@ -125,7 +122,7 @@ public class JndiContext implements Context, Serializable {
             newBindings.put(name, value);
         } else {
             String segment = name.substring(0, pos);
-            org.apache.camel.util.ObjectHelper.isNotEmpty(segment);
+            org.apache.camel.util.ObjectHelper.notNullOrEmpty(segment, "segment");
             Object o = treeBindings.get(segment);
             if (o == null) {
                 o = newContext();

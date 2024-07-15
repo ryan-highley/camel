@@ -16,16 +16,13 @@
  */
 package org.apache.camel.dsl.jbang.core.commands.k;
 
-import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -34,17 +31,18 @@ import java.util.stream.Stream;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
-import org.apache.camel.dsl.jbang.core.common.GistHelper;
-import org.apache.camel.dsl.jbang.core.common.GitHubHelper;
+import org.apache.camel.dsl.jbang.core.commands.kubernetes.KubernetesBaseCommand;
+import org.apache.camel.dsl.jbang.core.commands.kubernetes.KubernetesHelper;
+import org.apache.camel.dsl.jbang.core.commands.kubernetes.traits.TraitCatalog;
+import org.apache.camel.dsl.jbang.core.commands.kubernetes.traits.TraitContext;
+import org.apache.camel.dsl.jbang.core.commands.kubernetes.traits.TraitHelper;
+import org.apache.camel.dsl.jbang.core.commands.kubernetes.traits.TraitProfile;
 import org.apache.camel.dsl.jbang.core.common.JSonHelper;
 import org.apache.camel.dsl.jbang.core.common.Printer;
-import org.apache.camel.github.GistResourceResolver;
-import org.apache.camel.github.GitHubResourceResolver;
-import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.camel.impl.engine.DefaultResourceResolvers;
-import org.apache.camel.spi.ResourceResolver;
+import org.apache.camel.dsl.jbang.core.common.Source;
+import org.apache.camel.dsl.jbang.core.common.SourceHelper;
+import org.apache.camel.dsl.jbang.core.common.SourceScheme;
 import org.apache.camel.util.FileUtil;
-import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.v1.Integration;
 import org.apache.camel.v1.IntegrationSpec;
@@ -54,18 +52,11 @@ import org.apache.camel.v1.integrationspec.Sources;
 import org.apache.camel.v1.integrationspec.Template;
 import org.apache.camel.v1.integrationspec.Traits;
 import org.apache.camel.v1.integrationspec.template.Spec;
-import org.apache.camel.v1.integrationspec.traits.Builder;
-import org.apache.camel.v1.integrationspec.traits.Camel;
-import org.apache.camel.v1.integrationspec.traits.Container;
-import org.apache.camel.v1.integrationspec.traits.Environment;
-import org.apache.camel.v1.integrationspec.traits.Mount;
-import org.apache.camel.v1.integrationspec.traits.Openapi;
-import org.apache.camel.v1.integrationspec.traits.ServiceBinding;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
 @Command(name = "run", description = "Run Camel integrations on Kubernetes", sortOptions = false)
-public class IntegrationRun extends KubeBaseCommand {
+public class IntegrationRun extends KubernetesBaseCommand {
 
     @CommandLine.Parameters(description = "The Camel file(s) to run.",
                             arity = "0..9", paramLabel = "<files>")
@@ -79,11 +70,14 @@ public class IntegrationRun extends KubeBaseCommand {
                         description = "An image built externally (for instance via CI/CD). Enabling it will skip the integration build phase.")
     String image;
 
-    @CommandLine.Option(names = { "--kit", "-k" }, description = "The kit used to run the integration.")
+    @CommandLine.Option(names = { "--kit" }, description = "The kit used to run the integration.")
     String kit;
 
-    @CommandLine.Option(names = { "--profile" }, description = "The trait profile to use for the deployment.")
-    String profile;
+    @CommandLine.Option(names = { "--trait-profile" }, description = "The trait profile to use for the deployment.")
+    String traitProfile;
+
+    @CommandLine.Option(names = { "--integration-profile" }, description = "The integration profile to use for the deployment.")
+    String integrationProfile;
 
     @CommandLine.Option(names = { "--service-account" }, description = "The service account used to run this Integration.")
     String serviceAccount;
@@ -92,15 +86,15 @@ public class IntegrationRun extends KubeBaseCommand {
                         description = "The path of the YAML file containing a PodSpec template to be used for the integration pods.")
     String podTemplate;
 
-    @CommandLine.Option(names = { "--operator-id", "-x" }, defaultValue = "camel-k",
+    @CommandLine.Option(names = { "--operator-id" }, defaultValue = "camel-k",
                         description = "Operator id selected to manage this integration.")
     String operatorId = "camel-k";
 
-    @CommandLine.Option(names = { "--dependency", "-d" },
+    @CommandLine.Option(names = { "--dependency" },
                         description = "Adds dependency that should be included, use \"camel:\" prefix for a Camel component, \"mvn:org.my:app:1.0\" for a Maven dependency.")
     String[] dependencies;
 
-    @CommandLine.Option(names = { "--property", "-p" },
+    @CommandLine.Option(names = { "--property" },
                         description = "Add a runtime property or properties file from a path, a config map or a secret (syntax: [my-key=my-value|file:/path/to/my-conf.properties|[configmap|secret]:name]).")
     String[] properties;
 
@@ -119,15 +113,15 @@ public class IntegrationRun extends KubeBaseCommand {
     @CommandLine.Option(names = { "--open-api" }, description = "Add an OpenAPI spec (syntax: [configmap|file]:name).")
     String[] openApis;
 
-    @CommandLine.Option(names = { "--env", "-e" },
+    @CommandLine.Option(names = { "--env" },
                         description = "Set an environment variable in the integration container, for instance \"-e MY_VAR=my-value\".")
     String[] envVars;
 
-    @CommandLine.Option(names = { "--volume", "-v" },
+    @CommandLine.Option(names = { "--volume" },
                         description = "Mount a volume into the integration container, for instance \"-v pvcname:/container/path\".")
     String[] volumes;
 
-    @CommandLine.Option(names = { "--connect", "-c" },
+    @CommandLine.Option(names = { "--connect" },
                         description = "A Service that the integration should bind to, specified as [[apigroup/]version:]kind:[namespace/]name.")
     String[] connects;
 
@@ -146,7 +140,7 @@ public class IntegrationRun extends KubeBaseCommand {
                         description = "Add a label to the integration. Use name values pairs like \"--label my.company=hello\".")
     String[] labels;
 
-    @CommandLine.Option(names = { "--traits", "-t" },
+    @CommandLine.Option(names = { "--trait" },
                         description = "Add a trait configuration to the integration. Use name values pairs like \"--trait trait.name.config=hello\".")
     String[] traits;
 
@@ -158,13 +152,13 @@ public class IntegrationRun extends KubeBaseCommand {
                         description = "Enable storage of sources and resources as a compressed binary blobs.")
     boolean compression;
 
-    @CommandLine.Option(names = { "--wait", "-w" }, description = "Wait for the integration to become ready.")
+    @CommandLine.Option(names = { "--wait" }, description = "Wait for the integration to become ready.")
     boolean wait;
 
-    @CommandLine.Option(names = { "--logs", "-l" }, description = "Print logs after integration has been started.")
+    @CommandLine.Option(names = { "--logs" }, description = "Print logs after integration has been started.")
     boolean logs;
 
-    @CommandLine.Option(names = { "--output", "-o" },
+    @CommandLine.Option(names = { "--output" },
                         description = "Just output the generated integration custom resource (supports: yaml or json).")
     String output;
 
@@ -205,8 +199,8 @@ public class IntegrationRun extends KubeBaseCommand {
             integration.getSpec().setIntegrationKit(integrationKit);
         }
 
-        if (profile != null) {
-            TraitProfile p = TraitProfile.valueOf(profile.toUpperCase(Locale.US));
+        if (traitProfile != null) {
+            TraitProfile p = TraitProfile.valueOf(traitProfile.toUpperCase(Locale.US));
             integration.getSpec().setProfile(p.name().toLowerCase(Locale.US));
         }
 
@@ -227,7 +221,20 @@ public class IntegrationRun extends KubeBaseCommand {
         }
 
         // --operator-id={id} is a syntax sugar for '--annotation camel.apache.org/operator.id={id}'
-        integration.getMetadata().getAnnotations().put(KubeCommand.OPERATOR_ID_LABEL, operatorId);
+        integration.getMetadata().getAnnotations().put(CamelKCommand.OPERATOR_ID_LABEL, operatorId);
+
+        // --integration-profile={id} is a syntax sugar for '--annotation camel.apache.org/integration-profile.id={id}'
+        if (integrationProfile != null) {
+            if (integrationProfile.contains("/")) {
+                String[] namespacedName = integrationProfile.split("/", 2);
+                integration.getMetadata().getAnnotations().put(CamelKCommand.INTEGRATION_PROFILE_NAMESPACE_ANNOTATION,
+                        namespacedName[0]);
+                integration.getMetadata().getAnnotations().put(CamelKCommand.INTEGRATION_PROFILE_ANNOTATION, namespacedName[1]);
+            } else {
+                integration.getMetadata().getAnnotations().put(CamelKCommand.INTEGRATION_PROFILE_ANNOTATION,
+                        integrationProfile);
+            }
+        }
 
         if (labels != null && labels.length > 0) {
             integration.getMetadata().setLabels(Arrays.stream(labels)
@@ -245,11 +252,9 @@ public class IntegrationRun extends KubeBaseCommand {
         }
 
         if (image != null) {
-            Container containerTrait = new Container();
-            containerTrait.setImage(image);
-            traitsSpec.setContainer(containerTrait);
+            TraitHelper.configureContainerImage(traitsSpec, image, null, null, null, null);
         } else {
-            List<Source> resolvedSources = resolveSources(integrationSources);
+            List<Source> resolvedSources = SourceHelper.resolveSources(integrationSources, compression);
 
             List<Flows> flows = new ArrayList<>();
             List<Sources> sources = new ArrayList<>();
@@ -288,7 +293,7 @@ public class IntegrationRun extends KubeBaseCommand {
         }
 
         if (podTemplate != null) {
-            Source templateSource = resolveSource(podTemplate);
+            Source templateSource = SourceHelper.resolveSource(podTemplate);
             if (!templateSource.isYaml()) {
                 throw new RuntimeCamelException(
                         ("Unsupported pod template %s - " +
@@ -310,7 +315,30 @@ public class IntegrationRun extends KubeBaseCommand {
 
         if (output != null) {
             switch (output) {
-                case "yaml" -> printer().println(KubernetesHelper.yaml().dumpAsMap(integration));
+                case "k8s" -> {
+                    TraitContext context = new TraitContext(integration.getMetadata().getName(), "1.0-SNAPSHOT");
+                    TraitHelper.configureContainerImage(traitsSpec, image, "quay.io", null, integration.getMetadata().getName(),
+                            "1.0-SNAPSHOT");
+
+                    if (traitProfile != null) {
+                        new TraitCatalog().traitsForProfile(TraitProfile.valueOf(traitProfile.toUpperCase(Locale.US)))
+                                .forEach(t -> {
+                                    if (t.configure(traitsSpec, context)) {
+                                        t.apply(traitsSpec, context);
+                                    }
+                                });
+                    } else {
+                        new TraitCatalog().allTraits().forEach(t -> {
+                            if (t.configure(traitsSpec, context)) {
+                                t.apply(traitsSpec, context);
+                            }
+                        });
+                    }
+
+                    printer().println(
+                            context.buildItems().stream().map(KubernetesHelper::dumpYaml).collect(Collectors.joining("---")));
+                }
+                case "yaml" -> printer().println(KubernetesHelper.dumpYaml(integration));
                 case "json" -> printer().println(
                         JSonHelper.prettyPrint(KubernetesHelper.json().writer().writeValueAsString(integration), 2));
                 default -> {
@@ -340,156 +368,22 @@ public class IntegrationRun extends KubeBaseCommand {
         }
 
         if (logs) {
-            new IntegrationLogs(getMain()).watchLogs(integration.getMetadata().getName());
+            IntegrationLogs logsCommand = new IntegrationLogs(getMain());
+            logsCommand.withClient(client());
+            logsCommand.name = integration.getMetadata().getName();
+            logsCommand.doCall();
         }
 
         return 0;
     }
 
     private void convertOptionsToTraits(Traits traitsSpec) {
-        Mount mountTrait = null;
-
-        if (configs != null && configs.length > 0) {
-            mountTrait = new Mount();
-            mountTrait.setConfigs(List.of(configs));
-        }
-
-        if (resources != null && resources.length > 0) {
-            if (mountTrait == null) {
-                mountTrait = new Mount();
-            }
-            mountTrait.setResources(List.of(resources));
-        }
-
-        if (volumes != null && volumes.length > 0) {
-            if (mountTrait == null) {
-                mountTrait = new Mount();
-            }
-            mountTrait.setVolumes(List.of(volumes));
-        }
-
-        if (mountTrait != null) {
-            traitsSpec.setMount(mountTrait);
-        }
-
-        if (openApis != null && openApis.length > 0) {
-            Openapi openapiTrait = new Openapi();
-            openapiTrait.setConfigmaps(List.of(openApis));
-            traitsSpec.setOpenapi(openapiTrait);
-        }
-
-        if (properties != null && properties.length > 0) {
-            Camel camelTrait = new Camel();
-            camelTrait.setProperties(List.of(properties));
-            traitsSpec.setCamel(camelTrait);
-        }
-
-        if (buildProperties != null && buildProperties.length > 0) {
-            Builder builderTrait = new Builder();
-            builderTrait.setProperties(List.of(buildProperties));
-            traitsSpec.setBuilder(builderTrait);
-        }
-
-        if (envVars != null && envVars.length > 0) {
-            Environment environmentTrait = new Environment();
-            environmentTrait.setVars(List.of(envVars));
-            traitsSpec.setEnvironment(environmentTrait);
-        }
-
-        if (connects != null && connects.length > 0) {
-            ServiceBinding serviceBindingTrait = new ServiceBinding();
-            serviceBindingTrait.setServices(List.of(connects));
-            traitsSpec.setServiceBinding(serviceBindingTrait);
-        }
-    }
-
-    private Source resolveSource(String source) {
-        List<Source> resolved = resolveSources(Collections.singletonList(source));
-        if (resolved.isEmpty()) {
-            throw new RuntimeCamelException("Failed to resolve source file: " + source);
-        } else {
-            return resolved.get(0);
-        }
-    }
-
-    private List<Source> resolveSources(List<String> sources) {
-        List<Source> resolved = new ArrayList<>();
-        for (String source : sources) {
-            SourceScheme sourceScheme = SourceScheme.fromUri(source);
-            String fileExtension = FileUtil.onlyExt(source);
-            String fileName = SourceScheme.onlyName(FileUtil.onlyName(source)) + "." + fileExtension;
-            try {
-                switch (sourceScheme) {
-                    case GIST -> {
-                        StringJoiner all = new StringJoiner(",");
-                        GistHelper.fetchGistUrls(source, all);
-
-                        try (ResourceResolver resolver = new GistResourceResolver()) {
-                            for (String uri : all.toString().split(",")) {
-                                resolved.add(new Source(
-                                        fileName,
-                                        IOHelper.loadText(resolver.resolve(uri).getInputStream()),
-                                        fileExtension, compression, false));
-                            }
-                        }
-                    }
-                    case HTTP -> {
-                        try (ResourceResolver resolver = new DefaultResourceResolvers.HttpResolver()) {
-                            resolved.add(new Source(
-                                    fileName,
-                                    IOHelper.loadText(resolver.resolve(source).getInputStream()),
-                                    fileExtension, compression, false));
-                        }
-                    }
-                    case HTTPS -> {
-                        try (ResourceResolver resolver = new DefaultResourceResolvers.HttpsResolver()) {
-                            resolved.add(new Source(
-                                    fileName,
-                                    IOHelper.loadText(resolver.resolve(source).getInputStream()),
-                                    fileExtension, compression, false));
-                        }
-                    }
-                    case FILE -> {
-                        try (ResourceResolver resolver = new DefaultResourceResolvers.FileResolver()) {
-                            resolved.add(new Source(
-                                    fileName,
-                                    IOHelper.loadText(resolver.resolve(source).getInputStream()),
-                                    fileExtension, compression, true));
-                        }
-                    }
-                    case CLASSPATH -> {
-                        try (ResourceResolver resolver = new DefaultResourceResolvers.ClasspathResolver()) {
-                            resolver.setCamelContext(new DefaultCamelContext());
-                            resolved.add(new Source(
-                                    fileName,
-                                    IOHelper.loadText(resolver.resolve(source).getInputStream()),
-                                    fileExtension, compression, true));
-                        }
-                    }
-                    case GITHUB, RAW_GITHUB -> {
-                        StringJoiner all = new StringJoiner(",");
-                        GitHubHelper.fetchGithubUrls(source, all);
-
-                        try (ResourceResolver resolver = new GitHubResourceResolver()) {
-                            for (String uri : all.toString().split(",")) {
-                                resolved.add(new Source(
-                                        fileName,
-                                        IOHelper.loadText(resolver.resolve(uri).getInputStream()),
-                                        fileExtension, compression, false));
-                            }
-                        }
-                    }
-                    case UNKNOWN -> {
-                        try (FileInputStream fis = new FileInputStream(source)) {
-                            resolved.add(new Source(fileName, IOHelper.loadText(fis), fileExtension, compression, true));
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                throw new RuntimeCamelException("Failed to resolve sources", e);
-            }
-        }
-        return resolved;
+        TraitHelper.configureMountTrait(traitsSpec, configs, resources, volumes);
+        TraitHelper.configureOpenApiSpec(traitsSpec, openApis);
+        TraitHelper.configureProperties(traitsSpec, properties);
+        TraitHelper.configureBuildProperties(traitsSpec, buildProperties);
+        TraitHelper.configureEnvVars(traitsSpec, envVars);
+        TraitHelper.configureConnects(traitsSpec, connects);
     }
 
     private String getIntegrationName(List<String> sources) {
@@ -545,34 +439,6 @@ public class IntegrationRun extends KubeBaseCommand {
         if (dependency.startsWith("mvn:org.apache.camel.quarkus:")) {
             String suggested = normalizeDependency(dependency.split(":")[2]);
             printer.printf("Warning: do not use '%s' as a dependency. Please use '%s' instead%n", dependency, suggested);
-        }
-    }
-
-    private record Source(String name, String content, String extension, boolean compressed, boolean local) {
-
-        /**
-         * Provides source contant and automatically handles compression of content when enabled.
-         *
-         * @return the content, maybe compressed.
-         */
-        public String content() {
-            if (compressed()) {
-                return CompressionHelper.compressBase64(content);
-            }
-
-            return content;
-        }
-
-        public String language() {
-            if ("yml".equals(extension)) {
-                return "yaml";
-            }
-
-            return extension;
-        }
-
-        public boolean isYaml() {
-            return "yaml".equals(language());
         }
     }
 

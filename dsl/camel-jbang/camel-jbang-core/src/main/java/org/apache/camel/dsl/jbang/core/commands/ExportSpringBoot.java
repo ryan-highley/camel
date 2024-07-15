@@ -34,6 +34,7 @@ import org.apache.camel.catalog.CamelCatalog;
 import org.apache.camel.dsl.jbang.core.common.CatalogLoader;
 import org.apache.camel.dsl.jbang.core.common.CommandLineHelper;
 import org.apache.camel.dsl.jbang.core.common.RuntimeUtil;
+import org.apache.camel.dsl.jbang.core.common.VersionHelper;
 import org.apache.camel.tooling.maven.MavenGav;
 import org.apache.camel.tooling.model.ArtifactModel;
 import org.apache.camel.util.CamelCaseOrderedProperties;
@@ -63,7 +64,7 @@ class ExportSpringBoot extends Export {
 
         // the settings file has information what to export
         File settings = new File(CommandLineHelper.getWorkDir(), Run.RUN_SETTINGS_FILE);
-        if (fresh || files != null || !settings.exists()) {
+        if (fresh || !files.isEmpty() || !settings.exists()) {
             // allow to automatic build
             if (!quiet) {
                 printer().println("Generating fresh run data");
@@ -104,9 +105,11 @@ class ExportSpringBoot extends Export {
         srcKameletsResourcesDir.mkdirs();
         // copy application properties files
         copyApplicationPropertiesFiles(srcResourcesDir);
+
         // copy source files
         copySourceFiles(settings, profile, srcJavaDirRoot, srcJavaDir, srcResourcesDir, srcCamelResourcesDir,
                 srcKameletsResourcesDir, srcPackageName);
+
         // copy from settings to profile
         copySettingsAndProfile(settings, profile, srcResourcesDir, prop -> {
             if (!hasModeline(settings)) {
@@ -179,17 +182,20 @@ class ExportSpringBoot extends Export {
         context = context.replaceFirst("\\{\\{ \\.CamelVersion }}", camelVersion);
         if (camelSpringBootVersion != null) {
             context = context.replaceFirst("\\{\\{ \\.CamelSpringBootVersion }}", camelSpringBootVersion);
+        } else {
+            context = context.replaceFirst("\\{\\{ \\.CamelSpringBootVersion }}", camelVersion);
         }
         if (additionalProperties != null) {
             String properties = Arrays.stream(additionalProperties.split(","))
                     .map(property -> {
                         String[] keyValueProperty = property.split("=");
-                        return String.format("\t\t<%s>%s</%s>", keyValueProperty[0], keyValueProperty[1],
+                        return String.format("        <%s>%s</%s>", keyValueProperty[0], keyValueProperty[1],
                                 keyValueProperty[0]);
                     })
-                    .map(property -> property + System.lineSeparator())
-                    .collect(Collectors.joining());
-            context = context.replaceFirst("\\{\\{ \\.AdditionalProperties }}", properties);
+                    .collect(Collectors.joining(System.lineSeparator()));
+            context = context.replaceFirst(Pattern.quote("{{ .AdditionalProperties }}"), Matcher.quoteReplacement(properties));
+        } else {
+            context = context.replaceFirst(Pattern.quote("{{ .AdditionalProperties }}"), "");
         }
 
         // Convert jkube properties to maven properties
@@ -230,6 +236,10 @@ class ExportSpringBoot extends Export {
                     // there is no spring boot starter so use plain camel
                     gav.setVersion(camelVersion);
                 }
+            }
+            // use spring-boot version from BOM
+            if ("org.springframework.boot".equals(gid)) {
+                gav.setVersion(null); // uses BOM so version should not be included
             }
             gavs.add(gav);
         }
@@ -291,6 +301,11 @@ class ExportSpringBoot extends Export {
         context = context.replaceAll("\\{\\{ \\.SpringBootVersion }}", springBootVersion);
         context = context.replaceFirst("\\{\\{ \\.JavaVersion }}", javaVersion);
         context = context.replaceAll("\\{\\{ \\.CamelVersion }}", camelVersion);
+        if (camelSpringBootVersion != null) {
+            context = context.replaceFirst("\\{\\{ \\.CamelSpringBootVersion }}", camelSpringBootVersion);
+        } else {
+            context = context.replaceFirst("\\{\\{ \\.CamelSpringBootVersion }}", camelVersion);
+        }
 
         if (repos == null || repos.isEmpty()) {
             context = context.replaceFirst("\\{\\{ \\.MavenRepositories }}", "");
@@ -361,6 +376,11 @@ class ExportSpringBoot extends Export {
         // remove out of the box dependencies
         answer.removeIf(s -> s.contains("camel-core"));
 
+        if (openapi != null) {
+            // include http server if using openapi
+            answer.add("mvn:org.apache.camel:camel-platform-http");
+        }
+
         return answer;
     }
 
@@ -384,9 +404,12 @@ class ExportSpringBoot extends Export {
 
     @Override
     protected String applicationPropertyLine(String key, String value) {
-        // camel.main.x should be renamed to camel.springboot.x
-        if (key.startsWith("camel.main.")) {
-            key = "camel.springboot." + key.substring(11);
+        boolean camel44orOlder = camelSpringBootVersion != null && VersionHelper.isLE("4.4", camelSpringBootVersion);
+        if (camel44orOlder) {
+            // camel.main.x should be renamed to camel.springboot.x (for camel 4.4.x or older)
+            if (key.startsWith("camel.main.")) {
+                key = "camel.springboot." + key.substring(11);
+            }
         }
         return super.applicationPropertyLine(key, value);
     }

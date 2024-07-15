@@ -16,11 +16,9 @@
  */
 package org.apache.camel.component.rest.openapi;
 
-import java.io.File;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -71,10 +69,9 @@ import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.support.DefaultEndpoint;
 import org.apache.camel.support.ResourceHelper;
-import org.apache.camel.util.FileUtil;
+import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.UnsafeUriCharactersEncoder;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,6 +125,7 @@ public final class RestOpenApiEndpoint extends DefaultEndpoint {
              label = "producer")
     private String operationId;
     @UriParam(description = "What payload type this component capable of consuming. Could be one type, like `application/json`"
+                            + " or multiple types as `application/json, application/xml; q=0.5` according to the RFC7231. This equates"
                             + " or multiple types as `application/json, application/xml; q=0.5` according to the RFC7231. This equates"
                             + " to the value of `Accept` HTTP header. If set overrides any value found in the OpenApi specification and."
                             + " in the component configuration",
@@ -212,7 +210,9 @@ public final class RestOpenApiEndpoint extends DefaultEndpoint {
         RestOpenApiProcessor target
                 = new RestOpenApiProcessor(this, doc, path, apiContextPath, processor, restOpenapiProcessorStrategy);
         CamelContextAware.trySetCamelContext(target, getCamelContext());
-        return createConsumerFor(path, target);
+        Consumer consumer = createConsumerFor(path, target);
+        target.setConsumer(consumer);
+        return consumer;
     }
 
     protected Consumer createConsumerFor(String basePath, RestOpenApiProcessor processor) throws Exception {
@@ -885,24 +885,25 @@ public final class RestOpenApiEndpoint extends DefaultEndpoint {
         final ParseOptions options = new ParseOptions();
         options.setResolveFully(true);
 
-        File tmpFileToDelete = null;
+        InputStream is = null;
         try {
+            String location = null;
+            String content = null;
             Resource resource = ResourceHelper.resolveMandatoryResource(camelContext, uri);
-            //if location can not be used in Swagger API (e.g. in case of "bean;")
-            // the content of the resource has to be copied into a tmp file for swagger API.
-            String locationToSearch;
-            if ("bean:".equals(ResourceHelper.getScheme(uri))) {
-                Path tmpFile = Files.createTempFile(null, null);
-                tmpFileToDelete = tmpFile.toFile();
-                tmpFileToDelete.deleteOnExit();
-                FileUtils.copyInputStreamToFile(resource.getInputStream(), tmpFileToDelete);
-                locationToSearch = tmpFile.toUri().toString();
+            if (resource.getScheme().startsWith("http")) {
+                location = resource.getURI().toString();
             } else {
-                locationToSearch = resource.getURI().toString();
+                is = resource.getInputStream();
+                if (is != null) {
+                    content = IOHelper.loadText(is);
+                }
             }
-
-            final SwaggerParseResult openApi = openApiParser.readLocation(locationToSearch, null, options);
-
+            SwaggerParseResult openApi = null;
+            if (location != null) {
+                openApi = openApiParser.readLocation(location, null, options);
+            } else if (content != null) {
+                openApi = openApiParser.readContents(content, null, options);
+            }
             if (openApi != null && openApi.getOpenAPI() != null) {
                 return openApi.getOpenAPI();
             }
@@ -910,9 +911,7 @@ public final class RestOpenApiEndpoint extends DefaultEndpoint {
             throw new IllegalArgumentException(
                     "The given OpenApi specification cannot be loaded from: " + uri, e);
         } finally {
-            if (tmpFileToDelete != null) {
-                FileUtil.deleteFile(tmpFileToDelete);
-            }
+            IOHelper.close(is);
         }
 
         // In theory there should be a message in the parse result, but it has disappeared...

@@ -47,14 +47,15 @@ import org.apache.camel.component.kamelet.KameletEndpoint;
 import org.apache.camel.dsl.jbang.core.commands.CamelCommand;
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
 import org.apache.camel.dsl.jbang.core.commands.k.support.Capability;
-import org.apache.camel.dsl.jbang.core.commands.k.support.RuntimeType;
-import org.apache.camel.dsl.jbang.core.commands.k.support.RuntimeTypeConverter;
 import org.apache.camel.dsl.jbang.core.commands.k.support.SourceMetadata;
 import org.apache.camel.dsl.jbang.core.commands.k.support.StubComponentResolver;
 import org.apache.camel.dsl.jbang.core.commands.k.support.StubDataFormatResolver;
 import org.apache.camel.dsl.jbang.core.commands.k.support.StubLanguageResolver;
 import org.apache.camel.dsl.jbang.core.commands.k.support.StubTransformerResolver;
 import org.apache.camel.dsl.jbang.core.common.CatalogLoader;
+import org.apache.camel.dsl.jbang.core.common.RuntimeCompletionCandidates;
+import org.apache.camel.dsl.jbang.core.common.RuntimeType;
+import org.apache.camel.dsl.jbang.core.common.RuntimeTypeConverter;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.DefaultModelReifierFactory;
 import org.apache.camel.model.CircuitBreakerDefinition;
@@ -126,13 +127,19 @@ public class Agent extends CamelCommand {
     String runtimeVersion;
 
     @CommandLine.Option(names = { "--runtime" },
+                        completionCandidates = RuntimeCompletionCandidates.class,
                         converter = RuntimeTypeConverter.class,
-                        description = "Runtime (spring-boot, quarkus, camel-main)")
-    RuntimeType runtimeType = RuntimeType.camelMain;
+                        defaultValue = "camel-main",
+                        description = "Runtime (${COMPLETION-CANDIDATES})")
+    RuntimeType runtimeType = RuntimeType.main;
 
     @CommandLine.Option(names = { "--repos" },
                         description = "Comma separated list of additional maven repositories")
     String repos;
+
+    @CommandLine.Option(names = { "--quarkus-group-id" }, description = "Quarkus Platform Maven groupId",
+                        defaultValue = "io.quarkus.platform")
+    String quarkusGroupId = "io.quarkus.platform";
 
     public Agent(CamelJBangMain main) {
         super(main);
@@ -372,8 +379,8 @@ public class Agent extends CamelCommand {
             case springBoot:
                 return CatalogLoader.loadSpringBootCatalog(repos, runtimeVersion);
             case quarkus:
-                return CatalogLoader.loadQuarkusCatalog(repos, runtimeVersion);
-            case camelMain:
+                return CatalogLoader.loadQuarkusCatalog(repos, runtimeVersion, quarkusGroupId);
+            case main:
                 return CatalogLoader.loadCatalog(repos, runtimeVersion);
             default:
                 throw new IllegalArgumentException("Unsupported runtime: " + runtime);

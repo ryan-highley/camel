@@ -37,6 +37,7 @@ import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
+import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
@@ -71,11 +72,11 @@ import static org.eclipse.californium.scandium.config.DtlsConfig.DTLS_CLIENT_AUT
 import static org.eclipse.californium.scandium.config.DtlsConfig.DTLS_RECOMMENDED_CIPHER_SUITES_ONLY;
 
 /**
- * Send and receive messages to/from COAP capable devices.
+ * Send and receive messages to/from CoAP (Constrained Application Protocol) capable devices.
  */
 @UriEndpoint(firstVersion = "2.16.0", scheme = "coap,coaps,coap+tcp,coaps+tcp", title = "CoAP", syntax = "coap:uri",
              category = { Category.IOT }, headersClass = CoAPConstants.class)
-public class CoAPEndpoint extends DefaultEndpoint {
+public class CoAPEndpoint extends DefaultEndpoint implements EndpointServiceLocation {
     final static Logger LOGGER = LoggerFactory.getLogger(CoAPEndpoint.class);
     @UriPath
     private URI uri;
@@ -117,6 +118,22 @@ public class CoAPEndpoint extends DefaultEndpoint {
             this.uri = null;
         }
         this.component = component;
+    }
+
+    @Override
+    public String getServiceUrl() {
+        if (uri != null) {
+            return uri.toString();
+        }
+        return null;
+    }
+
+    @Override
+    public String getServiceProtocol() {
+        if (uri != null) {
+            return uri.getScheme();
+        }
+        return null;
     }
 
     public void setCoapMethodRestrict(String coapMethodRestrict) {
@@ -430,67 +447,16 @@ public class CoAPEndpoint extends DefaultEndpoint {
         }
         DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder(cfg);
         if (client) {
-            if (advancedCertificateVerifier == null && sslContextParameters == null && advancedPskStore == null) {
-                throw new IllegalStateException(
-                        "Either an advancedCertificateVerifier, sslContextParameters or advancedPskStore object "
-                                                + "must be configured for a TLS client");
-            }
-            builder.set(DTLS_RECOMMENDED_CIPHER_SUITES_ONLY, isRecommendedCipherSuitesOnly());
-            builder.set(DtlsConfig.DTLS_ROLE, DtlsRole.CLIENT_ONLY);
+            setupCreateDTLSConnectorClient(builder);
         } else {
-            if (privateKey == null && sslContextParameters == null && advancedPskStore == null) {
-                throw new IllegalStateException(
-                        "Either a privateKey, sslContextParameters or advancedPskStore object "
-                                                + "must be configured for a TLS service");
-            }
-            if (privateKey != null && publicKey == null) {
-                throw new IllegalStateException("A public key must be configured to use a Raw Public Key with TLS");
-            }
-            if ((isClientAuthenticationRequired() || isClientAuthenticationWanted())
-                    && (sslContextParameters == null || sslContextParameters.getTrustManagers() == null)
-                    && publicKey == null) {
-                throw new IllegalStateException("A truststore must be configured to support TLS client authentication");
-            }
-
-            builder.setAddress(address);
-            if (isClientAuthenticationRequired()) {
-                builder.set(DTLS_CLIENT_AUTHENTICATION_MODE, CertificateAuthenticationMode.NEEDED);
-            } else if (isClientAuthenticationWanted()) {
-                builder.set(DTLS_CLIENT_AUTHENTICATION_MODE, CertificateAuthenticationMode.WANTED);
-            } else {
-                // Is it right to set to NONE here?
-                builder.set(DTLS_CLIENT_AUTHENTICATION_MODE, CertificateAuthenticationMode.NONE);
-            }
-            builder.set(DTLS_RECOMMENDED_CIPHER_SUITES_ONLY, isRecommendedCipherSuitesOnly());
+            setupCreateDTLSConnectorServer(address, builder);
         }
 
         try {
             // Configure the identity if the sslContextParameters or privateKey
             // parameter is specified
             if (sslContextParameters != null && sslContextParameters.getKeyManagers() != null) {
-                KeyManagersParameters keyManagers = sslContextParameters.getKeyManagers();
-                KeyStore keyStore = keyManagers.getKeyStore().createKeyStore();
-
-                // Use the configured alias or fall back to the first alias in
-                // the keystore that contains a key
-                String alias = getAlias();
-                if (alias == null) {
-                    Enumeration<String> aliases = keyStore.aliases();
-                    while (aliases.hasMoreElements()) {
-                        String ksAlias = aliases.nextElement();
-                        if (keyStore.isKeyEntry(ksAlias)) {
-                            alias = ksAlias;
-                            break;
-                        }
-                    }
-                }
-                if (alias == null) {
-                    throw new IllegalStateException("The sslContextParameters keystore must contain a key entry");
-                }
-
-                PrivateKey privateKey = (PrivateKey) keyStore.getKey(alias, keyManagers.getKeyPassword().toCharArray());
-                builder.setCertificateIdentityProvider(
-                        new SingleCertificateProvider(privateKey, keyStore.getCertificateChain(alias)));
+                configureIdentity(builder);
 
             } else if (privateKey != null) {
                 builder.setCertificateIdentityProvider(new SingleCertificateProvider(privateKey, publicKey));
@@ -518,11 +484,74 @@ public class CoAPEndpoint extends DefaultEndpoint {
         }
 
         if (getConfiguredCipherSuites() != null) {
-            LOGGER.debug("There are configured cipher suites: " + getConfiguredCipherSuites());
+            LOGGER.debug("There are configured cipher suites: {}", getConfiguredCipherSuites());
             builder.set(DTLS_CIPHER_SUITES, CipherSuite.getTypesByNames(getConfiguredCipherSuites()));
         }
 
         return new DTLSConnector(builder.build());
+    }
+
+    private void configureIdentity(DtlsConnectorConfig.Builder builder) throws GeneralSecurityException, IOException {
+        KeyManagersParameters keyManagers = sslContextParameters.getKeyManagers();
+        KeyStore keyStore = keyManagers.getKeyStore().createKeyStore();
+
+        // Use the configured alias or fall back to the first alias in
+        // the keystore that contains a key
+        String alias = getAlias();
+        if (alias == null) {
+            Enumeration<String> aliases = keyStore.aliases();
+            while (aliases.hasMoreElements()) {
+                String ksAlias = aliases.nextElement();
+                if (keyStore.isKeyEntry(ksAlias)) {
+                    alias = ksAlias;
+                    break;
+                }
+            }
+        }
+        if (alias == null) {
+            throw new IllegalStateException("The sslContextParameters keystore must contain a key entry");
+        }
+
+        PrivateKey privateKey = (PrivateKey) keyStore.getKey(alias, keyManagers.getKeyPassword().toCharArray());
+        builder.setCertificateIdentityProvider(
+                new SingleCertificateProvider(privateKey, keyStore.getCertificateChain(alias)));
+    }
+
+    private void setupCreateDTLSConnectorServer(InetSocketAddress address, DtlsConnectorConfig.Builder builder) {
+        if (privateKey == null && sslContextParameters == null && advancedPskStore == null) {
+            throw new IllegalStateException(
+                    "Either a privateKey, sslContextParameters or advancedPskStore object "
+                                            + "must be configured for a TLS service");
+        }
+        if (privateKey != null && publicKey == null) {
+            throw new IllegalStateException("A public key must be configured to use a Raw Public Key with TLS");
+        }
+        if ((isClientAuthenticationRequired() || isClientAuthenticationWanted())
+                && (sslContextParameters == null || sslContextParameters.getTrustManagers() == null)
+                && publicKey == null) {
+            throw new IllegalStateException("A truststore must be configured to support TLS client authentication");
+        }
+
+        builder.setAddress(address);
+        if (isClientAuthenticationRequired()) {
+            builder.set(DTLS_CLIENT_AUTHENTICATION_MODE, CertificateAuthenticationMode.NEEDED);
+        } else if (isClientAuthenticationWanted()) {
+            builder.set(DTLS_CLIENT_AUTHENTICATION_MODE, CertificateAuthenticationMode.WANTED);
+        } else {
+            // Is it right to set to NONE here?
+            builder.set(DTLS_CLIENT_AUTHENTICATION_MODE, CertificateAuthenticationMode.NONE);
+        }
+        builder.set(DTLS_RECOMMENDED_CIPHER_SUITES_ONLY, isRecommendedCipherSuitesOnly());
+    }
+
+    private void setupCreateDTLSConnectorClient(DtlsConnectorConfig.Builder builder) {
+        if (advancedCertificateVerifier == null && sslContextParameters == null && advancedPskStore == null) {
+            throw new IllegalStateException(
+                    "Either an advancedCertificateVerifier, sslContextParameters or advancedPskStore object "
+                                            + "must be configured for a TLS client");
+        }
+        builder.set(DTLS_RECOMMENDED_CIPHER_SUITES_ONLY, isRecommendedCipherSuitesOnly());
+        builder.set(DtlsConfig.DTLS_ROLE, DtlsRole.CLIENT_ONLY);
     }
 
     public CoapClient createCoapClient(URI uri) throws IOException, GeneralSecurityException {

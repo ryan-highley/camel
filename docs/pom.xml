@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-parent</artifactId>
-        <version>4.6.0-SNAPSHOT</version>
+        <version>4.8.0-SNAPSHOT</version>
         <relativePath>../parent</relativePath>
     </parent>
 
@@ -139,6 +139,17 @@
                                 <configuration>
                                     <nodeVersion>v16.17.1</nodeVersion>
                                     <yarnVersion>v1.22.19</yarnVersion>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>yarn install</id>
+                                <goals>
+                                    <goal>yarn</goal>
+                                </goals>
+                                <configuration>
+                                     <!-- need to specify the normal install as there is another goal specified too and no cache is checked in codebase -->
+                                    <arguments>install</arguments>
+                                    <skip>${skipOnUnsupported}</skip>
                                 </configuration>
                             </execution>
                             <execution>

@@ -1187,6 +1187,36 @@ public interface Kinesis2EndpointBuilderFactory {
             return this;
         }
         /**
+         * The interval in milliseconds to wait between shard polling.
+         * 
+         * The option is a: <code>long</code> type.
+         * 
+         * Default: 10000
+         * Group: consumer (advanced)
+         * 
+         * @param shardMonitorInterval the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointConsumerBuilder shardMonitorInterval(long shardMonitorInterval) {
+            doSetProperty("shardMonitorInterval", shardMonitorInterval);
+            return this;
+        }
+        /**
+         * The interval in milliseconds to wait between shard polling.
+         * 
+         * The option will be converted to a <code>long</code> type.
+         * 
+         * Default: 10000
+         * Group: consumer (advanced)
+         * 
+         * @param shardMonitorInterval the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointConsumerBuilder shardMonitorInterval(String shardMonitorInterval) {
+            doSetProperty("shardMonitorInterval", shardMonitorInterval);
+            return this;
+        }
+        /**
          * Amazon Kinesis client to use for all requests for this endpoint.
          * 
          * The option is a:
@@ -1246,6 +1276,100 @@ public interface Kinesis2EndpointBuilderFactory {
          */
         default AdvancedKinesis2EndpointConsumerBuilder asyncClient(String asyncClient) {
             doSetProperty("asyncClient", asyncClient);
+            return this;
+        }
+        /**
+         * If we want to a KCL Consumer, we can pass an instance of
+         * CloudWatchAsyncClient.
+         * 
+         * The option is a:
+         * <code>software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient</code> type.
+         * 
+         * Group: advanced
+         * 
+         * @param cloudWatchAsyncClient the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointConsumerBuilder cloudWatchAsyncClient(software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient cloudWatchAsyncClient) {
+            doSetProperty("cloudWatchAsyncClient", cloudWatchAsyncClient);
+            return this;
+        }
+        /**
+         * If we want to a KCL Consumer, we can pass an instance of
+         * CloudWatchAsyncClient.
+         * 
+         * The option will be converted to a
+         * <code>software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient</code> type.
+         * 
+         * Group: advanced
+         * 
+         * @param cloudWatchAsyncClient the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointConsumerBuilder cloudWatchAsyncClient(String cloudWatchAsyncClient) {
+            doSetProperty("cloudWatchAsyncClient", cloudWatchAsyncClient);
+            return this;
+        }
+        /**
+         * If we want to a KCL Consumer, we can pass an instance of
+         * DynamoDbAsyncClient.
+         * 
+         * The option is a:
+         * <code>software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient</code> type.
+         * 
+         * Group: advanced
+         * 
+         * @param dynamoDbAsyncClient the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointConsumerBuilder dynamoDbAsyncClient(software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient dynamoDbAsyncClient) {
+            doSetProperty("dynamoDbAsyncClient", dynamoDbAsyncClient);
+            return this;
+        }
+        /**
+         * If we want to a KCL Consumer, we can pass an instance of
+         * DynamoDbAsyncClient.
+         * 
+         * The option will be converted to a
+         * <code>software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient</code> type.
+         * 
+         * Group: advanced
+         * 
+         * @param dynamoDbAsyncClient the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointConsumerBuilder dynamoDbAsyncClient(String dynamoDbAsyncClient) {
+            doSetProperty("dynamoDbAsyncClient", dynamoDbAsyncClient);
+            return this;
+        }
+        /**
+         * If we want to a KCL Consumer set it to true.
+         * 
+         * The option is a: <code>boolean</code> type.
+         * 
+         * Default: false
+         * Group: advanced
+         * 
+         * @param useKclConsumers the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointConsumerBuilder useKclConsumers(boolean useKclConsumers) {
+            doSetProperty("useKclConsumers", useKclConsumers);
+            return this;
+        }
+        /**
+         * If we want to a KCL Consumer set it to true.
+         * 
+         * The option will be converted to a <code>boolean</code> type.
+         * 
+         * Default: false
+         * Group: advanced
+         * 
+         * @param useKclConsumers the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointConsumerBuilder useKclConsumers(String useKclConsumers) {
+            doSetProperty("useKclConsumers", useKclConsumers);
             return this;
         }
     }
@@ -1737,6 +1861,100 @@ public interface Kinesis2EndpointBuilderFactory {
             doSetProperty("asyncClient", asyncClient);
             return this;
         }
+        /**
+         * If we want to a KCL Consumer, we can pass an instance of
+         * CloudWatchAsyncClient.
+         * 
+         * The option is a:
+         * <code>software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient</code> type.
+         * 
+         * Group: advanced
+         * 
+         * @param cloudWatchAsyncClient the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointProducerBuilder cloudWatchAsyncClient(software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient cloudWatchAsyncClient) {
+            doSetProperty("cloudWatchAsyncClient", cloudWatchAsyncClient);
+            return this;
+        }
+        /**
+         * If we want to a KCL Consumer, we can pass an instance of
+         * CloudWatchAsyncClient.
+         * 
+         * The option will be converted to a
+         * <code>software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient</code> type.
+         * 
+         * Group: advanced
+         * 
+         * @param cloudWatchAsyncClient the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointProducerBuilder cloudWatchAsyncClient(String cloudWatchAsyncClient) {
+            doSetProperty("cloudWatchAsyncClient", cloudWatchAsyncClient);
+            return this;
+        }
+        /**
+         * If we want to a KCL Consumer, we can pass an instance of
+         * DynamoDbAsyncClient.
+         * 
+         * The option is a:
+         * <code>software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient</code> type.
+         * 
+         * Group: advanced
+         * 
+         * @param dynamoDbAsyncClient the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointProducerBuilder dynamoDbAsyncClient(software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient dynamoDbAsyncClient) {
+            doSetProperty("dynamoDbAsyncClient", dynamoDbAsyncClient);
+            return this;
+        }
+        /**
+         * If we want to a KCL Consumer, we can pass an instance of
+         * DynamoDbAsyncClient.
+         * 
+         * The option will be converted to a
+         * <code>software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient</code> type.
+         * 
+         * Group: advanced
+         * 
+         * @param dynamoDbAsyncClient the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointProducerBuilder dynamoDbAsyncClient(String dynamoDbAsyncClient) {
+            doSetProperty("dynamoDbAsyncClient", dynamoDbAsyncClient);
+            return this;
+        }
+        /**
+         * If we want to a KCL Consumer set it to true.
+         * 
+         * The option is a: <code>boolean</code> type.
+         * 
+         * Default: false
+         * Group: advanced
+         * 
+         * @param useKclConsumers the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointProducerBuilder useKclConsumers(boolean useKclConsumers) {
+            doSetProperty("useKclConsumers", useKclConsumers);
+            return this;
+        }
+        /**
+         * If we want to a KCL Consumer set it to true.
+         * 
+         * The option will be converted to a <code>boolean</code> type.
+         * 
+         * Default: false
+         * Group: advanced
+         * 
+         * @param useKclConsumers the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointProducerBuilder useKclConsumers(String useKclConsumers) {
+            doSetProperty("useKclConsumers", useKclConsumers);
+            return this;
+        }
     }
 
     /**
@@ -2184,6 +2402,100 @@ public interface Kinesis2EndpointBuilderFactory {
             doSetProperty("asyncClient", asyncClient);
             return this;
         }
+        /**
+         * If we want to a KCL Consumer, we can pass an instance of
+         * CloudWatchAsyncClient.
+         * 
+         * The option is a:
+         * <code>software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient</code> type.
+         * 
+         * Group: advanced
+         * 
+         * @param cloudWatchAsyncClient the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointBuilder cloudWatchAsyncClient(software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient cloudWatchAsyncClient) {
+            doSetProperty("cloudWatchAsyncClient", cloudWatchAsyncClient);
+            return this;
+        }
+        /**
+         * If we want to a KCL Consumer, we can pass an instance of
+         * CloudWatchAsyncClient.
+         * 
+         * The option will be converted to a
+         * <code>software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient</code> type.
+         * 
+         * Group: advanced
+         * 
+         * @param cloudWatchAsyncClient the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointBuilder cloudWatchAsyncClient(String cloudWatchAsyncClient) {
+            doSetProperty("cloudWatchAsyncClient", cloudWatchAsyncClient);
+            return this;
+        }
+        /**
+         * If we want to a KCL Consumer, we can pass an instance of
+         * DynamoDbAsyncClient.
+         * 
+         * The option is a:
+         * <code>software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient</code> type.
+         * 
+         * Group: advanced
+         * 
+         * @param dynamoDbAsyncClient the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointBuilder dynamoDbAsyncClient(software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient dynamoDbAsyncClient) {
+            doSetProperty("dynamoDbAsyncClient", dynamoDbAsyncClient);
+            return this;
+        }
+        /**
+         * If we want to a KCL Consumer, we can pass an instance of
+         * DynamoDbAsyncClient.
+         * 
+         * The option will be converted to a
+         * <code>software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient</code> type.
+         * 
+         * Group: advanced
+         * 
+         * @param dynamoDbAsyncClient the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointBuilder dynamoDbAsyncClient(String dynamoDbAsyncClient) {
+            doSetProperty("dynamoDbAsyncClient", dynamoDbAsyncClient);
+            return this;
+        }
+        /**
+         * If we want to a KCL Consumer set it to true.
+         * 
+         * The option is a: <code>boolean</code> type.
+         * 
+         * Default: false
+         * Group: advanced
+         * 
+         * @param useKclConsumers the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointBuilder useKclConsumers(boolean useKclConsumers) {
+            doSetProperty("useKclConsumers", useKclConsumers);
+            return this;
+        }
+        /**
+         * If we want to a KCL Consumer set it to true.
+         * 
+         * The option will be converted to a <code>boolean</code> type.
+         * 
+         * Default: false
+         * Group: advanced
+         * 
+         * @param useKclConsumers the value to set
+         * @return the dsl builder
+         */
+        default AdvancedKinesis2EndpointBuilder useKclConsumers(String useKclConsumers) {
+            doSetProperty("useKclConsumers", useKclConsumers);
+            return this;
+        }
     }
 
     public interface Kinesis2Builders {
@@ -2301,6 +2613,18 @@ public interface Kinesis2EndpointBuilderFactory {
          */
         public String messageTimestamp() {
             return "CamelMessageTimestamp";
+        }
+        /**
+         * The resume action to execute when resuming.
+         * 
+         * The option is a: {@code String} type.
+         * 
+         * Group: consumer
+         * 
+         * @return the name of the header {@code KinesisDbResumeAction}.
+         */
+        public String kinesisDbResumeAction() {
+            return "CamelKinesisDbResumeAction";
         }
         /**
          * The shard ID of the shard where the data record was placed.

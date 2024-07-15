@@ -32,7 +32,7 @@ import org.apache.camel.util.json.JsonObject;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
-@Command(name = "variable", description = "List variables in a running Camel integration", sortOptions = false)
+@Command(name = "variable", description = "List variables of Camel integrations", sortOptions = false)
 public class ListVariable extends ProcessWatchCommand {
 
     public static class PidNameKeyCompletionCandidates implements Iterable<String> {
@@ -63,7 +63,6 @@ public class ListVariable extends ProcessWatchCommand {
         List<Row> rows = new ArrayList<>();
 
         List<Long> pids = findPids(name);
-
         ProcessHandle.allProcesses()
                 .filter(ph -> pids.contains(ph.pid()))
                 .forEach(ph -> {
@@ -90,7 +89,7 @@ public class ListVariable extends ProcessWatchCommand {
                                     JsonObject jo = (JsonObject) arr.get(i);
                                     row.id = id;
                                     row.key = jo.getString("key");
-                                    row.className = jo.getString("className");
+                                    row.type = jo.getString("type");
                                     row.value = jo.get("value");
                                     rows.add(row);
                                 }
@@ -109,7 +108,7 @@ public class ListVariable extends ProcessWatchCommand {
                             .with(r -> r.name),
                     new Column().header("REPOSITORY").headerAlign(HorizontalAlign.CENTER).with(r -> r.id),
                     new Column().header("TYPE").headerAlign(HorizontalAlign.CENTER)
-                            .maxWidth(40, OverflowBehaviour.ELLIPSIS_LEFT).with(r -> r.className),
+                            .maxWidth(40, OverflowBehaviour.ELLIPSIS_LEFT).with(r -> r.type),
                     new Column().header("KEY").dataAlign(HorizontalAlign.LEFT).maxWidth(50, OverflowBehaviour.ELLIPSIS_RIGHT)
                             .with(r -> r.key),
                     new Column().header("VALUE").headerAlign(HorizontalAlign.RIGHT).maxWidth(80, OverflowBehaviour.NEWLINE)
@@ -155,7 +154,7 @@ public class ListVariable extends ProcessWatchCommand {
         String name;
         String id;
         String key;
-        String className;
+        String type;
         Object value;
 
         Row copy() {

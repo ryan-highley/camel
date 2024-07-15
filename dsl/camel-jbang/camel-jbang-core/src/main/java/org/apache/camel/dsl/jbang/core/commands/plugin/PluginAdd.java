@@ -33,27 +33,32 @@ public class PluginAdd extends PluginBaseCommand {
                             paramLabel = "<name>")
     String name;
 
-    @CommandLine.Option(names = { "--command", "-c" },
+    @CommandLine.Option(names = { "--command" },
                         description = "The command that the plugin uses.")
     String command;
 
-    @CommandLine.Option(names = { "--description", "-d" },
+    @CommandLine.Option(names = { "--description" },
                         description = "A short description of the plugin.")
     String description;
 
-    @CommandLine.Option(names = { "--artifactId", "-a" },
+    @CommandLine.Option(names = { "--artifactId" },
                         description = "Maven artifactId.")
     String artifactId;
 
-    @CommandLine.Option(names = { "--groupId", "-g" },
+    @CommandLine.Option(names = { "--groupId" },
                         defaultValue = "org.apache.camel",
                         description = "Maven groupId.")
     String groupId = "org.apache.camel";
 
-    @CommandLine.Option(names = { "--version", "-v" },
+    @CommandLine.Option(names = { "--version" },
                         defaultValue = "${camel-version}",
                         description = "Maven artifact version.")
     String version;
+
+    @CommandLine.Option(names = { "--first-version" },
+                        defaultValue = "${camel-version}",
+                        description = "First version of this plugin.")
+    String firstVersion;
 
     @CommandLine.Option(names = { "--gav" },
                         description = "Maven group and artifact coordinates.")
@@ -77,16 +82,26 @@ public class PluginAdd extends PluginBaseCommand {
             if (description == null) {
                 description = camelPlugin.get().getDescription();
             }
+            if (firstVersion == null) {
+                firstVersion = camelPlugin.get().getFirstVersion();
+            }
         }
 
         if (command == null) {
             // use plugin name as command
             command = name;
         }
+        if (firstVersion == null) {
+            // fallback to version specified
+            firstVersion = version;
+        }
 
         JsonObject plugin = new JsonObject();
         plugin.put("name", name);
         plugin.put("command", command);
+        if (firstVersion != null) {
+            plugin.put("firstVersion", firstVersion);
+        }
         plugin.put("description",
                 description != null ? description : "Plugin %s called with command %s".formatted(name, command));
 

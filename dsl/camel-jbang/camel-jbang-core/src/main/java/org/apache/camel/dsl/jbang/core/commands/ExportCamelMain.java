@@ -20,9 +20,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.camel.catalog.CamelCatalog;
 import org.apache.camel.catalog.DefaultCamelCatalog;
@@ -59,7 +63,7 @@ class ExportCamelMain extends Export {
 
         // the settings file has information what to export
         File settings = new File(CommandLineHelper.getWorkDir(), Run.RUN_SETTINGS_FILE);
-        if (fresh || files != null || !settings.exists()) {
+        if (fresh || !files.isEmpty() || !settings.exists()) {
             // allow to automatic build
             if (!quiet && fresh) {
                 printer().println("Generating fresh run data");
@@ -179,6 +183,20 @@ class ExportCamelMain extends Export {
         Properties prop = new CamelCaseOrderedProperties();
         RuntimeUtil.loadProperties(prop, settings);
         String repos = getMavenRepos(settings, prop, camelVersion);
+
+        if (additionalProperties != null) {
+            String properties = Arrays.stream(additionalProperties.split(","))
+                    .map(property -> {
+                        String[] keyValueProperty = property.split("=");
+                        return String.format("        <%s>%s</%s>", keyValueProperty[0], keyValueProperty[1],
+                                keyValueProperty[0]);
+                    })
+                    .collect(Collectors.joining(System.lineSeparator()));
+            context = context.replaceFirst(Pattern.quote("{{ .AdditionalProperties }}"), Matcher.quoteReplacement(properties));
+        } else {
+            context = context.replaceFirst(Pattern.quote("{{ .AdditionalProperties }}"), "");
+        }
+
         if (repos == null || repos.isEmpty()) {
             context = context.replaceFirst("\\{\\{ \\.MavenRepositories }}", "");
         } else {
@@ -243,8 +261,10 @@ class ExportCamelMain extends Export {
         if (profile.exists()) {
             RuntimeUtil.loadProperties(prop, profile);
         }
+        boolean jib = prop.stringPropertyNames().stream().anyMatch(s -> s.startsWith("jib."));
         boolean jkube = prop.stringPropertyNames().stream().anyMatch(s -> s.startsWith("jkube."));
-        if (jkube) {
+        // jib is used for docker and kubernetes, jkube is only used for kubernetes
+        if (jib || jkube) {
             // include all jib/jkube/label properties
             String fromImage = null;
             for (String key : prop.stringPropertyNames()) {
@@ -263,23 +283,23 @@ class ExportCamelMain extends Export {
                 sb1.append(String.format("        <%s>%s</%s>%n", "jib.from.image", fromImage, "jib.from.image"));
             }
 
-            InputStream is = ExportCamelMain.class.getClassLoader().getResourceAsStream("templates/main-kubernetes-pom.tmpl");
+            InputStream is = ExportCamelMain.class.getClassLoader().getResourceAsStream("templates/main-docker-pom.tmpl");
             String context2 = IOHelper.loadText(is);
             IOHelper.close(is);
 
-            context2 = context2.replaceFirst("\\{\\{ \\.JibMavenPluginVersion }}", jibMavenPluginVersion(settings));
+            context2 = context2.replaceFirst("\\{\\{ \\.JibMavenPluginVersion }}", jibMavenPluginVersion(settings, prop));
 
             // image from/to auth
             String auth = "";
             if (prop.stringPropertyNames().stream().anyMatch(s -> s.startsWith("jib.from.auth."))) {
-                is = ExportCamelMain.class.getClassLoader().getResourceAsStream("templates/main-kubernetes-from-auth-pom.tmpl");
+                is = ExportCamelMain.class.getClassLoader().getResourceAsStream("templates/main-docker-from-auth-pom.tmpl");
                 auth = IOHelper.loadText(is);
                 IOHelper.close(is);
             }
             context2 = context2.replace("{{ .JibFromImageAuth }}", auth);
             auth = "";
             if (prop.stringPropertyNames().stream().anyMatch(s -> s.startsWith("jib.to.auth."))) {
-                is = ExportCamelMain.class.getClassLoader().getResourceAsStream("templates/main-kubernetes-to-auth-pom.tmpl");
+                is = ExportCamelMain.class.getClassLoader().getResourceAsStream("templates/main-docker-to-auth-pom.tmpl");
                 auth = IOHelper.loadText(is);
                 IOHelper.close(is);
             }
@@ -291,6 +311,15 @@ class ExportCamelMain extends Export {
             }
             context2 = context2.replaceFirst("\\{\\{ \\.Port }}", String.valueOf(port));
             sb2.append(context2);
+            // jkube is only used for kubernetes
+            if (jkube) {
+                is = ExportCamelMain.class.getClassLoader().getResourceAsStream("templates/main-kubernetes-pom.tmpl");
+                String context3 = IOHelper.loadText(is);
+                IOHelper.close(is);
+                context3 = context3.replaceFirst("\\{\\{ \\.JkubeMavenPluginVersion }}",
+                        jkubeMavenPluginVersion(settings, prop));
+                sb2.append(context3);
+            }
         }
 
         context = context.replace("{{ .CamelKubernetesProperties }}", sb1.toString());
@@ -316,6 +345,11 @@ class ExportCamelMain extends Export {
         answer.removeIf(s -> s.contains("camel-main"));
         answer.removeIf(s -> s.contains("camel-health"));
 
+        if (openapi != null) {
+            // include http server if using openapi
+            answer.add("mvn:org.apache.camel:camel-platform-http-main");
+        }
+
         // if platform-http is included then we need to switch to use camel-platform-http-main as implementation
         if (answer.stream().anyMatch(s -> s.contains("camel-platform-http") && !s.contains("camel-platform-http-main"))) {
             answer.removeIf(s -> s.contains("org.apache.camel:camel-platform-http:"));
@@ -325,6 +359,16 @@ class ExportCamelMain extends Export {
         }
 
         return answer;
+    }
+
+    @Override
+    protected void prepareApplicationProperties(Properties properties) {
+        if (openapi != null) {
+            // enable http server if not explicit configured
+            if (properties.getProperty("camel.server.enabled") == null) {
+                properties.setProperty("camel.server.enabled", "true");
+            }
+        }
     }
 
     private void createMainClassSource(File srcJavaDir, String packageName, String mainClassname) throws Exception {

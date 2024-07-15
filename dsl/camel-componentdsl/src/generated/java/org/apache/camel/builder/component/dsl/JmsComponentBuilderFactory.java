@@ -1729,6 +1729,26 @@ public interface JmsComponentBuilderFactory {
     
         
         /**
+         * Whether to detect the network address location of the JMS broker on
+         * startup. This information is gathered via reflection on the
+         * ConnectionFactory, and is vendor specific. This option can be used to
+         * turn this off.
+         * 
+         * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
+         * 
+         * Default: true
+         * Group: advanced
+         * 
+         * @param serviceLocationEnabled the value to set
+         * @return the dsl builder
+         */
+        default JmsComponentBuilder serviceLocationEnabled(boolean serviceLocationEnabled) {
+            doSetProperty("serviceLocationEnabled", serviceLocationEnabled);
+            return this;
+        }
+    
+        
+        /**
          * Sets whether synchronous processing should be strictly used.
          * 
          * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
@@ -1873,6 +1893,43 @@ public interface JmsComponentBuilderFactory {
          */
         default JmsComponentBuilder waitForProvisionCorrelationToBeUpdatedThreadSleepingTime(long waitForProvisionCorrelationToBeUpdatedThreadSleepingTime) {
             doSetProperty("waitForProvisionCorrelationToBeUpdatedThreadSleepingTime", waitForProvisionCorrelationToBeUpdatedThreadSleepingTime);
+            return this;
+        }
+    
+        
+        /**
+         * Number of times to wait for temporary replyTo queue to be created and
+         * ready when doing request/reply over JMS.
+         * 
+         * The option is a: &lt;code&gt;int&lt;/code&gt; type.
+         * 
+         * Default: 200
+         * Group: advanced
+         * 
+         * @param waitForTemporaryReplyToToBeUpdatedCounter the value to set
+         * @return the dsl builder
+         */
+        default JmsComponentBuilder waitForTemporaryReplyToToBeUpdatedCounter(int waitForTemporaryReplyToToBeUpdatedCounter) {
+            doSetProperty("waitForTemporaryReplyToToBeUpdatedCounter", waitForTemporaryReplyToToBeUpdatedCounter);
+            return this;
+        }
+    
+        
+        /**
+         * Interval in millis to sleep each time while waiting for temporary
+         * replyTo queue to be ready.
+         * 
+         * The option is a: &lt;code&gt;long&lt;/code&gt; type.
+         * 
+         * Default: 100
+         * Group: advanced
+         * 
+         * @param waitForTemporaryReplyToToBeUpdatedThreadSleepingTime the value
+         * to set
+         * @return the dsl builder
+         */
+        default JmsComponentBuilder waitForTemporaryReplyToToBeUpdatedThreadSleepingTime(long waitForTemporaryReplyToToBeUpdatedThreadSleepingTime) {
+            doSetProperty("waitForTemporaryReplyToToBeUpdatedThreadSleepingTime", waitForTemporaryReplyToToBeUpdatedThreadSleepingTime);
             return this;
         }
     
@@ -2183,6 +2240,7 @@ public interface JmsComponentBuilderFactory {
             case "receiveTimeout": getOrCreateConfiguration((JmsComponent) component).setReceiveTimeout((long) value); return true;
             case "recoveryInterval": getOrCreateConfiguration((JmsComponent) component).setRecoveryInterval((long) value); return true;
             case "requestTimeoutCheckerInterval": getOrCreateConfiguration((JmsComponent) component).setRequestTimeoutCheckerInterval((long) value); return true;
+            case "serviceLocationEnabled": ((JmsComponent) component).setServiceLocationEnabled((boolean) value); return true;
             case "synchronous": getOrCreateConfiguration((JmsComponent) component).setSynchronous((boolean) value); return true;
             case "temporaryQueueResolver": getOrCreateConfiguration((JmsComponent) component).setTemporaryQueueResolver((org.apache.camel.component.jms.TemporaryQueueResolver) value); return true;
             case "transferException": getOrCreateConfiguration((JmsComponent) component).setTransferException((boolean) value); return true;
@@ -2190,6 +2248,8 @@ public interface JmsComponentBuilderFactory {
             case "useMessageIDAsCorrelationID": getOrCreateConfiguration((JmsComponent) component).setUseMessageIDAsCorrelationID((boolean) value); return true;
             case "waitForProvisionCorrelationToBeUpdatedCounter": getOrCreateConfiguration((JmsComponent) component).setWaitForProvisionCorrelationToBeUpdatedCounter((int) value); return true;
             case "waitForProvisionCorrelationToBeUpdatedThreadSleepingTime": getOrCreateConfiguration((JmsComponent) component).setWaitForProvisionCorrelationToBeUpdatedThreadSleepingTime((long) value); return true;
+            case "waitForTemporaryReplyToToBeUpdatedCounter": getOrCreateConfiguration((JmsComponent) component).setWaitForTemporaryReplyToToBeUpdatedCounter((int) value); return true;
+            case "waitForTemporaryReplyToToBeUpdatedThreadSleepingTime": getOrCreateConfiguration((JmsComponent) component).setWaitForTemporaryReplyToToBeUpdatedThreadSleepingTime((long) value); return true;
             case "headerFilterStrategy": ((JmsComponent) component).setHeaderFilterStrategy((org.apache.camel.spi.HeaderFilterStrategy) value); return true;
             case "errorHandlerLoggingLevel": getOrCreateConfiguration((JmsComponent) component).setErrorHandlerLoggingLevel((org.apache.camel.LoggingLevel) value); return true;
             case "errorHandlerLogStackTrace": getOrCreateConfiguration((JmsComponent) component).setErrorHandlerLogStackTrace((boolean) value); return true;

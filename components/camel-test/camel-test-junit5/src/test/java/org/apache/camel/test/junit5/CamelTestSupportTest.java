@@ -19,7 +19,6 @@ package org.apache.camel.test.junit5;
 import org.apache.camel.NoSuchEndpointException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -28,10 +27,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class CamelTestSupportTest extends CamelTestSupport {
 
     @Override
-    @BeforeEach
-    public void setUp() throws Exception {
+    public void doPreSetup() throws Exception {
         replaceRouteFromWith("routeId", "direct:start");
-        super.setUp();
     }
 
     @Test
@@ -45,16 +42,12 @@ public class CamelTestSupportTest extends CamelTestSupport {
 
     @Test
     public void exceptionThrownWhenEndpointNotFoundAndNoCreate() {
-        assertThrows(NoSuchEndpointException.class, () -> {
-            getMockEndpoint("mock:bogus", false);
-        });
+        assertThrows(NoSuchEndpointException.class, () -> getMockEndpoint("mock:bogus", false));
     }
 
     @Test
     public void exceptionThrownWhenEndpointNotAMockEndpoint() {
-        assertThrows(NoSuchEndpointException.class, () -> {
-            getMockEndpoint("direct:something", false);
-        });
+        assertThrows(NoSuchEndpointException.class, () -> getMockEndpoint("direct:something", false));
     }
 
     @Test

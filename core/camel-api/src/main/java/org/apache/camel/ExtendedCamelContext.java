@@ -23,6 +23,7 @@ import java.util.function.Supplier;
 
 import org.apache.camel.catalog.RuntimeCamelCatalog;
 import org.apache.camel.spi.BootstrapCloseable;
+import org.apache.camel.spi.EndpointServiceRegistry;
 import org.apache.camel.spi.EndpointStrategy;
 import org.apache.camel.spi.EndpointUriFactory;
 import org.apache.camel.spi.ExchangeFactory;
@@ -377,6 +378,16 @@ public interface ExtendedCamelContext {
     void setReactiveExecutor(ReactiveExecutor reactiveExecutor);
 
     /**
+     * Gets the {@link EndpointServiceRegistry} to use.
+     */
+    EndpointServiceRegistry getEndpointServiceRegistry();
+
+    /**
+     * Sets a custom {@link EndpointServiceRegistry} to be used.
+     */
+    void setEndpointServiceRegistry(EndpointServiceRegistry endpointServiceRegistry);
+
+    /**
      * Whether exchange event notification is applicable (possible). This API is used internally in Camel as
      * optimization.
      *
@@ -407,7 +418,7 @@ public interface ExtendedCamelContext {
     /**
      * Gets the {@link RuntimeCamelCatalog} if available on the classpath.
      */
-    @Deprecated
+    @Deprecated(since = "4.0.0")
     default RuntimeCamelCatalog getRuntimeCamelCatalog() {
         return getContextPlugin(RuntimeCamelCatalog.class);
     }
@@ -441,7 +452,10 @@ public interface ExtendedCamelContext {
      * Danger!!! This will dispose the route model from the {@link CamelContext} which is used for lightweight mode.
      * This means afterwards no new routes can be dynamically added. Any operations on the
      * org.apache.camel.model.ModelCamelContext will return null or be a noop operation.
+     *
+     * @deprecated noop, do not use
      */
+    @Deprecated
     void disposeModel();
 
     /**

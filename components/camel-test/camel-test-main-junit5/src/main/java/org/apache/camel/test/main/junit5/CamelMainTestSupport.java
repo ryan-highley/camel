@@ -74,6 +74,7 @@ public abstract class CamelMainTestSupport extends CamelTestSupport {
      * @param  registry  the registry in which the custom beans are bound.
      * @throws Exception if an error occurs while binding a custom bean.
      */
+    @Deprecated
     protected void bindToRegistryAfterInjections(Registry registry) throws Exception {
         // Nothing to do by default
     }
@@ -121,8 +122,8 @@ public abstract class CamelMainTestSupport extends CamelTestSupport {
     }
 
     /**
-     * Allows to specify the main class of the application to test if needed in order to simulate the same behavior as
-     * with {@link org.apache.camel.main.Main#Main(Class)}.
+     * Allows specifying the main class of the application to test if needed to simulate the same behavior as with
+     * {@link org.apache.camel.main.Main#Main(Class)}.
      *
      * @return the main class of the application to test if any. {@code null} by default indicating that there is no
      *         specific main class.
@@ -142,15 +143,9 @@ public abstract class CamelMainTestSupport extends CamelTestSupport {
         }
         configure(main.configure());
         main.setPropertyPlaceholderLocations(getPropertyPlaceholderLocations());
-        main.setOverrideProperties(useOverridePropertiesWithPropertiesComponent());
+        main.setOverrideProperties(camelContextConfiguration().useOverridePropertiesWithPropertiesComponent());
         main.init(context);
         return context;
-    }
-
-    @Override
-    protected void applyCamelPostProcessor() throws Exception {
-        super.applyCamelPostProcessor();
-        bindToRegistryAfterInjections(context.getRegistry());
     }
 
     /**

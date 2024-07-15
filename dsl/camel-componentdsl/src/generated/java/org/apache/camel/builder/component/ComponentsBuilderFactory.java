@@ -46,8 +46,8 @@ import org.apache.camel.builder.component.dsl.*;
 public interface ComponentsBuilderFactory {
 
     /**
-     * ActiveMQ (camel-activemq)
-     * Send messages to (or consume from) Apache ActiveMQ. This component
+     * ActiveMQ 5.x (camel-activemq)
+     * Send messages to (or consume from) Apache ActiveMQ 5.x. This component
      * extends the Camel JMS component.
      * 
      * Category: messaging
@@ -58,6 +58,20 @@ public interface ComponentsBuilderFactory {
      */
     static ActivemqComponentBuilderFactory.ActivemqComponentBuilder activemq() {
         return ActivemqComponentBuilderFactory.activemq();
+    }
+    /**
+     * ActiveMQ 6.x (camel-activemq6)
+     * Send messages to (or consume from) Apache ActiveMQ 6.x. This component
+     * extends the Camel JMS component.
+     * 
+     * Category: messaging
+     * Since: 4.7
+     * Maven coordinates: org.apache.camel:camel-activemq6
+     * 
+     * @return the dsl builder
+     */
+    static Activemq6ComponentBuilderFactory.Activemq6ComponentBuilder activemq6() {
+        return Activemq6ComponentBuilderFactory.activemq6();
     }
     /**
      * AMQP (camel-amqp)
@@ -806,7 +820,8 @@ public interface ComponentsBuilderFactory {
     }
     /**
      * CoAP (camel-coap)
-     * Send and receive messages to/from COAP capable devices.
+     * Send and receive messages to/from CoAP (Constrained Application Protocol)
+     * capable devices.
      * 
      * Category: iot
      * Since: 2.16
@@ -819,7 +834,8 @@ public interface ComponentsBuilderFactory {
     }
     /**
      * CoAP (camel-coap)
-     * Send and receive messages to/from COAP capable devices.
+     * Send and receive messages to/from CoAP (Constrained Application Protocol)
+     * capable devices.
      * 
      * Category: iot
      * Since: 2.16
@@ -832,7 +848,8 @@ public interface ComponentsBuilderFactory {
     }
     /**
      * CoAP (Secure) (camel-coap)
-     * Send and receive messages to/from COAP capable devices.
+     * Send and receive messages to/from CoAP (Constrained Application Protocol)
+     * capable devices.
      * 
      * Category: iot
      * Since: 2.16
@@ -845,7 +862,8 @@ public interface ComponentsBuilderFactory {
     }
     /**
      * CoAP (camel-coap)
-     * Send and receive messages to/from COAP capable devices.
+     * Send and receive messages to/from CoAP (Constrained Application Protocol)
+     * capable devices.
      * 
      * Category: iot
      * Since: 2.16
@@ -2847,8 +2865,9 @@ public interface ComponentsBuilderFactory {
         return LdifComponentBuilderFactory.ldif();
     }
     /**
-     * Log (camel-log)
-     * Log messages to the underlying logging mechanism.
+     * Log Data (camel-log)
+     * Prints data form the routed message (such as body and headers) to the
+     * logger.
      * 
      * Category: core,monitoring
      * Since: 1.1
@@ -3401,6 +3420,19 @@ public interface ComponentsBuilderFactory {
         return PgeventComponentBuilderFactory.pgevent();
     }
     /**
+     * Pinecone (camel-pinecone)
+     * Perform operations on the Pinecone Vector Database.
+     * 
+     * Category: database,ai
+     * Since: 4.6
+     * Maven coordinates: org.apache.camel:camel-pinecone
+     * 
+     * @return the dsl builder
+     */
+    static PineconeComponentBuilderFactory.PineconeComponentBuilder pinecone() {
+        return PineconeComponentBuilderFactory.pinecone();
+    }
+    /**
      * Platform HTTP (camel-platform-http)
      * Expose HTTP endpoints using the HTTP server available in the current
      * platform.
@@ -3826,6 +3858,19 @@ public interface ComponentsBuilderFactory {
      */
     static SmbComponentBuilderFactory.SmbComponentBuilder smb() {
         return SmbComponentBuilderFactory.smb();
+    }
+    /**
+     * Smooks (camel-smooks)
+     * EDI, XML, CSV, etc. based data transformation using Smooks.
+     * 
+     * Category: transformation
+     * Since: 4.7
+     * Maven coordinates: org.apache.camel:camel-smooks
+     * 
+     * @return the dsl builder
+     */
+    static SmooksComponentBuilderFactory.SmooksComponentBuilder smooks() {
+        return SmooksComponentBuilderFactory.smooks();
     }
     /**
      * SMPP (camel-smpp)

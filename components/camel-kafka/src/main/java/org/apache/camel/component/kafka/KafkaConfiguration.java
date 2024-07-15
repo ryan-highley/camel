@@ -38,6 +38,7 @@ import org.apache.camel.spi.StateRepository;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriParams;
 import org.apache.camel.spi.UriPath;
+import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.support.jsse.CipherSuitesParameters;
 import org.apache.camel.support.jsse.KeyManagersParameters;
 import org.apache.camel.support.jsse.KeyStoreParameters;
@@ -45,6 +46,7 @@ import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.support.jsse.SecureSocketProtocolsParameters;
 import org.apache.camel.support.jsse.TrustManagersParameters;
 import org.apache.camel.util.ObjectHelper;
+import org.apache.camel.util.StringHelper;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -181,6 +183,8 @@ public class KafkaConfiguration implements Cloneable, HeaderFilterStrategyAware 
     private String key;
     @UriParam(label = "producer")
     private Integer partitionKey;
+    @UriParam(label = "producer", defaultValue = "true")
+    private boolean useIterator = true;
     @UriParam(label = "producer", enums = "all,-1,0,1", defaultValue = "all")
     private String requestRequiredAcks = "all";
     // buffer.memory
@@ -568,8 +572,13 @@ public class KafkaConfiguration implements Cloneable, HeaderFilterStrategyAware 
             addPropertyIfNotNull(props, SslConfigs.SSL_KEY_PASSWORD_CONFIG, keyManagers.getKeyPassword());
             KeyStoreParameters keyStore = keyManagers.getKeyStore();
             if (keyStore != null) {
+                // kakfa loads the resource itself and you cannot have prefix
+                String location = keyStore.getResource();
+                if (ResourceHelper.hasScheme(location)) {
+                    location = StringHelper.after(location, ":");
+                }
                 addUpperCasePropertyIfNotEmpty(props, SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, keyStore.getType());
-                addPropertyIfNotNull(props, SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keyStore.getResource());
+                addPropertyIfNotNull(props, SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, location);
                 addPropertyIfNotNull(props, SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, keyStore.getPassword());
             }
         }
@@ -579,8 +588,13 @@ public class KafkaConfiguration implements Cloneable, HeaderFilterStrategyAware 
             addPropertyIfNotNull(props, SslConfigs.SSL_TRUSTMANAGER_ALGORITHM_CONFIG, trustManagers.getAlgorithm());
             KeyStoreParameters keyStore = trustManagers.getKeyStore();
             if (keyStore != null) {
+                // kakfa loads the resource itself and you cannot have prefix
+                String location = keyStore.getResource();
+                if (ResourceHelper.hasScheme(location)) {
+                    location = StringHelper.after(location, ":");
+                }
                 addPropertyIfNotNull(props, SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, keyStore.getType());
-                addPropertyIfNotNull(props, SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, keyStore.getResource());
+                addPropertyIfNotNull(props, SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, location);
                 addPropertyIfNotEmpty(props, SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, keyStore.getPassword());
             }
         }
@@ -1371,6 +1385,18 @@ public class KafkaConfiguration implements Cloneable, HeaderFilterStrategyAware 
      */
     public void setPartitionKey(Integer partitionKey) {
         this.partitionKey = partitionKey;
+    }
+
+    public boolean isUseIterator() {
+        return useIterator;
+    }
+
+    /**
+     * Sets whether sending to kafka should send the message body as a single record, or use a java.util.Iterator to
+     * send multiple records to kafka (if the message body can be iterated).
+     */
+    public void setUseIterator(boolean useIterator) {
+        this.useIterator = useIterator;
     }
 
     public String getRequestRequiredAcks() {

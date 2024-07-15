@@ -32,6 +32,7 @@ import org.apache.camel.ErrorHandlerFactory;
 import org.apache.camel.Ordered;
 import org.apache.camel.Route;
 import org.apache.camel.RoutesBuilder;
+import org.apache.camel.model.BeanFactoryDefinition;
 import org.apache.camel.model.FromDefinition;
 import org.apache.camel.model.InterceptDefinition;
 import org.apache.camel.model.InterceptFromDefinition;
@@ -46,7 +47,6 @@ import org.apache.camel.model.RouteTemplatesDefinition;
 import org.apache.camel.model.RoutesDefinition;
 import org.apache.camel.model.TemplatedRouteDefinition;
 import org.apache.camel.model.TemplatedRoutesDefinition;
-import org.apache.camel.model.app.RegistryBeanDefinition;
 import org.apache.camel.model.errorhandler.RefErrorHandlerDefinition;
 import org.apache.camel.model.rest.RestConfigurationDefinition;
 import org.apache.camel.model.rest.RestDefinition;
@@ -56,6 +56,7 @@ import org.apache.camel.spi.PropertiesComponent;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.ResourceAware;
 import org.apache.camel.spi.RestConfiguration;
+import org.apache.camel.spi.SupervisingRouteController;
 import org.apache.camel.support.LifecycleStrategySupport;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.StringHelper;
@@ -77,7 +78,7 @@ public abstract class RouteBuilder extends BuilderSupport implements RoutesBuild
     private final List<TransformerBuilder> transformerBuilders = new ArrayList<>();
     private final List<ValidatorBuilder> validatorBuilders = new ArrayList<>();
     // XML and YAML DSL allows to define custom beans which we need to capture
-    private final List<RegistryBeanDefinition> beans = new ArrayList<>();
+    private final List<BeanFactoryDefinition<?>> beans = new ArrayList<>();
 
     private RestsDefinition restCollection = new RestsDefinition();
     private RestConfigurationDefinition restConfiguration;
@@ -701,6 +702,13 @@ public abstract class RouteBuilder extends BuilderSupport implements RoutesBuild
         // trigger update of the routes
         populateOrUpdateRoutes();
 
+        // trigger reloaded routes to be started if under supervising controller
+        // as this requires to be done manually via the controller
+        // the default route controller will auto-start routes when added to camel
+        if (getContext().getRouteController() instanceof SupervisingRouteController src) {
+            src.startRoutes(true);
+        }
+
         if (this instanceof OnCamelContextEvent) {
             context.addLifecycleStrategy(LifecycleStrategySupport.adapt((OnCamelContextEvent) this));
         }
@@ -784,7 +792,7 @@ public abstract class RouteBuilder extends BuilderSupport implements RoutesBuild
             getRestCollection().setResource(getResource());
             getRouteTemplateCollection().setResource(getResource());
             getTemplatedRouteCollection().setResource(getResource());
-            for (RegistryBeanDefinition def : beans) {
+            for (BeanFactoryDefinition def : beans) {
                 def.setResource(getResource());
             }
 
@@ -928,9 +936,9 @@ public abstract class RouteBuilder extends BuilderSupport implements RoutesBuild
         CamelContext camelContext = notNullCamelContext();
 
         Model model = camelContext.getCamelContextExtension().getContextPlugin(Model.class);
-        for (RegistryBeanDefinition def : beans) {
+        for (BeanFactoryDefinition<?> def : beans) {
             // add to model
-            model.addRegistryBean(def);
+            model.addCustomBean(def);
         }
     }
 
@@ -944,7 +952,7 @@ public abstract class RouteBuilder extends BuilderSupport implements RoutesBuild
         return getRestCollection();
     }
 
-    public List<RegistryBeanDefinition> getBeans() {
+    public List<BeanFactoryDefinition<?>> getBeans() {
         return beans;
     }
 

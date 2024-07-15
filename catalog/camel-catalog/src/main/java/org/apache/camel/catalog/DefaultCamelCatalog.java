@@ -542,53 +542,90 @@ public class DefaultCamelCatalog extends AbstractCachingCamelCatalog implements 
     public String summaryAsJson() {
         return cache(SUMMARY_AS_JSON, () -> {
             Map<String, Object> obj = new JsonObject();
-            obj.put("version", getCatalogVersion());
+            obj.put("version", getLoadedVersion());
             obj.put("models", findModelNames().size());
             obj.put("components", findComponentNames().size());
             obj.put("dataformats", findDataFormatNames().size());
             obj.put("languages", findLanguageNames().size());
             obj.put("others", findOtherNames().size());
+            obj.put("beans", findBeansNames().size());
+            obj.put("dev-consoles", findDevConsoleNames().size());
+            obj.put("transformers", findTransformerNames().size());
             return JsonMapper.serialize(obj);
         });
     }
 
     @Override
     public ArtifactModel<?> modelFromMavenGAV(String groupId, String artifactId, String version) {
-        for (String name : findComponentNames()) {
-            ArtifactModel<?> am = componentModel(name);
-            if (matchArtifact(am, groupId, artifactId, version)) {
-                return am;
+        try {
+            for (String name : findComponentNames()) {
+                ArtifactModel<?> am = componentModel(name);
+                if (matchArtifact(am, groupId, artifactId, version)) {
+                    return am;
+                }
             }
+        } catch (Throwable e) {
+            // ignore as catalog can be dynamic changed and older releases may not have newer apis
         }
-        for (String name : findDataFormatNames()) {
-            ArtifactModel<?> am = dataFormatModel(name);
-            if (matchArtifact(am, groupId, artifactId, version)) {
-                return am;
+        try {
+            for (String name : findDataFormatNames()) {
+                ArtifactModel<?> am = dataFormatModel(name);
+                if (matchArtifact(am, groupId, artifactId, version)) {
+                    return am;
+                }
             }
+        } catch (Throwable e) {
+            // ignore as catalog can be dynamic changed and older releases may not have newer apis
         }
-        for (String name : findLanguageNames()) {
-            ArtifactModel<?> am = languageModel(name);
-            if (matchArtifact(am, groupId, artifactId, version)) {
-                return am;
+        try {
+            for (String name : findLanguageNames()) {
+                ArtifactModel<?> am = languageModel(name);
+                if (matchArtifact(am, groupId, artifactId, version)) {
+                    return am;
+                }
             }
+        } catch (Throwable e) {
+            // ignore as catalog can be dynamic changed and older releases may not have newer apis
         }
-        for (String name : findOtherNames()) {
-            ArtifactModel<?> am = otherModel(name);
-            if (matchArtifact(am, groupId, artifactId, version)) {
-                return am;
+        try {
+            for (String name : findOtherNames()) {
+                ArtifactModel<?> am = otherModel(name);
+                if (matchArtifact(am, groupId, artifactId, version)) {
+                    return am;
+                }
             }
+        } catch (Throwable e) {
+            // ignore as catalog can be dynamic changed and older releases may not have newer apis
         }
-        for (String name : findTransformerNames()) {
-            ArtifactModel<?> am = transformerModel(name);
-            if (matchArtifact(am, groupId, artifactId, version)) {
-                return am;
+        try {
+            for (String name : findTransformerNames()) {
+                ArtifactModel<?> am = transformerModel(name);
+                if (matchArtifact(am, groupId, artifactId, version)) {
+                    return am;
+                }
             }
+        } catch (Throwable e) {
+            // ignore as catalog can be dynamic changed and older releases may not have newer apis
         }
-        for (String name : findDevConsoleNames()) {
-            ArtifactModel<?> am = devConsoleModel(name);
-            if (matchArtifact(am, groupId, artifactId, version)) {
-                return am;
+        try {
+            for (String name : findDevConsoleNames()) {
+                ArtifactModel<?> am = devConsoleModel(name);
+                if (matchArtifact(am, groupId, artifactId, version)) {
+                    return am;
+                }
             }
+        } catch (Throwable e) {
+            // ignore as catalog can be dynamic changed and older releases may not have newer apis
+        }
+        try {
+            for (String name : findBeansNames()) {
+                ArtifactModel<?> am = pojoBeanModel(name);
+                if (matchArtifact(am, groupId, artifactId, version)) {
+                    return am;
+                }
+            }
+        } catch (Throwable e) {
+            // ignore as catalog can be dynamic changed and older releases may not have newer apis
         }
         return null;
     }

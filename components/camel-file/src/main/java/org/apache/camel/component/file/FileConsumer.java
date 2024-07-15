@@ -49,7 +49,7 @@ public class FileConsumer extends GenericFileConsumer<File> implements ResumeAwa
 
     private static final Logger LOG = LoggerFactory.getLogger(FileConsumer.class);
     private ResumeStrategy resumeStrategy;
-    private String endpointPath;
+    private final String endpointPath;
     private Set<String> extendedAttributes;
 
     public FileConsumer(FileEndpoint endpoint, Processor processor, GenericFileOperations<File> operations,
@@ -87,10 +87,18 @@ public class FileConsumer extends GenericFileConsumer<File> implements ResumeAwa
             Arrays.sort(files, Comparator.comparing(File::getAbsoluteFile));
         }
 
+        if (processPolledFiles(fileList, depth, files)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean processPolledFiles(List<GenericFile<File>> fileList, int depth, File[] files) {
         for (File file : files) {
             // check if we can continue polling in files
             if (!canPollMoreFiles(fileList)) {
-                return false;
+                return true;
             }
 
             // trace log as Windows/Unix can have different views what the file is
@@ -105,13 +113,7 @@ public class FileConsumer extends GenericFileConsumer<File> implements ResumeAwa
                     = asGenericFile(endpointPath, file, getEndpoint().getCharset(), getEndpoint().isProbeContentType());
 
             if (resumeStrategy != null) {
-                ResumeAdapter adapter = resumeStrategy.getAdapter();
-                LOG.trace("Checking the resume adapter: {}", adapter);
-                if (adapter instanceof FileOffsetResumeAdapter) {
-                    LOG.trace("The resume adapter is for offsets: {}", adapter);
-                    ((FileOffsetResumeAdapter) adapter).setResumePayload(gf);
-                    adapter.resume();
-                }
+                final ResumeAdapter adapter = setupResumeStrategy(gf);
 
                 if (adapter instanceof DirectoryEntriesResumeAdapter) {
                     LOG.trace("Running the resume process for file {}", file);
@@ -122,36 +124,63 @@ public class FileConsumer extends GenericFileConsumer<File> implements ResumeAwa
                 }
             }
 
-            if (file.isDirectory()) {
-                if (endpoint.isRecursive() && depth < endpoint.getMaxDepth() && isValidFile(gf, true, files)) {
-                    boolean canPollMore = pollDirectory(file, fileList, depth);
-                    if (!canPollMore) {
-                        return false;
-                    }
-                }
-            } else {
-                // Windows can report false to a file on a share so regard it
-                // always as a file (if it is not a directory)
-                if (depth >= endpoint.minDepth && isValidFile(gf, false, files)) {
-                    LOG.trace("Adding valid file: {}", file);
-                    // matched file so add
-                    if (extendedAttributes != null) {
-                        Path path = file.toPath();
-                        Map<String, Object> allAttributes = new HashMap<>();
-                        for (String attribute : extendedAttributes) {
-                            readAttributes(file, path, allAttributes, attribute);
-                        }
-
-                        gf.setExtendedAttributes(allAttributes);
-                    }
-
-                    fileList.add(gf);
-                }
-
+            if (processEntry(fileList, depth, file, gf, files)) {
+                return true;
             }
         }
+        return false;
+    }
 
-        return true;
+    private boolean processEntry(List<GenericFile<File>> fileList, int depth, File file, GenericFile<File> gf, File[] files) {
+        if (file.isDirectory()) {
+            return processDirectoryEntry(fileList, depth, file, gf, files);
+        } else {
+            processFileEntry(fileList, depth, file, gf, files);
+
+        }
+        return false;
+    }
+
+    private void processFileEntry(List<GenericFile<File>> fileList, int depth, File file, GenericFile<File> gf, File[] files) {
+        // Windows can report false to a file on a share so regard it
+        // always as a file (if it is not a directory)
+        if (depth >= endpoint.minDepth && isValidFile(gf, false, files)) {
+            LOG.trace("Adding valid file: {}", file);
+            // matched file so add
+            if (extendedAttributes != null) {
+                Path path = file.toPath();
+                Map<String, Object> allAttributes = new HashMap<>();
+                for (String attribute : extendedAttributes) {
+                    readAttributes(file, path, allAttributes, attribute);
+                }
+
+                gf.setExtendedAttributes(allAttributes);
+            }
+
+            fileList.add(gf);
+        }
+    }
+
+    private boolean processDirectoryEntry(
+            List<GenericFile<File>> fileList, int depth, File file, GenericFile<File> gf, File[] files) {
+        if (endpoint.isRecursive() && depth < endpoint.getMaxDepth() && isValidFile(gf, true, files)) {
+            boolean canPollMore = pollDirectory(file, fileList, depth);
+            if (!canPollMore) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private ResumeAdapter setupResumeStrategy(GenericFile<File> gf) {
+        ResumeAdapter adapter = resumeStrategy.getAdapter();
+        LOG.trace("Checking the resume adapter: {}", adapter);
+        if (adapter instanceof FileOffsetResumeAdapter) {
+            LOG.trace("The resume adapter is for offsets: {}", adapter);
+            ((FileOffsetResumeAdapter) adapter).setResumePayload(gf);
+            adapter.resume();
+        }
+        return adapter;
     }
 
     @Override

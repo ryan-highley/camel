@@ -218,8 +218,27 @@ public final class StringHelper {
         // must replace amp first, so we dont replace &lt; to amp later
         return text.replace("&", "&amp;")
                 .replace("\"", "&quot;")
+                .replace("'", "&apos;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;");
+    }
+
+    /**
+     * Decodes the text into safe XML by replacing XML tokens with character values
+     *
+     * @param  text the text
+     * @return      the encoded text
+     */
+    public static String xmlDecode(final String text) {
+        if (text == null) {
+            return "";
+        }
+        // must replace amp first, so we dont replace &lt; to amp later
+        return text.replace("&amp;", "&")
+                .replace("&quot;", "\"")
+                .replace("&apos;", "'")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">");
     }
 
     /**
@@ -249,7 +268,7 @@ public final class StringHelper {
     public static boolean isClassName(String text) {
         if (text != null) {
             int lastIndexOf = text.lastIndexOf('.');
-            if (lastIndexOf <= 0 || lastIndexOf == text.length()) {
+            if (lastIndexOf <= 0) {
                 return false;
             }
 
@@ -286,15 +305,19 @@ public final class StringHelper {
     /**
      * Replaces the first from token in the given input string.
      * <p/>
-     * This implementation is not recursive, not does it check for tokens in the replacement string.
+     * This implementation is not recursive, not does it check for tokens in the replacement string. If from or to is
+     * null then the input string is returned as-is
      *
      * @param  input                    the input string
-     * @param  from                     the from string, must <b>not</b> be <tt>null</tt> or empty
-     * @param  to                       the replacement string, must <b>not</b> be empty
+     * @param  from                     the from string
+     * @param  to                       the replacement string
      * @return                          the replaced string, or the input string if no replacement was needed
      * @throws IllegalArgumentException if the input arguments is invalid
      */
     public static String replaceFirst(String input, String from, String to) {
+        if (from == null || to == null) {
+            return input;
+        }
         int pos = input.indexOf(from);
         if (pos != -1) {
             int len = from.length();
@@ -813,6 +836,34 @@ public final class StringHelper {
     }
 
     /**
+     * Returns the substring between the given head and tail
+     *
+     * @param  text the text
+     * @param  head the head of the substring
+     * @param  tail the tail of the substring
+     * @return      the substring between the given head and tail
+     */
+    public static String between(String text, int head, int tail) {
+        int len = text.length();
+        if (head > 0) {
+            if (head <= len) {
+                text = text.substring(head);
+            } else {
+                text = "";
+            }
+            len = text.length();
+        }
+        if (tail > 0) {
+            if (tail <= len) {
+                text = text.substring(0, len - tail);
+            } else {
+                text = "";
+            }
+        }
+        return text;
+    }
+
+    /**
      * Returns the string between the most outer pair of tokens
      * <p/>
      * The number of token pairs must be evenly, eg there must be same number of before and after tokens, otherwise
@@ -1104,7 +1155,7 @@ public final class StringHelper {
         StringBuilder answer = new StringBuilder();
 
         Character prev = null;
-        Character next = null;
+        Character next;
         char[] arr = text.toCharArray();
         for (int i = 0; i < arr.length; i++) {
             char ch = arr[i];

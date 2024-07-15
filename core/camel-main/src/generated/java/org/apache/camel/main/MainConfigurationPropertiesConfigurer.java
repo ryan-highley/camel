@@ -140,6 +140,12 @@ public class MainConfigurationPropertiesConfigurer extends org.apache.camel.supp
         case "logExhaustedMessageBody": target.setLogExhaustedMessageBody(property(camelContext, boolean.class, value)); return true;
         case "logmask":
         case "logMask": target.setLogMask(property(camelContext, boolean.class, value)); return true;
+        case "logname":
+        case "logName": target.setLogName(property(camelContext, java.lang.String.class, value)); return true;
+        case "mainlistenerclasses":
+        case "mainListenerClasses": target.setMainListenerClasses(property(camelContext, java.lang.String.class, value)); return true;
+        case "mainlisteners":
+        case "mainListeners": target.setMainListeners(property(camelContext, java.util.List.class, value)); return true;
         case "mdcloggingkeyspattern":
         case "mdcLoggingKeysPattern": target.setMdcLoggingKeysPattern(property(camelContext, java.lang.String.class, value)); return true;
         case "messagehistory":
@@ -374,6 +380,12 @@ public class MainConfigurationPropertiesConfigurer extends org.apache.camel.supp
         case "logExhaustedMessageBody": return boolean.class;
         case "logmask":
         case "logMask": return boolean.class;
+        case "logname":
+        case "logName": return java.lang.String.class;
+        case "mainlistenerclasses":
+        case "mainListenerClasses": return java.lang.String.class;
+        case "mainlisteners":
+        case "mainListeners": return java.util.List.class;
         case "mdcloggingkeyspattern":
         case "mdcLoggingKeysPattern": return java.lang.String.class;
         case "messagehistory":
@@ -609,6 +621,12 @@ public class MainConfigurationPropertiesConfigurer extends org.apache.camel.supp
         case "logExhaustedMessageBody": return target.isLogExhaustedMessageBody();
         case "logmask":
         case "logMask": return target.isLogMask();
+        case "logname":
+        case "logName": return target.getLogName();
+        case "mainlistenerclasses":
+        case "mainListenerClasses": return target.getMainListenerClasses();
+        case "mainlisteners":
+        case "mainListeners": return target.getMainListeners();
         case "mdcloggingkeyspattern":
         case "mdcLoggingKeysPattern": return target.getMdcLoggingKeysPattern();
         case "messagehistory":
@@ -729,6 +747,8 @@ public class MainConfigurationPropertiesConfigurer extends org.apache.camel.supp
         case "configurations": return org.apache.camel.CamelConfiguration.class;
         case "globaloptions":
         case "globalOptions": return java.lang.String.class;
+        case "mainlisteners":
+        case "mainListeners": return org.apache.camel.main.MainListener.class;
         case "routesbuilders":
         case "routesBuilders": return org.apache.camel.RoutesBuilder.class;
         default: return null;

@@ -22,6 +22,7 @@ import java.util.Map;
 import org.apache.camel.cloud.DiscoverableService;
 import org.apache.camel.cloud.ServiceDefinition;
 import org.apache.camel.http.base.cookie.CookieHandler;
+import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.HeaderFilterStrategy;
 import org.apache.camel.spi.HeaderFilterStrategyAware;
 import org.apache.camel.spi.Metadata;
@@ -30,7 +31,8 @@ import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.DefaultEndpoint;
 import org.apache.camel.util.CollectionHelper;
 
-public abstract class HttpCommonEndpoint extends DefaultEndpoint implements HeaderFilterStrategyAware, DiscoverableService {
+public abstract class HttpCommonEndpoint extends DefaultEndpoint
+        implements HeaderFilterStrategyAware, DiscoverableService, EndpointServiceLocation {
 
     // Note: all options must be documented with description in annotations so extended components can access the documentation
 
@@ -159,6 +161,8 @@ public abstract class HttpCommonEndpoint extends DefaultEndpoint implements Head
     private String oauth2ClientSecret;
     @UriParam(label = "producer,security", description = "OAuth2 Token endpoint")
     private String oauth2TokenEndpoint;
+    @UriParam(label = "producer,security", description = "OAuth2 scope")
+    private String oauth2Scope;
     @UriParam(label = "producer,security", description = "Authentication domain to use with NTML")
     private String authDomain;
     @UriParam(label = "producer,security", description = "Authentication host to use with NTML")
@@ -191,6 +195,22 @@ public abstract class HttpCommonEndpoint extends DefaultEndpoint implements Head
         super(endPointURI, component);
         this.component = component;
         this.httpUri = httpURI;
+    }
+
+    @Override
+    public String getServiceUrl() {
+        if (httpUri != null) {
+            return httpUri.toString();
+        }
+        return null;
+    }
+
+    @Override
+    public String getServiceProtocol() {
+        if (httpUri != null) {
+            return httpUri.getScheme();
+        }
+        return null;
     }
 
     public void connect(HttpConsumer consumer) throws Exception {
@@ -814,4 +834,14 @@ public abstract class HttpCommonEndpoint extends DefaultEndpoint implements Head
         this.oauth2TokenEndpoint = oauth2TokenEndpoint;
     }
 
+    public String getOauth2Scope() {
+        return oauth2Scope;
+    }
+
+    /**
+     * OAuth2 scope
+     */
+    public void setOauth2Scope(String oauth2Scope) {
+        this.oauth2Scope = oauth2Scope;
+    }
 }

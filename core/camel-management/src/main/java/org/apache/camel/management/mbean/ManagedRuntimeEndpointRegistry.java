@@ -48,7 +48,7 @@ public class ManagedRuntimeEndpointRegistry extends ManagedService implements Ma
     @Override
     public void init(ManagementStrategy strategy) {
         super.init(strategy);
-        sanitize = strategy.getManagementAgent().getMask() != null ? strategy.getManagementAgent().getMask() : false;
+        sanitize = strategy.getManagementAgent().getMask() != null ? strategy.getManagementAgent().getMask() : true;
     }
 
     @Override
@@ -96,7 +96,7 @@ public class ManagedRuntimeEndpointRegistry extends ManagedService implements Ma
         try {
             TabularData answer = new TabularDataSupport(CamelOpenMBeanTypes.listRuntimeEndpointsTabularType());
 
-            EndpointRegistry<?> staticRegistry = getContext().getEndpointRegistry();
+            EndpointRegistry staticRegistry = getContext().getEndpointRegistry();
             int index = 0;
 
             for (RuntimeEndpointRegistry.Statistic stat : registry.getEndpointStatistics()) {

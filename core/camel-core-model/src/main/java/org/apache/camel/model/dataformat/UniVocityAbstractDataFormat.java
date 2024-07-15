@@ -81,6 +81,24 @@ public abstract class UniVocityAbstractDataFormat extends DataFormatDefinition {
         // This constructor is needed by jaxb for schema generation
     }
 
+    protected UniVocityAbstractDataFormat(UniVocityAbstractDataFormat source) {
+        super(source);
+        this.nullValue = source.nullValue;
+        this.skipEmptyLines = source.skipEmptyLines;
+        this.ignoreTrailingWhitespaces = source.ignoreTrailingWhitespaces;
+        this.ignoreLeadingWhitespaces = source.ignoreLeadingWhitespaces;
+        this.headersDisabled = source.headersDisabled;
+        this.headers = source.headers;
+        this.headerExtractionEnabled = source.headerExtractionEnabled;
+        this.numberOfRecordsToRead = source.numberOfRecordsToRead;
+        this.emptyValue = source.emptyValue;
+        this.lineSeparator = source.lineSeparator;
+        this.normalizedLineSeparator = source.normalizedLineSeparator;
+        this.comment = source.comment;
+        this.lazyLoad = source.lazyLoad;
+        this.asMap = source.asMap;
+    }
+
     protected UniVocityAbstractDataFormat(String dataFormatName) {
         super(dataFormatName);
     }
@@ -287,7 +305,7 @@ public abstract class UniVocityAbstractDataFormat extends DataFormatDefinition {
      */
     @XmlTransient
     @SuppressWarnings("unchecked")
-    abstract static class AbstractBuilder<T extends AbstractBuilder<T, F>, F extends UniVocityAbstractDataFormat>
+    protected abstract static class AbstractBuilder<T extends AbstractBuilder<T, F>, F extends UniVocityAbstractDataFormat>
             implements DataFormatBuilder<F> {
 
         private String nullValue;

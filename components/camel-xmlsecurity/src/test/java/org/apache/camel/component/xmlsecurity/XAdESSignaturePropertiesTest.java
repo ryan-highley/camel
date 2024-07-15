@@ -63,10 +63,8 @@ import org.apache.camel.component.xmlsecurity.api.XmlSignatureHelper;
 import org.apache.camel.component.xmlsecurity.api.XmlSignatureProperties;
 import org.apache.camel.component.xmlsecurity.util.TestKeystore;
 import org.apache.camel.spi.Registry;
-import org.apache.camel.support.SimpleRegistry;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.apache.camel.test.junit5.TestSupport;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.component.xmlsecurity.XmlSignatureTest.checkThrownException;
@@ -93,15 +91,12 @@ public class XAdESSignaturePropertiesTest extends CamelTestSupport {
     }
 
     @Override
-    @BeforeEach
-    public void setUp() throws Exception {
+    public void doPreSetup() {
         disableJMX();
-        super.setUp();
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry registry = new SimpleRegistry();
+    protected void bindToRegistry(Registry registry) throws Exception {
         registry.bind("keyAccessorDefault", TestKeystore.getKeyAccessor("bob"));
         registry.bind("xmlSignatureProperties", getXmlSignatureProperties("bob"));
 
@@ -109,8 +104,6 @@ public class XAdESSignaturePropertiesTest extends CamelTestSupport {
         List<XPathFilterParameterSpec> xpaths = Collections
                 .singletonList(XmlSignatureHelper.getXpathFilter("/ns:root/a/@ID", namespaceMap));
         registry.bind("xpathsToIdAttributes", xpaths);
-
-        return registry;
     }
 
     @Override

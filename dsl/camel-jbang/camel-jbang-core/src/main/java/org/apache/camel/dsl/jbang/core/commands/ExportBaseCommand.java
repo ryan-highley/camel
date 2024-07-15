@@ -48,6 +48,8 @@ import java.util.stream.Collectors;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.dsl.jbang.core.common.CommandLineHelper;
 import org.apache.camel.dsl.jbang.core.common.RuntimeCompletionCandidates;
+import org.apache.camel.dsl.jbang.core.common.RuntimeType;
+import org.apache.camel.dsl.jbang.core.common.RuntimeTypeConverter;
 import org.apache.camel.dsl.jbang.core.common.RuntimeUtil;
 import org.apache.camel.dsl.jbang.core.common.VersionHelper;
 import org.apache.camel.tooling.maven.MavenArtifact;
@@ -61,7 +63,7 @@ import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.StringHelper;
 import picocli.CommandLine;
 
-abstract class ExportBaseCommand extends CamelCommand {
+public abstract class ExportBaseCommand extends CamelCommand {
 
     protected static final String BUILD_DIR = CommandLineHelper.CAMEL_JBANG_WORK_DIR + "/work";
 
@@ -95,9 +97,11 @@ abstract class ExportBaseCommand extends CamelCommand {
             "--dep", "--deps" }, description = "Add additional dependencies (Use commas to separate multiple dependencies).")
     protected String dependencies;
 
-    @CommandLine.Option(names = { "--runtime" }, completionCandidates = RuntimeCompletionCandidates.class,
-                        description = "Runtime (spring-boot, quarkus, or camel-main)")
-    protected String runtime;
+    @CommandLine.Option(names = { "--runtime" },
+                        completionCandidates = RuntimeCompletionCandidates.class,
+                        converter = RuntimeTypeConverter.class,
+                        description = "Runtime (${COMPLETION-CANDIDATES})")
+    protected RuntimeType runtime;
 
     @CommandLine.Option(names = { "--gav" }, description = "The Maven group:artifact:version")
     protected String gav;
@@ -148,8 +152,8 @@ abstract class ExportBaseCommand extends CamelCommand {
     protected String localKameletDir;
 
     @CommandLine.Option(names = { "--spring-boot-version" }, description = "Spring Boot version",
-                        defaultValue = "3.2.5")
-    protected String springBootVersion = "3.2.5";
+                        defaultValue = RuntimeType.SPRING_BOOT_VERSION)
+    protected String springBootVersion = RuntimeType.SPRING_BOOT_VERSION;
 
     @CommandLine.Option(names = { "--camel-spring-boot-version" }, description = "Camel version to use with Spring Boot")
     protected String camelSpringBootVersion;
@@ -163,8 +167,8 @@ abstract class ExportBaseCommand extends CamelCommand {
     protected String quarkusArtifactId = "quarkus-bom";
 
     @CommandLine.Option(names = { "--quarkus-version" }, description = "Quarkus Platform version",
-                        defaultValue = "3.9.4")
-    protected String quarkusVersion = "3.9.4";
+                        defaultValue = RuntimeType.QUARKUS_VERSION)
+    protected String quarkusVersion = RuntimeType.QUARKUS_VERSION;
 
     @CommandLine.Option(names = { "--maven-wrapper" }, defaultValue = "true",
                         description = "Include Maven Wrapper files in exported project")
@@ -207,11 +211,11 @@ abstract class ExportBaseCommand extends CamelCommand {
 
     @CommandLine.Option(names = { "--logging" }, defaultValue = "false",
                         description = "Can be used to turn on logging (logs to file in <user home>/.camel directory)")
-    boolean logging;
+    protected boolean logging;
 
     @CommandLine.Option(names = { "--quiet" }, defaultValue = "false",
                         description = "Will be quiet, only print when error occurs")
-    boolean quiet;
+    protected boolean quiet;
 
     @CommandLine.Option(names = { "--ignore-loading-error" },
                         description = "Whether to ignore route loading and compilation errors (use this with care!)")
@@ -227,9 +231,9 @@ abstract class ExportBaseCommand extends CamelCommand {
     public Integer doCall() throws Exception {
         // configure logging first
         if (logging) {
-            RuntimeUtil.configureLog(loggingLevel, false, false, false, true, null);
+            RuntimeUtil.configureLog(loggingLevel, false, false, false, true, null, null);
         } else {
-            RuntimeUtil.configureLog("off", false, false, false, true, null);
+            RuntimeUtil.configureLog("off", false, false, false, true, null, null);
         }
 
         if (!quiet) {
@@ -290,13 +294,17 @@ abstract class ExportBaseCommand extends CamelCommand {
     protected Integer runSilently(boolean ignoreLoadingError) throws Exception {
         Run run = new Run(getMain());
         // need to declare the profile to use for run
-        run.localKameletDir = localKameletDir;
         run.dependencies = dependencies;
         run.files = files;
         run.exclude = exclude;
         run.openapi = openapi;
         run.download = download;
-        return run.runSilent(ignoreLoadingError);
+        run.camelVersion = camelVersion;
+        run.quarkusVersion = quarkusVersion;
+        run.springBootVersion = springBootVersion;
+        run.kameletsVersion = kameletsVersion;
+        run.localKameletDir = localKameletDir;
+        return run.runExport(ignoreLoadingError);
     }
 
     protected Set<String> resolveDependencies(File settings, File profile) throws Exception {
@@ -319,7 +327,7 @@ abstract class ExportBaseCommand extends CamelCommand {
         // custom dependencies
         if (dependencies != null) {
             for (String d : dependencies.split(",")) {
-                answer.add(d.trim());
+                answer.add(normalizeDependency(d.trim()));
             }
         }
 
@@ -700,15 +708,37 @@ abstract class ExportBaseCommand extends CamelCommand {
         return -1;
     }
 
-    protected static String jibMavenPluginVersion(File settings) {
+    protected static String jibMavenPluginVersion(File settings, Properties prop) {
+        String answer = null;
+        if (prop != null) {
+            answer = prop.getProperty("camel.jbang.jib-maven-plugin-version");
+        }
+        if (answer == null) {
+            try {
+                List<String> lines = RuntimeUtil.loadPropertiesLines(settings);
+                answer = lines.stream().filter(l -> l.startsWith("camel.jbang.jib-maven-plugin-version="))
+                        .map(s -> StringHelper.after(s, "=")).findFirst().orElse(null);
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+        return answer != null ? answer : "3.4.3";
+    }
+
+    protected static String jkubeMavenPluginVersion(File settings, Properties prop) {
+        String answer = null;
+        if (prop != null) {
+            answer = prop.getProperty("camel.jbang.jkube-maven-plugin-version");
+        }
         try {
             List<String> lines = RuntimeUtil.loadPropertiesLines(settings);
-            return lines.stream().filter(l -> l.startsWith("camel.jbang.jib-maven-plugin-version="))
-                    .map(s -> StringHelper.after(s, "=")).findFirst().orElse("3.4.0");
+            answer = lines.stream()
+                    .filter(l -> l.startsWith("camel.jbang.jkube-maven-plugin-version=") || l.startsWith("jkube.version="))
+                    .map(s -> StringHelper.after(s, "=")).findFirst().orElse(null);
         } catch (Exception e) {
             // ignore
         }
-        return "3.4.0";
+        return answer != null ? answer : "1.16.2";
     }
 
     protected void safeCopy(File source, File target, boolean override) throws Exception {
@@ -770,6 +800,32 @@ abstract class ExportBaseCommand extends CamelCommand {
     private static String determinePackageName(String content) {
         final Matcher matcher = PACKAGE_PATTERN.matcher(content);
         return matcher.find() ? matcher.group(1) : null;
+    }
+
+    /**
+     * Normalize dependency expression. Basically replaces "camel-" based artifact names to use proper "camel:" prefix.
+     *
+     * @param  dependency to normalize.
+     * @return            normalized dependency.
+     */
+    private static String normalizeDependency(String dependency) {
+        if (dependency.startsWith("camel-quarkus-")) {
+            return "camel:" + dependency.substring("camel-quarkus-".length());
+        }
+
+        if (dependency.startsWith("camel-quarkus:")) {
+            return "camel:" + dependency.substring("camel-quarkus:".length());
+        }
+
+        if (dependency.startsWith("camel-k-")) {
+            return "camel-k:" + dependency.substring("camel-k-".length());
+        }
+
+        if (dependency.startsWith("camel-")) {
+            return "camel:" + dependency.substring("camel-".length());
+        }
+
+        return dependency;
     }
 
     protected static MavenGav parseMavenGav(String dep) {

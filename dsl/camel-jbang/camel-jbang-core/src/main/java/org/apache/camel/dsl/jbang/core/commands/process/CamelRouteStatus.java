@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.github.freva.asciitable.AsciiTable;
 import com.github.freva.asciitable.Column;
@@ -28,6 +29,7 @@ import com.github.freva.asciitable.OverflowBehaviour;
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
 import org.apache.camel.dsl.jbang.core.common.PidNameAgeCompletionCandidates;
 import org.apache.camel.dsl.jbang.core.common.ProcessHelper;
+import org.apache.camel.util.StringHelper;
 import org.apache.camel.util.TimeUtils;
 import org.apache.camel.util.json.JsonArray;
 import org.apache.camel.util.json.JsonObject;
@@ -65,6 +67,10 @@ public class CamelRouteStatus extends ProcessWatchCommand {
                         description = "Filter routes that must be slower than the given time (ms)")
     long mean;
 
+    @CommandLine.Option(names = { "--error" },
+                        description = "Shows detailed information for routes that has error status")
+    boolean error;
+
     public CamelRouteStatus(CamelJBangMain main) {
         super(main);
     }
@@ -73,6 +79,7 @@ public class CamelRouteStatus extends ProcessWatchCommand {
     public Integer doProcessWatchCall() throws Exception {
         List<Row> rows = new ArrayList<>();
 
+        AtomicBoolean remoteVisible = new AtomicBoolean();
         List<Long> pids = findPids(name);
         ProcessHandle.allProcesses()
                 .filter(ph -> pids.contains(ph.pid()))
@@ -94,10 +101,23 @@ public class CamelRouteStatus extends ProcessWatchCommand {
                             row.pid = Long.toString(ph.pid());
                             row.routeId = o.getString("routeId");
                             row.from = o.getString("from");
+                            Boolean bool = o.getBoolean("remote");
+                            if (bool != null) {
+                                // older camel versions does not include this information
+                                remoteVisible.set(true);
+                                row.remote = bool;
+                            }
                             row.source = o.getString("source");
                             row.state = o.getString("state");
                             row.age = o.getString("uptime");
                             row.uptime = row.age != null ? TimeUtils.toMilliSeconds(row.age) : 0;
+                            JsonObject eo = (JsonObject) o.get("lastError");
+                            if (eo != null) {
+                                row.lastErrorPhase = eo.getString("phase");
+                                row.lastErrorTimestamp = eo.getLongOrDefault("timestamp", 0);
+                                row.lastErrorMessage = eo.getString("message");
+                                row.stackTrace = eo.getCollection("stackTrace");
+                            }
                             Map<String, ?> stats = o.getMap("statistics");
                             if (stats != null) {
                                 Object load = stats.get("load01");
@@ -172,13 +192,22 @@ public class CamelRouteStatus extends ProcessWatchCommand {
         rows.sort(this::sortRow);
 
         if (!rows.isEmpty()) {
-            printTable(rows);
+            if (error) {
+                for (Row r : rows) {
+                    boolean error = r.lastErrorPhase != null;
+                    if (error) {
+                        printErrorTable(r, remoteVisible.get());
+                    }
+                }
+            } else {
+                printTable(rows, remoteVisible.get());
+            }
         }
 
         return 0;
     }
 
-    protected void printTable(List<Row> rows) {
+    protected void printTable(List<Row> rows, boolean remoteVisible) {
         printer().println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
                 new Column().header("PID").headerAlign(HorizontalAlign.CENTER).with(r -> r.pid),
                 new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).maxWidth(30, OverflowBehaviour.ELLIPSIS_RIGHT)
@@ -188,11 +217,11 @@ public class CamelRouteStatus extends ProcessWatchCommand {
                 new Column().header("FROM").visible(!wideUri).dataAlign(HorizontalAlign.LEFT)
                         .maxWidth(45, OverflowBehaviour.ELLIPSIS_RIGHT)
                         .with(this::getFrom),
-                new Column().header("FROM").visible(wideUri).dataAlign(HorizontalAlign.LEFT)
-                        .maxWidth(45, OverflowBehaviour.NEWLINE)
-                        .with(this::getFrom),
-                new Column().header("STATUS").headerAlign(HorizontalAlign.CENTER)
-                        .with(r -> r.state),
+                new Column().header("REMOTE").visible(remoteVisible).headerAlign(HorizontalAlign.CENTER)
+                        .dataAlign(HorizontalAlign.CENTER)
+                        .with(this::getRemote),
+                new Column().header("STATUS").dataAlign(HorizontalAlign.LEFT).headerAlign(HorizontalAlign.CENTER)
+                        .with(this::getStatus),
                 new Column().header("AGE").headerAlign(HorizontalAlign.CENTER).with(r -> r.age),
                 new Column().header("COVER").with(this::getCoverage),
                 new Column().header("MSG/S").with(this::getThroughput),
@@ -205,6 +234,40 @@ public class CamelRouteStatus extends ProcessWatchCommand {
                 new Column().header("LAST").with(r -> r.last),
                 new Column().header("DELTA").with(this::getDelta),
                 new Column().header("SINCE-LAST").with(this::getSinceLast))));
+    }
+
+    protected void printErrorTable(Row er, boolean remoteVisible) {
+        printer().println(AsciiTable.getTable(AsciiTable.NO_BORDERS, List.of(er), Arrays.asList(
+                new Column().header("PID").headerAlign(HorizontalAlign.CENTER).with(r -> r.pid),
+                new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).maxWidth(30, OverflowBehaviour.ELLIPSIS_RIGHT)
+                        .with(r -> r.name),
+                new Column().header("ID").dataAlign(HorizontalAlign.LEFT).maxWidth(20, OverflowBehaviour.ELLIPSIS_RIGHT)
+                        .with(this::getId),
+                new Column().header("FROM").visible(!wideUri).dataAlign(HorizontalAlign.LEFT)
+                        .maxWidth(45, OverflowBehaviour.ELLIPSIS_RIGHT)
+                        .with(this::getFrom),
+                new Column().header("REMOTE").visible(remoteVisible).headerAlign(HorizontalAlign.CENTER)
+                        .dataAlign(HorizontalAlign.CENTER)
+                        .with(this::getRemote),
+                new Column().header("STATUS").dataAlign(HorizontalAlign.LEFT).headerAlign(HorizontalAlign.CENTER)
+                        .with(this::getStatus),
+                new Column().header("PHASE").dataAlign(HorizontalAlign.LEFT).headerAlign(HorizontalAlign.CENTER)
+                        .with(r -> r.lastErrorPhase),
+                new Column().header("AGO").headerAlign(HorizontalAlign.CENTER)
+                        .with(this::getErrorAgo),
+                new Column().header("MESSAGE").dataAlign(HorizontalAlign.LEFT)
+                        .maxWidth(80, OverflowBehaviour.NEWLINE)
+                        .with(r -> r.lastErrorMessage))));
+        if (!er.stackTrace.isEmpty()) {
+            printer().println();
+            printer().println(StringHelper.fillChars('-', 120));
+            printer().println(StringHelper.padString(1, 55) + "STACK-TRACE");
+            printer().println(StringHelper.fillChars('-', 120));
+            for (String line : er.stackTrace) {
+                printer().println(String.format("\t%s", line));
+            }
+            printer().println();
+        }
     }
 
     protected int sortRow(Row o1, Row o2) {
@@ -224,6 +287,13 @@ public class CamelRouteStatus extends ProcessWatchCommand {
             default:
                 return 0;
         }
+    }
+
+    protected String getErrorAgo(Row r) {
+        if (r.lastErrorTimestamp > 0) {
+            return TimeUtils.printSince(r.lastErrorTimestamp);
+        }
+        return "";
     }
 
     protected String getFrom(Row r) {
@@ -260,6 +330,17 @@ public class CamelRouteStatus extends ProcessWatchCommand {
         return s;
     }
 
+    protected String getRemote(Row r) {
+        return r.remote ? "x" : "";
+    }
+
+    protected String getStatus(Row r) {
+        if (r.lastErrorPhase != null) {
+            return "Error";
+        }
+        return r.state;
+    }
+
     protected String getId(Row r) {
         if (source && r.source != null) {
             return sourceLocLine(r.source);
@@ -286,6 +367,7 @@ public class CamelRouteStatus extends ProcessWatchCommand {
         long uptime;
         String routeId;
         String from;
+        boolean remote;
         String source;
         String state;
         String age;
@@ -305,6 +387,10 @@ public class CamelRouteStatus extends ProcessWatchCommand {
         String load01;
         String load05;
         String load15;
+        String lastErrorPhase;
+        long lastErrorTimestamp;
+        String lastErrorMessage;
+        List<String> stackTrace;
     }
 
 }

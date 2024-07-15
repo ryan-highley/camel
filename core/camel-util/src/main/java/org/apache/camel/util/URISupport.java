@@ -30,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import static org.apache.camel.util.CamelURIParser.URI_ALREADY_NORMALIZED;
@@ -50,6 +51,7 @@ public final class URISupport {
     // Match any key-value pair in the URI query string whose key contains
     // "passphrase" or "password" or secret key (case-insensitive).
     // First capture group is the key, second is the value.
+    @SuppressWarnings("RegExpUnnecessaryNonCapturingGroup")
     private static final Pattern ALL_SECRETS = Pattern.compile(
             "([?&][^=]*(?:" + SensitiveUtils.getSensitivePattern() + ")[^=]*)=(RAW(([{][^}]*[}])|([(][^)]*[)]))|[^&]*)",
             Pattern.CASE_INSENSITIVE);
@@ -315,6 +317,22 @@ public final class URISupport {
      * @see              #RAW_TOKEN_END
      */
     public static void resolveRawParameterValues(Map<String, Object> parameters) {
+        resolveRawParameterValues(parameters, null);
+    }
+
+    /**
+     * Traverses the given parameters, and resolve any parameter values which uses the RAW token syntax:
+     * <tt>key=RAW(value)</tt>. This method will then remove the RAW tokens, and replace the content of the value, with
+     * just the value.
+     *
+     * @param parameters the uri parameters
+     * @param onReplace  optional function executed when replace the raw value
+     * @see              #parseQuery(String)
+     * @see              #RAW_TOKEN_PREFIX
+     * @see              #RAW_TOKEN_START
+     * @see              #RAW_TOKEN_END
+     */
+    public static void resolveRawParameterValues(Map<String, Object> parameters, Function<String, String> onReplace) {
         for (Map.Entry<String, Object> entry : parameters.entrySet()) {
             if (entry.getValue() == null) {
                 continue;
@@ -335,6 +353,9 @@ public final class URISupport {
                         // do not encode RAW parameters unless it has %
                         // need to reverse: replace % with %25 to avoid losing "%" when decoding
                         String s = raw.replace("%25", "%");
+                        if (onReplace != null) {
+                            s = onReplace.apply(s);
+                        }
                         list.set(i, s);
                     }
                 }
@@ -345,6 +366,9 @@ public final class URISupport {
                     // do not encode RAW parameters unless it has %
                     // need to reverse: replace % with %25 to avoid losing "%" when decoding
                     String s = raw.replace("%25", "%");
+                    if (onReplace != null) {
+                        s = onReplace.apply(s);
+                    }
                     entry.setValue(s);
                 }
             }
@@ -495,7 +519,7 @@ public final class URISupport {
      *                            is no options.
      * @throws URISyntaxException is thrown if uri has invalid syntax.
      */
-    @Deprecated
+    @Deprecated(since = "4.1.0")
     public static String createQueryString(Map<String, String> options, String ampersand, boolean encode) {
         if (!options.isEmpty()) {
             StringBuilder rc = new StringBuilder();
@@ -519,7 +543,7 @@ public final class URISupport {
         }
     }
 
-    @Deprecated
+    @Deprecated(since = "4.0.0")
     public static String createQueryString(Collection<String> sortedKeys, Map<String, Object> options, boolean encode) {
         return createQueryString(sortedKeys.toArray(new String[0]), options, encode);
     }
@@ -750,7 +774,7 @@ public final class URISupport {
                 prev = key;
             }
             if (sort) {
-                final String[] array = entries.toArray(new String[entries.size()]);
+                final String[] array = entries.toArray(new String[0]);
                 Arrays.sort(array);
 
                 query = URISupport.createQueryString(array, parameters, true);

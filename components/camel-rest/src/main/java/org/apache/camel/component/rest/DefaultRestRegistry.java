@@ -33,7 +33,7 @@ import org.apache.camel.Service;
 import org.apache.camel.ServiceStatus;
 import org.apache.camel.StatefulService;
 import org.apache.camel.StaticService;
-import org.apache.camel.ValueHolder;
+import org.apache.camel.spi.NormalizedEndpointUri;
 import org.apache.camel.spi.RestConfiguration;
 import org.apache.camel.spi.RestRegistry;
 import org.apache.camel.support.LifecycleStrategySupport;
@@ -43,16 +43,19 @@ import org.apache.camel.util.ObjectHelper;
 public class DefaultRestRegistry extends ServiceSupport implements StaticService, RestRegistry, CamelContextAware {
 
     private CamelContext camelContext;
-    private final Map<Consumer, RestService> registry = new LinkedHashMap<>();
+    private final Map<Consumer, List<RestService>> registry = new LinkedHashMap<>();
     private transient Producer apiProducer;
 
     @Override
     public void addRestService(
-            Consumer consumer, String url, String baseUrl, String basePath, String uriTemplate, String method,
+            Consumer consumer, boolean contractFirst, String url, String baseUrl, String basePath, String uriTemplate,
+            String method,
             String consumes, String produces, String inType, String outType, String routeId, String description) {
         RestServiceEntry entry = new RestServiceEntry(
-                consumer, url, baseUrl, basePath, uriTemplate, method, consumes, produces, inType, outType, description);
-        registry.put(consumer, entry);
+                consumer, contractFirst, url, baseUrl, basePath, uriTemplate, method, consumes, produces, inType, outType,
+                description);
+        List<RestService> list = registry.computeIfAbsent(consumer, c -> new ArrayList<>());
+        list.add(entry);
     }
 
     @Override
@@ -62,12 +65,20 @@ public class DefaultRestRegistry extends ServiceSupport implements StaticService
 
     @Override
     public List<RestRegistry.RestService> listAllRestServices() {
-        return new ArrayList<>(registry.values());
+        List<RestRegistry.RestService> answer = new ArrayList<>();
+        for (var list : registry.values()) {
+            answer.addAll(list);
+        }
+        return answer;
     }
 
     @Override
     public int size() {
-        return registry.size();
+        int count = 0;
+        for (var list : registry.values()) {
+            count += list.size();
+        }
+        return count;
     }
 
     @Override
@@ -76,8 +87,8 @@ public class DefaultRestRegistry extends ServiceSupport implements StaticService
         if (apiProducer == null) {
             Endpoint restApiEndpoint = null;
             Endpoint restEndpoint = null;
-            for (Map.Entry<? extends ValueHolder<String>, Endpoint> entry : camelContext.getEndpointRegistry().entrySet()) {
-                String uri = entry.getKey().get();
+            for (Map.Entry<NormalizedEndpointUri, Endpoint> entry : camelContext.getEndpointRegistry().entrySet()) {
+                String uri = entry.getKey().getUri();
                 if (uri.startsWith("rest-api:")) {
                     restApiEndpoint = entry.getValue();
                     break;
@@ -158,6 +169,7 @@ public class DefaultRestRegistry extends ServiceSupport implements StaticService
     private static final class RestServiceEntry implements RestService {
 
         private final Consumer consumer;
+        private final boolean contractFirst;
         private final String url;
         private final String baseUrl;
         private final String basePath;
@@ -169,11 +181,11 @@ public class DefaultRestRegistry extends ServiceSupport implements StaticService
         private final String outType;
         private final String description;
 
-        private RestServiceEntry(Consumer consumer, String url, String baseUrl, String basePath, String uriTemplate,
-                                 String method,
-                                 String consumes, String produces, String inType, String outType,
-                                 String description) {
+        private RestServiceEntry(Consumer consumer, boolean contractFirst, String url, String baseUrl, String basePath,
+                                 String uriTemplate, String method, String consumes, String produces,
+                                 String inType, String outType, String description) {
             this.consumer = consumer;
+            this.contractFirst = contractFirst;
             this.url = url;
             this.baseUrl = baseUrl;
             this.basePath = basePath;
@@ -189,6 +201,11 @@ public class DefaultRestRegistry extends ServiceSupport implements StaticService
         @Override
         public Consumer getConsumer() {
             return consumer;
+        }
+
+        @Override
+        public boolean isContractFirst() {
+            return contractFirst;
         }
 
         @Override

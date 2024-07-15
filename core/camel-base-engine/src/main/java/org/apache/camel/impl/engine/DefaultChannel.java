@@ -36,6 +36,7 @@ import org.apache.camel.spi.BacklogDebugger;
 import org.apache.camel.spi.Debugger;
 import org.apache.camel.spi.ErrorHandlerRedeliveryCustomizer;
 import org.apache.camel.spi.InterceptStrategy;
+import org.apache.camel.spi.InterceptableProcessor;
 import org.apache.camel.spi.ManagementInterceptStrategy;
 import org.apache.camel.spi.MessageHistoryFactory;
 import org.apache.camel.spi.Tracer;
@@ -176,8 +177,10 @@ public class DefaultChannel extends CamelInternalProcessor implements Channel {
         // as we do not want regular tracer to trace the debugger)
         if (camelContext.isDebugStandby() || route.isDebugging()) {
             final Debugger customDebugger = camelContext.getDebugger();
+            final MessageHistoryFactory messageHistoryFactory = camelContext.getMessageHistoryFactory();
             if (customDebugger != null) {
                 // use custom debugger
+                addAdvice(new MessageHistoryAdvice(messageHistoryFactory, targetOutputDef));
                 addAdvice(new DebuggerAdvice(customDebugger, nextProcessor, targetOutputDef));
             }
             BacklogDebugger debugger = getBacklogDebugger(camelContext, customDebugger == null);
@@ -192,12 +195,13 @@ public class DefaultChannel extends CamelInternalProcessor implements Channel {
                 if (!skip && routeDefinition != null) {
                     backlogDebuggerSetupInitialBreakpoints(definition, routeDefinition, first, debugger, targetOutputDef);
                     if (first && debugger.isSingleStepIncludeStartEnd()) {
-                        // add breakpoint on route input instead of first node
-                        addAdvice(new BacklogDebuggerAdvice(debugger, nextProcessor, routeDefinition.getInput()));
                         // debugger captures message history, and we need to capture history of incoming
                         addAdvice(
                                 new MessageHistoryAdvice(camelContext.getMessageHistoryFactory(), routeDefinition.getInput()));
+                        // add breakpoint on route input instead of first node
+                        addAdvice(new BacklogDebuggerAdvice(debugger, nextProcessor, routeDefinition.getInput()));
                     }
+                    addAdvice(new MessageHistoryAdvice(messageHistoryFactory, targetOutputDef));
                     addAdvice(new BacklogDebuggerAdvice(debugger, nextProcessor, targetOutputDef));
                 }
             }
@@ -211,13 +215,15 @@ public class DefaultChannel extends CamelInternalProcessor implements Channel {
         if (route.isTracing() || camelContext.isTracingStandby()) {
             // add logger tracer
             Tracer tracer = camelContext.getTracer();
-            addAdvice(new TracingAdvice(tracer, targetOutputDef, routeDefinition, first));
+            addAdvice(new TracingAdvice(camelContext, tracer, targetOutputDef, routeDefinition, first));
         }
 
-        if (route.isMessageHistory()) {
-            // add message history advice
-            MessageHistoryFactory factory = camelContext.getMessageHistoryFactory();
-            addAdvice(new MessageHistoryAdvice(factory, targetOutputDef));
+        // debugger will automatically include message history
+        boolean debugging = camelContext.isDebugStandby() || route.isDebugging();
+        if (!debugging && route.isMessageHistory()) {
+            final MessageHistoryFactory messageHistoryFactory = camelContext.getMessageHistoryFactory();
+            // add message history advice (when not debugging)
+            addAdvice(new MessageHistoryAdvice(messageHistoryFactory, targetOutputDef));
         }
         // add advice that keeps track of which node is processing
         addAdvice(new NodeHistoryAdvice(targetOutputDef));
@@ -228,24 +234,28 @@ public class DefaultChannel extends CamelInternalProcessor implements Channel {
         Collections.reverse(interceptors);
         // wrap the output with the configured interceptors
         Processor target = nextProcessor;
-        for (InterceptStrategy strategy : interceptors) {
-            Processor next = target == nextProcessor ? null : nextProcessor;
-            // use the fine grained definition (eg the child if available). Its always possible to get back to the parent
-            Processor wrapped = strategy.wrapProcessorInInterceptors(route.getCamelContext(), targetOutputDef, target, next);
-            if (!(wrapped instanceof AsyncProcessor)) {
-                LOG.warn("Interceptor: {} at: {} does not return an AsyncProcessor instance."
-                         + " This causes the asynchronous routing engine to not work as optimal as possible."
-                         + " See more details at the InterceptStrategy javadoc."
-                         + " Camel will use a bridge to adapt the interceptor to the asynchronous routing engine,"
-                         + " but its not the most optimal solution. Please consider changing your interceptor to comply.",
-                        strategy, definition);
+        boolean skip = target instanceof InterceptableProcessor && !((InterceptableProcessor) target).canIntercept();
+        if (!skip) {
+            for (InterceptStrategy strategy : interceptors) {
+                Processor next = target == nextProcessor ? null : nextProcessor;
+                // use the fine grained definition (eg the child if available). Its always possible to get back to the parent
+                Processor wrapped
+                        = strategy.wrapProcessorInInterceptors(route.getCamelContext(), targetOutputDef, target, next);
+                if (!(wrapped instanceof AsyncProcessor)) {
+                    LOG.warn("Interceptor: {} at: {} does not return an AsyncProcessor instance."
+                             + " This causes the asynchronous routing engine to not work as optimal as possible."
+                             + " See more details at the InterceptStrategy javadoc."
+                             + " Camel will use a bridge to adapt the interceptor to the asynchronous routing engine,"
+                             + " but its not the most optimal solution. Please consider changing your interceptor to comply.",
+                            strategy, definition);
+                }
+                if (!(wrapped instanceof WrapAwareProcessor)) {
+                    // wrap the target so it becomes a service and we can manage its lifecycle
+                    wrapped = PluginHelper.getInternalProcessorFactory(camelContext)
+                            .createWrapProcessor(wrapped, target);
+                }
+                target = wrapped;
             }
-            if (!(wrapped instanceof WrapAwareProcessor)) {
-                // wrap the target so it becomes a service and we can manage its lifecycle
-                wrapped = PluginHelper.getInternalProcessorFactory(camelContext)
-                        .createWrapProcessor(wrapped, target);
-            }
-            target = wrapped;
         }
 
         if (route.isStreamCaching()) {
@@ -362,7 +372,7 @@ public class DefaultChannel extends CamelInternalProcessor implements Channel {
                         if (loc != null && loc.contains(":")) {
                             loc = StringHelper.after(loc, ":");
                         }
-                        String num = "" + definition.getLineNumber();
+                        String num = String.valueOf(definition.getLineNumber());
                         if (PatternHelper.matchPattern(loc, ploc) && pnum.equals(num)) {
                             match = true;
                         }

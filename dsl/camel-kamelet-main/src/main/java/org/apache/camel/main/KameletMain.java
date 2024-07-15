@@ -45,6 +45,7 @@ import org.apache.camel.main.download.DependencyDownloaderComponentResolver;
 import org.apache.camel.main.download.DependencyDownloaderDataFormatResolver;
 import org.apache.camel.main.download.DependencyDownloaderKamelet;
 import org.apache.camel.main.download.DependencyDownloaderLanguageResolver;
+import org.apache.camel.main.download.DependencyDownloaderPropertiesComponent;
 import org.apache.camel.main.download.DependencyDownloaderPropertiesFunctionResolver;
 import org.apache.camel.main.download.DependencyDownloaderPropertyBindingListener;
 import org.apache.camel.main.download.DependencyDownloaderResourceLoader;
@@ -100,7 +101,7 @@ import org.apache.camel.tooling.maven.MavenGav;
  */
 public class KameletMain extends MainCommandLineSupport {
 
-    public static final String DEFAULT_KAMELETS_LOCATION = "classpath:/kamelets,github:apache:camel-kamelets/kamelets";
+    public static final String DEFAULT_KAMELETS_LOCATION = "classpath:kamelets,github:apache:camel-kamelets/kamelets";
 
     protected final MainRegistry registry = new MainRegistry();
     private String profile = "dev";
@@ -397,6 +398,11 @@ public class KameletMain extends MainCommandLineSupport {
         // setup backlog recorder from very start
         answer.getCamelContextExtension().setStartupStepRecorder(new BacklogStartupStepRecorder());
 
+        boolean export = "true".equals(getInitialProperties().get("camel.jbang.export"));
+        if (export) {
+            addInitialProperty("camel.component.properties.ignore-missing-property", "true");
+        }
+
         boolean prompt = "true".equals(getInitialProperties().get("camel.jbang.prompt"));
         if (prompt) {
             answer.getPropertiesComponent().addPropertiesSource(new PromptPropertyPlaceholderSource());
@@ -569,7 +575,10 @@ public class KameletMain extends MainCommandLineSupport {
                 answer.addService(new CommandLineDependencyDownloader(answer, dependencies.toString()));
             }
 
-            KnownDependenciesResolver knownDeps = new KnownDependenciesResolver(answer);
+            String springBootVersion = (String) getInitialProperties().get("camel.jbang.springBootVersion");
+            String quarkusVersion = (String) getInitialProperties().get("camel.jbang.quarkusVersion");
+
+            KnownDependenciesResolver knownDeps = new KnownDependenciesResolver(answer, springBootVersion, quarkusVersion);
             knownDeps.loadKnownDependencies();
             DependencyDownloaderPropertyBindingListener listener
                     = new DependencyDownloaderPropertyBindingListener(answer, knownDeps);
@@ -610,6 +619,8 @@ public class KameletMain extends MainCommandLineSupport {
             }
             answer.getCamelContextExtension().getRegistry().bind(DownloadModelineParser.class.getSimpleName(),
                     new DownloadModelineParser(answer));
+
+            answer.addService(new DependencyDownloaderPropertiesComponent(answer, knownDeps, silent));
 
             // reloader
             if (sourceDir != null) {
@@ -667,7 +678,8 @@ public class KameletMain extends MainCommandLineSupport {
 
         org.apache.camel.component.properties.PropertiesComponent pc
                 = (org.apache.camel.component.properties.PropertiesComponent) camelContext.getPropertiesComponent();
-        pc.setPropertiesFunctionResolver(new DependencyDownloaderPropertiesFunctionResolver(camelContext));
+        boolean export = "true".equals(getInitialProperties().get("camel.jbang.export"));
+        pc.setPropertiesFunctionResolver(new DependencyDownloaderPropertiesFunctionResolver(camelContext, export));
     }
 
     @Override

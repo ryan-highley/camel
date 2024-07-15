@@ -28,11 +28,20 @@ import org.apache.camel.spi.Metadata;
  * spreads the load evenly.
  */
 @Metadata(label = "eip,routing")
-@XmlRootElement(name = "roundRobin")
+@XmlRootElement(name = "roundRobinLoadBalancer")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class RoundRobinLoadBalancerDefinition extends LoadBalancerDefinition {
 
     public RoundRobinLoadBalancerDefinition() {
+    }
+
+    protected RoundRobinLoadBalancerDefinition(RoundRobinLoadBalancerDefinition source) {
+        super(source);
+    }
+
+    @Override
+    public RoundRobinLoadBalancerDefinition copyDefinition() {
+        return new RoundRobinLoadBalancerDefinition(this);
     }
 
     @Override

@@ -59,10 +59,10 @@ public class BeanExpression implements Expression, Predicate {
     private BeanComponent beanComponent;
     private Language simple;
     private Class<?> resultType;
-    private Object bean;
+    private final Object bean;
     private String beanName;
     private Class<?> type;
-    private String method;
+    private final String method;
     private BeanHolder beanHolder;
     private boolean ognlMethod;
     private BeanScope scope = BeanScope.Singleton;
@@ -193,7 +193,7 @@ public class BeanExpression implements Expression, Predicate {
     public String toString() {
         StringBuilder sb = new StringBuilder("BeanExpression[");
         if (bean != null) {
-            sb.append(bean.toString());
+            sb.append(bean);
         } else if (beanName != null) {
             sb.append(beanName);
         } else if (type != null) {
@@ -347,13 +347,13 @@ public class BeanExpression implements Expression, Predicate {
     private static Object invokeBean(BeanHolder beanHolder, String beanName, String methodName, Exchange exchange) {
         Object result;
 
-        BeanExpressionProcessor processor = new BeanExpressionProcessor(beanHolder);
-        if (methodName != null) {
-            processor.setMethod(methodName);
-            // enable OGNL like invocation
-            processor.setShorthandMethod(true);
-        }
-        try {
+        try (BeanExpressionProcessor processor = new BeanExpressionProcessor(beanHolder)) {
+
+            if (methodName != null) {
+                processor.setMethod(methodName);
+                // enable OGNL like invocation
+                processor.setShorthandMethod(true);
+            }
             // copy the original exchange to avoid side effects on it
             Exchange resultExchange = ExchangeHelper.createCopy(exchange, true);
             // remove any existing exception in case we do OGNL on the exception

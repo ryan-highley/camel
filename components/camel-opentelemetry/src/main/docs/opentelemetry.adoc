@@ -28,9 +28,10 @@ The configuration properties for the OpenTelemetry tracer are:
 |excludePatterns |  | Sets exclude pattern(s) that will disable tracing for Camel
 messages that matches the pattern. The content is a Set<String> where the key is a pattern. The pattern
 uses the rules from Intercept.
-|encoding |false| Sets whether the header keys need to be encoded (connector specific) or not. The value is a boolean.
+|encoding | false | Sets whether the header keys need to be encoded (connector specific) or not. The value is a boolean.
 Dashes are required for instances to be encoded for JMS property keys.
-
+|traceProcessors | false | Setting this to true will create new OpenTelemetry Spans for each Camel Processors.
+Use the excludePattern property to filter out Processors
 |=======================================================================
 
 
@@ -54,7 +55,7 @@ otelTracer.init(camelContext);
 
 NOTE: You would still need OpenTelemetry to instrument your code, which can be done via a <<OpenTelemetry-JavaAgent,Java agent>>.
 
-=== Using it with standalone Camel
+=== Using with standalone Camel
 
 If you use `camel-main` as standalone Camel, then you can enable and use OpenTelemetry without Java code.
 
@@ -63,7 +64,7 @@ Add `camel-opentelemetry` component in your POM, and configure in `application.p
 [source,properties]
 ----
 camel.opentelemetry.enabled = true
-# you can confiure the other options
+# you can configure the other options
 # camel.opentelemetry.instrumentationName = myApp
 ----
 
@@ -83,7 +84,7 @@ a `OpenTelemetryTracer` bean has been defined by the application.
 
 Download the https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/[latest version].
 
-This package includes the instrumentation agent as well as instrumentations for all supported libraries and all available data exporters.
+This package includes the instrumentation agent as well as instrumentation's for all supported libraries and all available data exporters.
 The package provides a completely automatic, out-of-the-box experience.
 
 Enable the instrumentation agent using the `-javaagent` flag to the JVM.

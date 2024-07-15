@@ -222,6 +222,7 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
     }
 
     protected void actionTask() {
+        String action = null;
         try {
             JsonObject root = loadAction();
             if (root == null || root.isEmpty()) {
@@ -232,7 +233,7 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                 LOG.debug("Action: {}", root);
             }
 
-            String action = root.getString("action");
+            action = root.getString("action");
             if ("route".equals(action)) {
                 doActionRouteTask(root);
             } else if ("logger".equals(action)) {
@@ -263,15 +264,19 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                 doActionSendTask(root);
             } else if ("transform".equals(action)) {
                 doActionTransformTask(root);
+            } else if ("bean".equals(action)) {
+                doActionBeanTask(root);
+            } else if ("kafka".equals(action)) {
+                doActionKafkaTask();
             }
-
-            // action done so delete file
-            FileUtil.deleteFile(actionFile);
-
         } catch (Exception e) {
             // ignore
-            LOG.debug("Error executing action file: {} due to: {}. This exception is ignored.", actionFile, e.getMessage(),
+            LOG.warn("Error executing action: {} due to: {}. This exception is ignored.", action != null ? action : actionFile,
+                    e.getMessage(),
                     e);
+        } finally {
+            // action done so delete file
+            FileUtil.deleteFile(actionFile);
         }
     }
 
@@ -609,6 +614,8 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                                 .getMap("exception"));
                 IOHelper.writeText(jo.toJson(), outputFile);
             }
+        } else {
+            IOHelper.writeText("{}", outputFile);
         }
     }
 
@@ -624,6 +631,8 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                     Map.of("filter", filter, "limit", limit, "browse", browse));
             LOG.trace("Updating output file: {}", outputFile);
             IOHelper.writeText(json.toJson(), outputFile);
+        } else {
+            IOHelper.writeText("{}", outputFile);
         }
     }
 
@@ -634,6 +643,8 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
             JsonObject json = (JsonObject) dc.call(DevConsole.MediaType.JSON);
             LOG.trace("Updating output file: {}", outputFile);
             IOHelper.writeText(json.toJson(), outputFile);
+        } else {
+            IOHelper.writeText("{}", outputFile);
         }
     }
 
@@ -645,6 +656,8 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
             JsonObject json = (JsonObject) dc.call(DevConsole.MediaType.JSON, Map.of("stacktrace", stacktrace));
             LOG.trace("Updating output file: {}", outputFile);
             IOHelper.writeText(json.toJson(), outputFile);
+        } else {
+            IOHelper.writeText("{}", outputFile);
         }
     }
 
@@ -660,6 +673,8 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                             Map.of("filter", filter, "format", format, "uriAsParameters", uriAsParameters));
             LOG.trace("Updating output file: {}", outputFile);
             IOHelper.writeText(json.toJson(), outputFile);
+        } else {
+            IOHelper.writeText("{}", outputFile);
         }
     }
 
@@ -671,6 +686,8 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
             JsonObject json = (JsonObject) dc.call(DevConsole.MediaType.JSON, Map.of("filter", filter));
             LOG.trace("Updating output file: {}", outputFile);
             IOHelper.writeText(json.toJson(), outputFile);
+        } else {
+            IOHelper.writeText("{}", outputFile);
         }
     }
 
@@ -681,6 +698,8 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
             JsonObject json = (JsonObject) dc.call(DevConsole.MediaType.JSON, Map.of(Exchange.HTTP_PATH, "/*"));
             LOG.trace("Updating output file: {}", outputFile);
             IOHelper.writeText(json.toJson(), outputFile);
+        } else {
+            IOHelper.writeText("{}", outputFile);
         }
     }
 
@@ -691,7 +710,46 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
             JsonObject json = (JsonObject) dc.call(DevConsole.MediaType.JSON, Map.of("stackTrace", "true"));
             LOG.trace("Updating output file: {}", outputFile);
             IOHelper.writeText(json.toJson(), outputFile);
+        } else {
+            IOHelper.writeText("{}", outputFile);
         }
+    }
+
+    private void doActionKafkaTask() throws IOException {
+        DevConsole dc = camelContext.getCamelContextExtension().getContextPlugin(DevConsoleRegistry.class)
+                .resolveById("kafka");
+        if (dc != null) {
+            JsonObject json = (JsonObject) dc.call(DevConsole.MediaType.JSON, Map.of("committed", "true"));
+            LOG.trace("Updating output file: {}", outputFile);
+            IOHelper.writeText(json.toJson(), outputFile);
+        } else {
+            IOHelper.writeText("{}", outputFile);
+        }
+    }
+
+    private void doActionBeanTask(JsonObject root) throws IOException {
+        String filter = root.getStringOrDefault("filter", "");
+        String properties = root.getStringOrDefault("properties", "true");
+        String nulls = root.getStringOrDefault("nulls", "true");
+        String internal = root.getStringOrDefault("internal", "false");
+
+        Map<String, Object> options = Map.of("filter", filter, "properties", properties, "nulls", nulls, "internal", internal);
+
+        JsonObject answer = new JsonObject();
+        DevConsole dc1 = camelContext.getCamelContextExtension().getContextPlugin(DevConsoleRegistry.class)
+                .resolveById("bean");
+        DevConsole dc2 = camelContext.getCamelContextExtension().getContextPlugin(DevConsoleRegistry.class)
+                .resolveById("bean-model");
+        if (dc1 != null) {
+            JsonObject json = (JsonObject) dc1.call(DevConsole.MediaType.JSON, options);
+            answer.put("beans", json.getMap("beans"));
+        }
+        if (dc2 != null) {
+            JsonObject json = (JsonObject) dc2.call(DevConsole.MediaType.JSON, options);
+            answer.put("bean-models", json.getMap("beans"));
+        }
+        LOG.trace("Updating output file: {}", outputFile);
+        IOHelper.writeText(answer.toJson(), outputFile);
     }
 
     private void doActionResetStatsTask() throws Exception {
@@ -712,6 +770,8 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                     Map.of("command", cmd, "breakpoint", bp, "history", history));
             LOG.trace("Updating output file: {}", outputFile);
             IOHelper.writeText(json.toJson(), outputFile);
+        } else {
+            IOHelper.writeText("{}", outputFile);
         }
     }
 
@@ -736,7 +796,7 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                 LoggerHelper.changeLoggingLevel(logger, level);
             }
         } catch (Exception e) {
-            // ignore
+            LOG.warn("Error changing logging level due to {}. This exception is ignored.", e.getMessage(), e);
         }
     }
 
@@ -756,8 +816,8 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                 })
                 .toList();
         for (String id : ids) {
+            String command = root.getString("command");
             try {
-                String command = root.getString("command");
                 if ("start".equals(command)) {
                     if ("*".equals(id)) {
                         camelContext.getRouteController().startAllRoutes();
@@ -771,12 +831,24 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                         camelContext.getRouteController().stopRoute(id);
                     }
                 } else if ("suspend".equals(command)) {
-                    camelContext.getRouteController().suspendRoute(id);
+                    if ("*".equals(id)) {
+                        for (Route r : camelContext.getRoutes()) {
+                            camelContext.getRouteController().suspendRoute(r.getRouteId());
+                        }
+                    } else {
+                        camelContext.getRouteController().suspendRoute(id);
+                    }
                 } else if ("resume".equals(command)) {
-                    camelContext.getRouteController().resumeRoute(id);
+                    if ("*".equals(id)) {
+                        for (Route r : camelContext.getRoutes()) {
+                            camelContext.getRouteController().resumeRoute(r.getRouteId());
+                        }
+                    } else {
+                        camelContext.getRouteController().resumeRoute(id);
+                    }
                 }
             } catch (Exception e) {
-                // ignore
+                LOG.warn("Error {} route: {} due to: {}. This exception is ignored.", command, id, e.getMessage(), e);
             }
         }
     }
@@ -957,12 +1029,36 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                         root.put("transformers", json);
                     }
                 }
+                DevConsole dc17 = dcr.resolveById("service");
+                if (dc17 != null) {
+                    JsonObject json = (JsonObject) dc17.call(DevConsole.MediaType.JSON);
+                    if (json != null && !json.isEmpty()) {
+                        root.put("services", json);
+                    }
+                }
+                DevConsole dc18 = dcr.resolveById("platform-http");
+                if (dc18 != null) {
+                    JsonObject json = (JsonObject) dc18.call(DevConsole.MediaType.JSON);
+                    if (json != null && !json.isEmpty()) {
+                        root.put("platform-http", json);
+                    }
+                }
+                DevConsole dc19 = dcr.resolveById("rest");
+                if (dc19 != null) {
+                    JsonObject json = (JsonObject) dc19.call(DevConsole.MediaType.JSON);
+                    if (json != null && !json.isEmpty()) {
+                        root.put("rests", json);
+                    }
+                }
+                DevConsole dc20 = dcr.resolveById("kafka");
+                if (dc20 != null) {
+                    JsonObject json = (JsonObject) dc20.call(DevConsole.MediaType.JSON);
+                    if (json != null && !json.isEmpty()) {
+                        root.put("kafka", json);
+                    }
+                }
             }
             // various details
-            JsonObject services = collectServices();
-            if (!services.isEmpty()) {
-                root.put("services", services);
-            }
             JsonObject mem = collectMemory();
             if (mem != null) {
                 root.put("memory", mem);
@@ -1072,55 +1168,6 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                 root.put("azure-secrets", json);
             }
         }
-        return root;
-    }
-
-    private JsonObject collectServices() {
-        JsonObject root = new JsonObject();
-
-        // platform-http is optional
-        if (camelContext.hasComponent("platform-http") != null) {
-            Optional<DevConsole> dc = PluginHelper.getDevConsoleResolver(camelContext).lookupDevConsole("platform-http");
-            if (dc.isPresent()) {
-                JsonObject json = (JsonObject) dc.get().call(DevConsole.MediaType.JSON);
-                if (json != null) {
-                    root.put("platform-http", json);
-                }
-            }
-        }
-        // netty is optional
-        Optional<DevConsole> dc = PluginHelper.getDevConsoleResolver(camelContext).lookupDevConsole("netty");
-        if (dc.isPresent()) {
-            JsonObject json = (JsonObject) dc.get().call(DevConsole.MediaType.JSON);
-            if (json != null) {
-                root.put("netty", json);
-            }
-        }
-        // mina is optional
-        dc = PluginHelper.getDevConsoleResolver(camelContext).lookupDevConsole("mina");
-        if (dc.isPresent()) {
-            JsonObject json = (JsonObject) dc.get().call(DevConsole.MediaType.JSON);
-            if (json != null) {
-                root.put("mina", json);
-            }
-        }
-        // mllp is optional
-        dc = PluginHelper.getDevConsoleResolver(camelContext).lookupDevConsole("mllp");
-        if (dc.isPresent()) {
-            JsonObject json = (JsonObject) dc.get().call(DevConsole.MediaType.JSON);
-            if (json != null) {
-                root.put("mllp", json);
-            }
-        }
-        // knative is optional
-        dc = PluginHelper.getDevConsoleResolver(camelContext).lookupDevConsole("knative");
-        if (dc.isPresent()) {
-            JsonObject json = (JsonObject) dc.get().call(DevConsole.MediaType.JSON);
-            if (json != null) {
-                root.put("knative", json);
-            }
-        }
-
         return root;
     }
 

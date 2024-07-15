@@ -1749,6 +1749,26 @@ public interface AmqpComponentBuilderFactory {
     
         
         /**
+         * Whether to detect the network address location of the JMS broker on
+         * startup. This information is gathered via reflection on the
+         * ConnectionFactory, and is vendor specific. This option can be used to
+         * turn this off.
+         * 
+         * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
+         * 
+         * Default: true
+         * Group: advanced
+         * 
+         * @param serviceLocationEnabled the value to set
+         * @return the dsl builder
+         */
+        default AmqpComponentBuilder serviceLocationEnabled(boolean serviceLocationEnabled) {
+            doSetProperty("serviceLocationEnabled", serviceLocationEnabled);
+            return this;
+        }
+    
+        
+        /**
          * Sets whether synchronous processing should be strictly used.
          * 
          * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
@@ -1893,6 +1913,43 @@ public interface AmqpComponentBuilderFactory {
          */
         default AmqpComponentBuilder waitForProvisionCorrelationToBeUpdatedThreadSleepingTime(long waitForProvisionCorrelationToBeUpdatedThreadSleepingTime) {
             doSetProperty("waitForProvisionCorrelationToBeUpdatedThreadSleepingTime", waitForProvisionCorrelationToBeUpdatedThreadSleepingTime);
+            return this;
+        }
+    
+        
+        /**
+         * Number of times to wait for temporary replyTo queue to be created and
+         * ready when doing request/reply over JMS.
+         * 
+         * The option is a: &lt;code&gt;int&lt;/code&gt; type.
+         * 
+         * Default: 200
+         * Group: advanced
+         * 
+         * @param waitForTemporaryReplyToToBeUpdatedCounter the value to set
+         * @return the dsl builder
+         */
+        default AmqpComponentBuilder waitForTemporaryReplyToToBeUpdatedCounter(int waitForTemporaryReplyToToBeUpdatedCounter) {
+            doSetProperty("waitForTemporaryReplyToToBeUpdatedCounter", waitForTemporaryReplyToToBeUpdatedCounter);
+            return this;
+        }
+    
+        
+        /**
+         * Interval in millis to sleep each time while waiting for temporary
+         * replyTo queue to be ready.
+         * 
+         * The option is a: &lt;code&gt;long&lt;/code&gt; type.
+         * 
+         * Default: 100
+         * Group: advanced
+         * 
+         * @param waitForTemporaryReplyToToBeUpdatedThreadSleepingTime the value
+         * to set
+         * @return the dsl builder
+         */
+        default AmqpComponentBuilder waitForTemporaryReplyToToBeUpdatedThreadSleepingTime(long waitForTemporaryReplyToToBeUpdatedThreadSleepingTime) {
+            doSetProperty("waitForTemporaryReplyToToBeUpdatedThreadSleepingTime", waitForTemporaryReplyToToBeUpdatedThreadSleepingTime);
             return this;
         }
     
@@ -2204,6 +2261,7 @@ public interface AmqpComponentBuilderFactory {
             case "receiveTimeout": getOrCreateConfiguration((AMQPComponent) component).setReceiveTimeout((long) value); return true;
             case "recoveryInterval": getOrCreateConfiguration((AMQPComponent) component).setRecoveryInterval((long) value); return true;
             case "requestTimeoutCheckerInterval": getOrCreateConfiguration((AMQPComponent) component).setRequestTimeoutCheckerInterval((long) value); return true;
+            case "serviceLocationEnabled": ((AMQPComponent) component).setServiceLocationEnabled((boolean) value); return true;
             case "synchronous": getOrCreateConfiguration((AMQPComponent) component).setSynchronous((boolean) value); return true;
             case "temporaryQueueResolver": getOrCreateConfiguration((AMQPComponent) component).setTemporaryQueueResolver((org.apache.camel.component.jms.TemporaryQueueResolver) value); return true;
             case "transferException": getOrCreateConfiguration((AMQPComponent) component).setTransferException((boolean) value); return true;
@@ -2211,6 +2269,8 @@ public interface AmqpComponentBuilderFactory {
             case "useMessageIDAsCorrelationID": getOrCreateConfiguration((AMQPComponent) component).setUseMessageIDAsCorrelationID((boolean) value); return true;
             case "waitForProvisionCorrelationToBeUpdatedCounter": getOrCreateConfiguration((AMQPComponent) component).setWaitForProvisionCorrelationToBeUpdatedCounter((int) value); return true;
             case "waitForProvisionCorrelationToBeUpdatedThreadSleepingTime": getOrCreateConfiguration((AMQPComponent) component).setWaitForProvisionCorrelationToBeUpdatedThreadSleepingTime((long) value); return true;
+            case "waitForTemporaryReplyToToBeUpdatedCounter": getOrCreateConfiguration((AMQPComponent) component).setWaitForTemporaryReplyToToBeUpdatedCounter((int) value); return true;
+            case "waitForTemporaryReplyToToBeUpdatedThreadSleepingTime": getOrCreateConfiguration((AMQPComponent) component).setWaitForTemporaryReplyToToBeUpdatedThreadSleepingTime((long) value); return true;
             case "headerFilterStrategy": ((AMQPComponent) component).setHeaderFilterStrategy((org.apache.camel.spi.HeaderFilterStrategy) value); return true;
             case "errorHandlerLoggingLevel": getOrCreateConfiguration((AMQPComponent) component).setErrorHandlerLoggingLevel((org.apache.camel.LoggingLevel) value); return true;
             case "errorHandlerLogStackTrace": getOrCreateConfiguration((AMQPComponent) component).setErrorHandlerLogStackTrace((boolean) value); return true;

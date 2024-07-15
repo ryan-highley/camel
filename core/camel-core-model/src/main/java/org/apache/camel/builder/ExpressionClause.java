@@ -367,7 +367,7 @@ public class ExpressionClause<T> implements Expression, Predicate {
     /**
      * Returns a JOOR expression value builder
      */
-    @Deprecated
+    @Deprecated(since = "4.3.0")
     public T joor(String value) {
         return delegate.joor(value);
     }
@@ -375,7 +375,7 @@ public class ExpressionClause<T> implements Expression, Predicate {
     /**
      * Returns a JOOR expression value builder
      */
-    @Deprecated
+    @Deprecated(since = "4.3.0")
     public T joor(String value, Class<?> resultType) {
         return delegate.joor(value, resultType);
     }
@@ -1055,7 +1055,7 @@ public class ExpressionClause<T> implements Expression, Predicate {
     }
 
     @Override
-    public <T> T evaluate(Exchange exchange, Class<T> type) {
+    public <U> U evaluate(Exchange exchange, Class<U> type) {
         init(exchange.getContext());
         return expr.evaluate(exchange, type);
     }

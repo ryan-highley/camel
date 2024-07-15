@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-azure-parent</artifactId>
-        <version>4.6.0-SNAPSHOT</version>
+        <version>4.8.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-azure-storage-blob</artifactId>
@@ -82,14 +82,6 @@
             <version>${commons-io-version}</version>
         </dependency>
 
-        <!-- optional CloudEvent support -->
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-cloudevents</artifactId>
-            <scope>provided</scope>
-            <optional>true</optional>
-        </dependency>
-
         <!-- for testing -->
         <dependency>
             <groupId>org.apache.camel</groupId>
@@ -111,12 +103,6 @@
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
             <version>${awaitility-version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${testcontainers-version}</version>
             <scope>test</scope>
         </dependency>
 

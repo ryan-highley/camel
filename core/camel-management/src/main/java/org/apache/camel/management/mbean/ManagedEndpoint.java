@@ -16,12 +16,15 @@
  */
 package org.apache.camel.management.mbean;
 
+import java.util.Map;
+
 import org.apache.camel.Endpoint;
 import org.apache.camel.ServiceStatus;
 import org.apache.camel.StatefulService;
 import org.apache.camel.api.management.ManagedInstance;
 import org.apache.camel.api.management.ManagedResource;
 import org.apache.camel.api.management.mbean.ManagedEndpointMBean;
+import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.ManagementStrategy;
 
 @ManagedResource(description = "Managed Endpoint")
@@ -66,6 +69,11 @@ public class ManagedEndpoint implements ManagedInstance, ManagedEndpointMBean {
     }
 
     @Override
+    public boolean isRemote() {
+        return endpoint.isRemote();
+    }
+
+    @Override
     public String getState() {
         // must use String type to be sure remote JMX can read the attribute without requiring Camel classes.
         if (endpoint instanceof StatefulService) {
@@ -75,6 +83,30 @@ public class ManagedEndpoint implements ManagedInstance, ManagedEndpointMBean {
 
         // assume started if not a ServiceSupport instance
         return ServiceStatus.Started.name();
+    }
+
+    @Override
+    public String getServiceLocationUrl() {
+        if (endpoint instanceof EndpointServiceLocation raa) {
+            return raa.getServiceUrl();
+        }
+        return null;
+    }
+
+    @Override
+    public String getServiceLocationProtocol() {
+        if (endpoint instanceof EndpointServiceLocation raa) {
+            return raa.getServiceProtocol();
+        }
+        return null;
+    }
+
+    @Override
+    public Map<String, String> getServiceLocationMetadata() {
+        if (endpoint instanceof EndpointServiceLocation raa) {
+            return raa.getServiceMetadata();
+        }
+        return null;
     }
 
     @Override

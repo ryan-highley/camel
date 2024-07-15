@@ -517,8 +517,8 @@ public abstract class AbstractCamelCatalog {
             // grab authority part and grab username and/or password
             String authority = u.getAuthority();
             if (authority != null && authority.contains("@")) {
-                String username = null;
-                String password = null;
+                String username;
+                String password;
 
                 // grab unserinfo part before @
                 String userInfo = authority.substring(0, authority.indexOf('@'));
@@ -529,6 +529,7 @@ public abstract class AbstractCamelCatalog {
                 } else {
                     // only username
                     username = userInfo;
+                    password = null;
                 }
 
                 // remember the username and/or password which we add later to the options
@@ -1269,7 +1270,7 @@ public abstract class AbstractCamelCatalog {
             if (!optionPlaceholder && !lookup && javaType != null
                     && (javaType.startsWith("java.util.Map") || javaType.startsWith("java.util.Properties"))) {
                 // there must be a valid suffix
-                if (suffix == null || suffix.isEmpty() || suffix.equals(".")) {
+                if (isValidSuffix(suffix)) {
                     result.addInvalidMap(longKey, value);
                 } else if (suffix.startsWith("[") && !suffix.contains("]")) {
                     result.addInvalidMap(longKey, value);
@@ -1277,7 +1278,7 @@ public abstract class AbstractCamelCatalog {
             }
             if (!optionPlaceholder && !lookup && javaType != null && "array".equals(row.getType())) {
                 // there must be a suffix and it must be using [] style
-                if (suffix == null || suffix.isEmpty() || suffix.equals(".")) {
+                if (isValidSuffix(suffix)) {
                     result.addInvalidArray(longKey, value);
                 } else if (!suffix.startsWith("[") && !suffix.contains("]")) {
                     result.addInvalidArray(longKey, value);
@@ -1291,6 +1292,10 @@ public abstract class AbstractCamelCatalog {
                 }
             }
         }
+    }
+
+    private static boolean isValidSuffix(String suffix) {
+        return suffix == null || suffix.isEmpty() || suffix.equals(".");
     }
 
     private static boolean acceptConfigurationPropertyKey(String key) {
@@ -1322,9 +1327,9 @@ public abstract class AbstractCamelCatalog {
 
         LanguageValidationResult answer = new LanguageValidationResult(simple);
 
-        Object context = null;
+        Object context;
         Object instance = null;
-        Class<?> clazz = null;
+        Class<?> clazz;
 
         try {
             // need a simple camel context for the simple language parser to be able to parse
@@ -1339,7 +1344,7 @@ public abstract class AbstractCamelCatalog {
             answer.setError(e.getMessage());
         }
 
-        if (clazz != null && context != null && instance != null) {
+        if (clazz != null) {
             Throwable cause = null;
             try {
                 if (predicate) {

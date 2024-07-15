@@ -16,6 +16,7 @@
  */
 package org.apache.camel.component.kubernetes;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -42,14 +43,17 @@ public class KubernetesTestSupport extends CamelTestSupport {
 
     @Override
     @BeforeEach
-    public void setUp() throws Exception {
+    public void doPreSetup() {
         // INSERT credentials and host here
         authToken = System.getProperty("kubernetes.test.auth");
         host = System.getProperty("kubernetes.test.host");
-        super.setUp();
     }
 
     public static String toUrlEncoded(String str) throws UnsupportedEncodingException {
         return URLEncoder.encode(str, StandardCharsets.UTF_8);
+    }
+
+    protected byte[] readExampleBinaryFile() throws IOException {
+        return getClass().getResourceAsStream("/binary-example/binary.bin").readAllBytes();
     }
 }

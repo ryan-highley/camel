@@ -57,6 +57,9 @@ public class ModelWriter extends BaseWriter {
     public void writeBeanDefinition(BeanDefinition def) throws IOException {
         doWriteBeanDefinition("bean", def);
     }
+    public void writeBeanFactoryDefinition(BeanFactoryDefinition def) throws IOException {
+        doWriteBeanFactoryDefinition("beanFactory", def);
+    }
     public void writeCatchDefinition(CatchDefinition def) throws IOException {
         doWriteCatchDefinition("doCatch", def);
     }
@@ -243,9 +246,6 @@ public class ModelWriter extends BaseWriter {
     public void writeRouteDefinition(RouteDefinition def) throws IOException {
         doWriteRouteDefinition("route", def);
     }
-    public void writeRouteTemplateBeanDefinition(RouteTemplateBeanDefinition def) throws IOException {
-        doWriteRouteTemplateBeanDefinition("templateBean", def);
-    }
     public void writeRouteTemplateContextRefDefinition(RouteTemplateContextRefDefinition def) throws IOException {
         doWriteRouteTemplateContextRefDefinition("routeTemplateContextRef", def);
     }
@@ -305,9 +305,6 @@ public class ModelWriter extends BaseWriter {
     }
     public void writeStopDefinition(StopDefinition def) throws IOException {
         doWriteStopDefinition("stop", def);
-    }
-    public void writeTemplatedRouteBeanDefinition(TemplatedRouteBeanDefinition def) throws IOException {
-        doWriteTemplatedRouteBeanDefinition("templatedRouteBean", def);
     }
     public void writeTemplatedRouteDefinition(TemplatedRouteDefinition def) throws IOException {
         doWriteTemplatedRouteDefinition("templatedRoute", def);
@@ -667,22 +664,22 @@ public class ModelWriter extends BaseWriter {
         doWriteCustomLoadBalancerDefinition("customLoadBalancer", def);
     }
     public void writeFailoverLoadBalancerDefinition(FailoverLoadBalancerDefinition def) throws IOException {
-        doWriteFailoverLoadBalancerDefinition("failover", def);
+        doWriteFailoverLoadBalancerDefinition("failoverLoadBalancer", def);
     }
     public void writeRandomLoadBalancerDefinition(RandomLoadBalancerDefinition def) throws IOException {
-        doWriteRandomLoadBalancerDefinition("random", def);
+        doWriteRandomLoadBalancerDefinition("randomLoadBalancer", def);
     }
     public void writeRoundRobinLoadBalancerDefinition(RoundRobinLoadBalancerDefinition def) throws IOException {
-        doWriteRoundRobinLoadBalancerDefinition("roundRobin", def);
+        doWriteRoundRobinLoadBalancerDefinition("roundRobinLoadBalancer", def);
     }
     public void writeStickyLoadBalancerDefinition(StickyLoadBalancerDefinition def) throws IOException {
-        doWriteStickyLoadBalancerDefinition("sticky", def);
+        doWriteStickyLoadBalancerDefinition("stickyLoadBalancer", def);
     }
     public void writeTopicLoadBalancerDefinition(TopicLoadBalancerDefinition def) throws IOException {
-        doWriteTopicLoadBalancerDefinition("topic", def);
+        doWriteTopicLoadBalancerDefinition("topicLoadBalancer", def);
     }
     public void writeWeightedLoadBalancerDefinition(WeightedLoadBalancerDefinition def) throws IOException {
-        doWriteWeightedLoadBalancerDefinition("weighted", def);
+        doWriteWeightedLoadBalancerDefinition("weightedLoadBalancer", def);
     }
     public void writeApiKeyDefinition(ApiKeyDefinition def) throws IOException {
         doWriteApiKeyDefinition("apiKey", def);
@@ -806,20 +803,20 @@ public class ModelWriter extends BaseWriter {
         doWriteAttribute("beanType", def.getBeanType());
         endElement(name);
     }
-    protected void doWriteBeanFactoryDefinitionAttributes(BeanFactoryDefinition<?, ?> def) throws IOException {
-        doWriteAttribute("scriptLanguage", def.getScriptLanguage());
-        doWriteAttribute("name", def.getName());
-        doWriteAttribute("type", def.getType());
-    }
-    protected void doWriteBeanFactoryDefinitionElements(BeanFactoryDefinition<?, ?> def) throws IOException {
-        doWriteList(null, "property", def.getPropertyDefinitions(), this::doWritePropertyDefinition);
-        doWriteElement("script", def.getScript(), this::doWriteString);
-        doWriteElement("properties", new BeanPropertiesAdapter().marshal(def.getProperties()), this::doWriteBeanPropertiesDefinition);
-    }
-    protected void doWriteBeanFactoryDefinition(String name, BeanFactoryDefinition<?, ?> def) throws IOException {
+    protected void doWriteBeanFactoryDefinition(String name, BeanFactoryDefinition<?> def) throws IOException {
         startElement(name);
-        doWriteBeanFactoryDefinitionAttributes(def);
-        doWriteBeanFactoryDefinitionElements(def);
+        doWriteAttribute("factoryMethod", def.getFactoryMethod());
+        doWriteAttribute("scriptLanguage", def.getScriptLanguage());
+        doWriteAttribute("builderClass", def.getBuilderClass());
+        doWriteAttribute("type", def.getType());
+        doWriteAttribute("factoryBean", def.getFactoryBean());
+        doWriteAttribute("initMethod", def.getInitMethod());
+        doWriteAttribute("name", def.getName());
+        doWriteAttribute("builderMethod", def.getBuilderMethod());
+        doWriteAttribute("destroyMethod", def.getDestroyMethod());
+        doWriteElement("script", def.getScript(), this::doWriteString);
+        doWriteElement("constructors", new BeanConstructorsAdapter().marshal(def.getConstructors()), this::doWriteBeanConstructorsDefinition);
+        doWriteElement("properties", new BeanPropertiesAdapter().marshal(def.getProperties()), this::doWriteBeanPropertiesDefinition);
         endElement(name);
     }
     protected void doWriteCatchDefinition(String name, CatchDefinition def) throws IOException {
@@ -1083,12 +1080,12 @@ public class ModelWriter extends BaseWriter {
         doWriteElement(null, def.getLoadBalancerType(), (n, v) -> {
             switch (v.getClass().getSimpleName()) {
                 case "CustomLoadBalancerDefinition" -> doWriteCustomLoadBalancerDefinition("customLoadBalancer", (CustomLoadBalancerDefinition) v);
-                case "FailoverLoadBalancerDefinition" -> doWriteFailoverLoadBalancerDefinition("failover", (FailoverLoadBalancerDefinition) v);
-                case "RandomLoadBalancerDefinition" -> doWriteRandomLoadBalancerDefinition("random", (RandomLoadBalancerDefinition) v);
-                case "RoundRobinLoadBalancerDefinition" -> doWriteRoundRobinLoadBalancerDefinition("roundRobin", (RoundRobinLoadBalancerDefinition) v);
-                case "StickyLoadBalancerDefinition" -> doWriteStickyLoadBalancerDefinition("sticky", (StickyLoadBalancerDefinition) v);
-                case "TopicLoadBalancerDefinition" -> doWriteTopicLoadBalancerDefinition("topic", (TopicLoadBalancerDefinition) v);
-                case "WeightedLoadBalancerDefinition" -> doWriteWeightedLoadBalancerDefinition("weighted", (WeightedLoadBalancerDefinition) v);
+                case "FailoverLoadBalancerDefinition" -> doWriteFailoverLoadBalancerDefinition("failoverLoadBalancer", (FailoverLoadBalancerDefinition) v);
+                case "RandomLoadBalancerDefinition" -> doWriteRandomLoadBalancerDefinition("randomLoadBalancer", (RandomLoadBalancerDefinition) v);
+                case "RoundRobinLoadBalancerDefinition" -> doWriteRoundRobinLoadBalancerDefinition("roundRobinLoadBalancer", (RoundRobinLoadBalancerDefinition) v);
+                case "StickyLoadBalancerDefinition" -> doWriteStickyLoadBalancerDefinition("stickyLoadBalancer", (StickyLoadBalancerDefinition) v);
+                case "TopicLoadBalancerDefinition" -> doWriteTopicLoadBalancerDefinition("topicLoadBalancer", (TopicLoadBalancerDefinition) v);
+                case "WeightedLoadBalancerDefinition" -> doWriteWeightedLoadBalancerDefinition("weightedLoadBalancer", (WeightedLoadBalancerDefinition) v);
             }
         });
         doWriteList(null, null, def.getOutputs(), this::doWriteProcessorDefinitionRef);
@@ -1560,12 +1557,6 @@ public class ModelWriter extends BaseWriter {
         doWriteList(null, null, def.getOutputs(), this::doWriteProcessorDefinitionRef);
         endElement(name);
     }
-    protected void doWriteRouteTemplateBeanDefinition(String name, RouteTemplateBeanDefinition def) throws IOException {
-        startElement(name);
-        doWriteBeanFactoryDefinitionAttributes(def);
-        doWriteBeanFactoryDefinitionElements(def);
-        endElement(name);
-    }
     protected void doWriteRouteTemplateContextRefDefinition(String name, RouteTemplateContextRefDefinition def) throws IOException {
         startElement(name);
         doWriteAttribute("ref", def.getRef());
@@ -1576,7 +1567,7 @@ public class ModelWriter extends BaseWriter {
         doWriteOptionalIdentifiedDefinitionAttributes(def);
         doWriteList(null, "templateParameter", def.getTemplateParameters(), this::doWriteRouteTemplateParameterDefinition);
         doWriteElement("route", def.getRoute(), this::doWriteRouteDefinition);
-        doWriteList(null, "templateBean", def.getTemplateBeans(), this::doWriteRouteTemplateBeanDefinition);
+        doWriteList(null, "templateBean", def.getTemplateBeans(), this::doWriteBeanFactoryDefinition);
         endElement(name);
     }
     protected void doWriteRouteTemplateParameterDefinition(String name, RouteTemplateParameterDefinition def) throws IOException {
@@ -1730,18 +1721,12 @@ public class ModelWriter extends BaseWriter {
         doWriteProcessorDefinitionAttributes(def);
         endElement(name);
     }
-    protected void doWriteTemplatedRouteBeanDefinition(String name, TemplatedRouteBeanDefinition def) throws IOException {
-        startElement(name);
-        doWriteBeanFactoryDefinitionAttributes(def);
-        doWriteBeanFactoryDefinitionElements(def);
-        endElement(name);
-    }
     protected void doWriteTemplatedRouteDefinition(String name, TemplatedRouteDefinition def) throws IOException {
         startElement(name);
         doWriteAttribute("routeId", def.getRouteId());
         doWriteAttribute("routeTemplateRef", def.getRouteTemplateRef());
         doWriteAttribute("prefixId", def.getPrefixId());
-        doWriteList(null, "bean", def.getBeans(), this::doWriteTemplatedRouteBeanDefinition);
+        doWriteList(null, "bean", def.getBeans(), this::doWriteBeanFactoryDefinition);
         doWriteList(null, "parameter", def.getParameters(), this::doWriteTemplatedRouteParameterDefinition);
         endElement(name);
     }
@@ -1964,7 +1949,7 @@ public class ModelWriter extends BaseWriter {
         domElements(def.getSpringBeans());
         domElements(def.getBlueprintBeans());
         doWriteList(null, "component-scan", def.getComponentScanning(), this::doWriteComponentScanDefinition);
-        doWriteList(null, "bean", def.getBeans(), this::doWriteRegistryBeanDefinition);
+        doWriteList(null, "bean", def.getBeans(), this::doWriteBeanFactoryDefinition);
         doWriteList(null, "restConfiguration", def.getRestConfigurations(), this::doWriteRestConfigurationDefinition);
         doWriteList(null, "rest", def.getRests(), this::doWriteRestDefinition);
         doWriteList(null, "routeConfiguration", def.getRouteConfigurations(), this::doWriteRouteConfigurationDefinition);
@@ -1979,22 +1964,6 @@ public class ModelWriter extends BaseWriter {
     protected void doWriteComponentScanDefinition(String name, ComponentScanDefinition def) throws IOException {
         startElement(name);
         doWriteAttribute("base-package", def.getBasePackage());
-        endElement(name);
-    }
-    protected void doWriteRegistryBeanDefinition(String name, RegistryBeanDefinition def) throws IOException {
-        startElement(name);
-        doWriteAttribute("factoryMethod", def.getFactoryMethod());
-        doWriteAttribute("initMethod", def.getInitMethod());
-        doWriteAttribute("scriptLanguage", def.getScriptLanguage());
-        doWriteAttribute("builderClass", def.getBuilderClass());
-        doWriteAttribute("name", def.getName());
-        doWriteAttribute("builderMethod", def.getBuilderMethod());
-        doWriteAttribute("destroyMethod", def.getDestroyMethod());
-        doWriteAttribute("type", def.getType());
-        doWriteAttribute("factoryBean", def.getFactoryBean());
-        doWriteElement("constructors", new BeanConstructorsAdapter().marshal(def.getConstructors()), this::doWriteBeanConstructorsDefinition);
-        doWriteElement("script", def.getScript(), this::doWriteString);
-        doWriteElement("properties", new BeanPropertiesAdapter().marshal(def.getProperties()), this::doWriteBeanPropertiesDefinition);
         endElement(name);
     }
     protected void doWriteBlacklistServiceCallServiceFilterConfiguration(String name, BlacklistServiceCallServiceFilterConfiguration def) throws IOException {
@@ -3459,6 +3428,7 @@ public class ModelWriter extends BaseWriter {
         doWriteOptionalIdentifiedDefinitionAttributes(def);
         doWriteAttribute("enableCORS", def.getEnableCORS());
         doWriteAttribute("deprecated", def.getDeprecated());
+        doWriteAttribute("streamCache", def.getStreamCache());
         doWriteAttribute("type", def.getType());
         doWriteAttribute("outType", def.getOutType());
         doWriteAttribute("path", def.getPath());

@@ -26,9 +26,9 @@ import org.apache.camel.spi.Metadata;
 import org.slf4j.Logger;
 
 /**
- * Logs the defined message to the logger
+ * Used for printing custom messages to the logger.
  */
-@Metadata(label = "eip,routing")
+@Metadata(label = "eip,routing", title = "Logger")
 @XmlRootElement(name = "log")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class LogDefinition extends NoOutputDefinition<LogDefinition> {
@@ -53,9 +53,24 @@ public class LogDefinition extends NoOutputDefinition<LogDefinition> {
     public LogDefinition() {
     }
 
+    protected LogDefinition(LogDefinition source) {
+        super(source);
+        this.loggerBean = source.loggerBean;
+        this.message = source.message;
+        this.loggingLevel = source.loggingLevel;
+        this.logName = source.logName;
+        this.marker = source.marker;
+        this.logger = source.logger;
+    }
+
     public LogDefinition(String message) {
         this();
         this.message = message;
+    }
+
+    @Override
+    public LogDefinition copyDefinition() {
+        return new LogDefinition(this);
     }
 
     @Override
@@ -106,7 +121,23 @@ public class LogDefinition extends NoOutputDefinition<LogDefinition> {
     }
 
     /**
-     * Sets the name of the logger
+     * Sets the name of the logger.
+     *
+     * The name is default the routeId or the source:line if source location is enabled. You can also specify the name
+     * using tokens:
+     *
+     * <br/>
+     * ${class} - the logger class name (org.apache.camel.processor.LogProcessor) <br/>
+     * ${contextId} - the camel context id <br/>
+     * ${routeId} - the route id <br/>
+     * ${groupId} - the route group id <br/>
+     * ${nodeId} - the node id <br/>
+     * ${nodePrefixId} - the node prefix id <br/>
+     * ${source} - the source:line (source location must be enabled) <br/>
+     * ${source.name} - the source filename (source location must be enabled) <br/>
+     * ${source.line} - the source line number (source location must be enabled)
+     *
+     * For example to use the route and node id you can specify the name as: ${routeId}/${nodeId}
      */
     public void setLogName(String logName) {
         this.logName = logName;

@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>components</artifactId>
-        <version>4.6.0-SNAPSHOT</version>
+        <version>4.8.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-ftp</artifactId>
@@ -101,7 +101,7 @@
 
         <!-- for testing sftp through http proxy -->
         <dependency>
-            <groupId>xyz.rogfam</groupId>
+            <groupId>io.github.littleproxy</groupId>
             <artifactId>littleproxy</artifactId>
             <version>${littleproxy-version}</version>
             <scope>test</scope>

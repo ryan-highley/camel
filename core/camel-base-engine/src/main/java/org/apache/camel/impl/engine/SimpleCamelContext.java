@@ -49,6 +49,7 @@ import org.apache.camel.spi.DataFormatResolver;
 import org.apache.camel.spi.DeferServiceFactory;
 import org.apache.camel.spi.DumpRoutesStrategy;
 import org.apache.camel.spi.EndpointRegistry;
+import org.apache.camel.spi.EndpointServiceRegistry;
 import org.apache.camel.spi.ExchangeFactory;
 import org.apache.camel.spi.ExchangeFactoryManager;
 import org.apache.camel.spi.ExecutorServiceManager;
@@ -67,6 +68,7 @@ import org.apache.camel.spi.ModelToXMLDumper;
 import org.apache.camel.spi.ModelToYAMLDumper;
 import org.apache.camel.spi.ModelineFactory;
 import org.apache.camel.spi.NodeIdFactory;
+import org.apache.camel.spi.NormalizedEndpointUri;
 import org.apache.camel.spi.PackageScanClassResolver;
 import org.apache.camel.spi.PackageScanResourceResolver;
 import org.apache.camel.spi.PeriodTaskResolver;
@@ -94,7 +96,6 @@ import org.apache.camel.spi.ValidatorRegistry;
 import org.apache.camel.spi.VariableRepositoryFactory;
 import org.apache.camel.support.DefaultRegistry;
 import org.apache.camel.support.DefaultUuidGenerator;
-import org.apache.camel.support.NormalizedUri;
 import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.ResolverHelper;
 import org.slf4j.Logger;
@@ -166,7 +167,7 @@ public class SimpleCamelContext extends AbstractCamelContext {
     protected TypeConverter createTypeConverter() {
         return new DefaultTypeConverter(
                 getCamelContextReference(), PluginHelper.getPackageScanClassResolver(this), getInjector(),
-                isLoadTypeConverters());
+                isLoadTypeConverters(), isTypeConverterStatisticsEnabled());
     }
 
     @Override
@@ -669,7 +670,7 @@ public class SimpleCamelContext extends AbstractCamelContext {
     }
 
     @Override
-    protected EndpointRegistry<NormalizedUri> createEndpointRegistry(Map<NormalizedUri, Endpoint> endpoints) {
+    protected EndpointRegistry createEndpointRegistry(Map<NormalizedEndpointUri, Endpoint> endpoints) {
         return new DefaultEndpointRegistry(getCamelContextReference(), endpoints);
     }
 
@@ -717,7 +718,7 @@ public class SimpleCamelContext extends AbstractCamelContext {
     }
 
     @Override
-    protected ValidatorRegistry<ValidatorKey> createValidatorRegistry() {
+    protected ValidatorRegistry createValidatorRegistry() {
         return new DefaultValidatorRegistry(getCamelContextReference());
     }
 
@@ -727,7 +728,12 @@ public class SimpleCamelContext extends AbstractCamelContext {
     }
 
     @Override
-    protected TransformerRegistry<TransformerKey> createTransformerRegistry() {
+    protected EndpointServiceRegistry createEndpointServiceRegistry() {
+        return new DefaultEndpointServiceRegistry(getCamelContextReference());
+    }
+
+    @Override
+    protected TransformerRegistry createTransformerRegistry() {
         return new DefaultTransformerRegistry(getCamelContextReference());
     }
 

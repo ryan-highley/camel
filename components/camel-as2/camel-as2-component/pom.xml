@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-as2-parent</artifactId>
-        <version>4.6.0-SNAPSHOT</version>
+        <version>4.8.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-as2</artifactId>
@@ -124,6 +124,7 @@
                                         <nullableOption>encryptingAlgorithm</nullableOption>
                                         <nullableOption>encryptingCertificateChain</nullableOption>
                                         <nullableOption>attachedFileName</nullableOption>
+                                        <nullableOption>receiptDeliveryOption</nullableOption>
                                     </nullableOptions>
                                 </api>
                                 <api>
@@ -138,6 +139,13 @@
                                                             <nullableOption>decryptingPrivateKey</nullableOption>
                                                         </nullableOptions>
                                      -->
+                                </api>
+                                <api>
+                                    <apiName>receipt</apiName>
+                                    <consumerOnly>true</consumerOnly>
+                                    <proxyClass>org.apache.camel.component.as2.api.AS2AsyncMDNServerManager</proxyClass>
+                                    <fromJavasource/>
+                                    <excludeConfigNames>handler</excludeConfigNames>
                                 </api>
                             </apis>
                             <!-- Specify global values for all APIs here, these are overridden at API level

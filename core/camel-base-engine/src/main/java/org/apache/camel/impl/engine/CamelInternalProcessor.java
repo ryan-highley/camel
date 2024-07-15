@@ -17,6 +17,7 @@
 package org.apache.camel.impl.engine;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,6 +45,7 @@ import org.apache.camel.spi.BacklogDebugger;
 import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.spi.CamelInternalProcessorAdvice;
 import org.apache.camel.spi.Debugger;
+import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.EventNotifier;
 import org.apache.camel.spi.InflightRepository;
 import org.apache.camel.spi.InternalProcessor;
@@ -75,6 +77,8 @@ import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.util.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Internal {@link Processor} that Camel routing engine used during routing for cross cutting functionality such as:
@@ -114,12 +118,11 @@ public class CamelInternalProcessor extends DelegateAsyncProcessor implements In
     private final ShutdownStrategy shutdownStrategy;
     private final List<CamelInternalProcessorAdvice<?>> advices = new ArrayList<>();
     private byte statefulAdvices;
-    private Object[] emptyStatefulStates;
     private PooledObjectFactory<CamelInternalTask> taskFactory;
 
     public CamelInternalProcessor(CamelContext camelContext) {
         this.camelContext = camelContext;
-        this.reactiveExecutor = camelContext.getCamelContextExtension().getReactiveExecutor();
+        this.reactiveExecutor = requireNonNull(camelContext.getCamelContextExtension().getReactiveExecutor());
         this.shutdownStrategy = camelContext.getShutdownStrategy();
     }
 
@@ -128,14 +131,6 @@ public class CamelInternalProcessor extends DelegateAsyncProcessor implements In
         this.camelContext = camelContext;
         this.reactiveExecutor = camelContext.getCamelContextExtension().getReactiveExecutor();
         this.shutdownStrategy = camelContext.getShutdownStrategy();
-    }
-
-    private CamelInternalProcessor(Logger log) {
-        // used for eager loading
-        camelContext = null;
-        reactiveExecutor = null;
-        shutdownStrategy = null;
-        log.trace("Loaded {}", AsyncAfterTask.class.getSimpleName());
     }
 
     @Override
@@ -148,9 +143,6 @@ public class CamelInternalProcessor extends DelegateAsyncProcessor implements In
             int capacity = camelContext.getCamelContextExtension().getExchangeFactory().getCapacity();
             taskFactory.setCapacity(capacity);
             LOG.trace("Using TaskFactory: {}", taskFactory);
-
-            // create empty array we can use for reset
-            emptyStatefulStates = new Object[statefulAdvices];
         }
 
         ServiceHelper.buildService(taskFactory, processor);
@@ -242,8 +234,7 @@ public class CamelInternalProcessor extends DelegateAsyncProcessor implements In
 
         @Override
         public void reset() {
-            // reset array by copying over from empty which is a very fast JVM optimized operation
-            System.arraycopy(emptyStatefulStates, 0, states, 0, statefulAdvices);
+            Arrays.fill(this.states, null);
             this.exchange = null;
             this.originalCallback = null;
         }
@@ -578,7 +569,7 @@ public class CamelInternalProcessor extends DelegateAsyncProcessor implements In
     public static final class BacklogTracerAdvice
             implements CamelInternalProcessorAdvice<DefaultBacklogTracerEventMessage> {
 
-        private final BacklogTraceAdviceEventNotifier notifier;
+        private final TraceAdviceEventNotifier notifier;
         private final CamelContext camelContext;
         private final BacklogTracer backlogTracer;
         private final NamedNode processorDefinition;
@@ -614,14 +605,14 @@ public class CamelInternalProcessor extends DelegateAsyncProcessor implements In
             this.notifier = getOrCreateEventNotifier(camelContext);
         }
 
-        private BacklogTraceAdviceEventNotifier getOrCreateEventNotifier(CamelContext camelContext) {
+        private TraceAdviceEventNotifier getOrCreateEventNotifier(CamelContext camelContext) {
             // use a single instance of this event notifier
             for (EventNotifier en : camelContext.getManagementStrategy().getEventNotifiers()) {
-                if (en instanceof BacklogTraceAdviceEventNotifier) {
-                    return (BacklogTraceAdviceEventNotifier) en;
+                if (en instanceof TraceAdviceEventNotifier) {
+                    return (TraceAdviceEventNotifier) en;
                 }
             }
-            BacklogTraceAdviceEventNotifier answer = new BacklogTraceAdviceEventNotifier();
+            TraceAdviceEventNotifier answer = new TraceAdviceEventNotifier();
             camelContext.getManagementStrategy().addEventNotifier(answer);
             return answer;
         }
@@ -656,6 +647,11 @@ public class CamelInternalProcessor extends DelegateAsyncProcessor implements In
                     DefaultBacklogTracerEventMessage pseudoFirst = new DefaultBacklogTracerEventMessage(
                             true, false, backlogTracer.incrementTraceCounter(), created, source, routeId, null, exchangeId,
                             rest, template, messageAsXml, messageAsJSon);
+                    if (exchange.getFromEndpoint() instanceof EndpointServiceLocation esl) {
+                        pseudoFirst.setEndpointServiceUrl(esl.getServiceUrl());
+                        pseudoFirst.setEndpointServiceProtocol(esl.getServiceProtocol());
+                        pseudoFirst.setEndpointServiceMetadata(esl.getServiceMetadata());
+                    }
                     backlogTracer.traceEvent(pseudoFirst);
                     exchange.getExchangeExtension().addOnCompletion(createOnCompletion(source, pseudoFirst));
                 }
@@ -714,21 +710,30 @@ public class CamelInternalProcessor extends DelegateAsyncProcessor implements In
             data.doneProcessing();
 
             String uri = null;
+            boolean remote = true;
             Endpoint endpoint = notifier.after(exchange);
             if (endpoint != null) {
                 uri = endpoint.getEndpointUri();
+                remote = endpoint.isRemote();
             } else if ((data.isFirst() || data.isLast()) && data.getToNode() == null && routeDefinition != null) {
                 // pseudo first/last event (the from in the route)
                 Route route = camelContext.getRoute(routeDefinition.getRouteId());
                 if (route != null && route.getConsumer() != null) {
                     // get the actual resolved uri
                     uri = route.getConsumer().getEndpoint().getEndpointUri();
+                    remote = route.getConsumer().getEndpoint().isRemote();
                 } else {
                     uri = routeDefinition.getEndpointUrl();
                 }
             }
             if (uri != null) {
                 data.setEndpointUri(uri);
+            }
+            data.setRemoteEndpoint(remote);
+            if (endpoint instanceof EndpointServiceLocation esl) {
+                data.setEndpointServiceUrl(esl.getServiceUrl());
+                data.setEndpointServiceProtocol(esl.getServiceProtocol());
+                data.setEndpointServiceMetadata(esl.getServiceMetadata());
             }
 
             if (!data.isFirst() && backlogTracer.isIncludeException()) {
@@ -741,11 +746,6 @@ public class CamelInternalProcessor extends DelegateAsyncProcessor implements In
                     data.setExceptionAsJSon(json);
                 }
             }
-        }
-
-        @Override
-        public boolean hasState() {
-            return true;
         }
 
     }
@@ -1070,15 +1070,17 @@ public class CamelInternalProcessor extends DelegateAsyncProcessor implements In
     /**
      * Advice for tracing
      */
-    public static class TracingAdvice implements CamelInternalProcessorAdvice<Object> {
+    public static class TracingAdvice implements CamelInternalProcessorAdvice<StopWatch> {
 
+        private final TraceAdviceEventNotifier notifier;
         private final Tracer tracer;
         private final NamedNode processorDefinition;
         private final NamedRoute routeDefinition;
         private final Synchronization tracingAfterRoute;
         private final boolean skip;
 
-        public TracingAdvice(Tracer tracer, NamedNode processorDefinition, NamedRoute routeDefinition, boolean first) {
+        public TracingAdvice(CamelContext camelContext, Tracer tracer, NamedNode processorDefinition,
+                             NamedRoute routeDefinition, boolean first) {
             this.tracer = tracer;
             this.processorDefinition = processorDefinition;
             this.routeDefinition = routeDefinition;
@@ -1103,11 +1105,28 @@ public class CamelInternalProcessor extends DelegateAsyncProcessor implements In
             } else {
                 this.skip = false;
             }
+            this.notifier = getOrCreateEventNotifier(camelContext);
+        }
+
+        private TraceAdviceEventNotifier getOrCreateEventNotifier(CamelContext camelContext) {
+            // use a single instance of this event notifier
+            for (EventNotifier en : camelContext.getManagementStrategy().getEventNotifiers()) {
+                if (en instanceof TraceAdviceEventNotifier) {
+                    return (TraceAdviceEventNotifier) en;
+                }
+            }
+            TraceAdviceEventNotifier answer = new TraceAdviceEventNotifier();
+            camelContext.getManagementStrategy().addEventNotifier(answer);
+            return answer;
         }
 
         @Override
-        public Object before(Exchange exchange) throws Exception {
+        public StopWatch before(Exchange exchange) throws Exception {
             if (!skip && tracer.isEnabled()) {
+
+                // to capture if the exchange was sent to an endpoint during this event
+                notifier.before(exchange);
+
                 if (tracingAfterRoute != null) {
                     // add before route and after route tracing but only once per route, so check if there is already an existing
                     boolean contains = exchange.getUnitOfWork().containsSynchronization(tracingAfterRoute);
@@ -1117,20 +1136,21 @@ public class CamelInternalProcessor extends DelegateAsyncProcessor implements In
                     }
                 }
                 tracer.traceBeforeNode(processorDefinition, exchange);
+                return new StopWatch();
             }
             return null;
         }
 
         @Override
-        public void after(Exchange exchange, Object data) throws Exception {
-            if (!skip && tracer.isEnabled()) {
+        public void after(Exchange exchange, StopWatch data) throws Exception {
+            if (data != null) {
+                Endpoint endpoint = notifier.after(exchange);
+                long elapsed = data.taken();
+                if (endpoint != null) {
+                    tracer.traceSentNode(processorDefinition, exchange, endpoint, elapsed);
+                }
                 tracer.traceAfterNode(processorDefinition, exchange);
             }
-        }
-
-        @Override
-        public boolean hasState() {
-            return false;
         }
 
         private static final class TracingAfterRoute extends SynchronizationAdapter {
@@ -1226,15 +1246,16 @@ public class CamelInternalProcessor extends DelegateAsyncProcessor implements In
     }
 
     /**
-     * Event notifier for {@link BacklogTracerAdvice} to capture {@link Exchange} sent to endpoints during tracing.
+     * Event notifier for {@link TracingAdvice} and {@link BacklogTracerAdvice} to capture {@link Exchange} sent to
+     * endpoints during tracing.
      */
-    private static final class BacklogTraceAdviceEventNotifier extends SimpleEventNotifierSupport implements NonManagedService {
+    private static final class TraceAdviceEventNotifier extends SimpleEventNotifierSupport implements NonManagedService {
 
         private final Object dummy = new Object();
 
         private final ConcurrentMap<Exchange, Object> uris = new ConcurrentHashMap<>();
 
-        public BacklogTraceAdviceEventNotifier() {
+        public TraceAdviceEventNotifier() {
             // only capture sending events
             setIgnoreExchangeEvents(false);
             setIgnoreExchangeSendingEvents(false);

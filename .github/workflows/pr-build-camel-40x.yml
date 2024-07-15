@@ -42,7 +42,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-          fetch-depth: 0
       - id: install-packages
         uses: ./.github/actions/install-packages
       - id: install-mvnd
@@ -72,3 +71,4 @@ jobs:
           pr-id: ${{ github.event.number }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           skip-mvnd-install: 'true'
+          artifact-upload-suffix: java-${{ matrix.java }}

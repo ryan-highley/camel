@@ -38,9 +38,9 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.spring.SpringCamelContext;
 import org.apache.camel.test.ExcludingPackageScanClassResolver;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.apache.camel.test.junit5.util.CamelContextTestHelper;
 import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.ObjectHelper;
-import org.junit.jupiter.api.AfterEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -76,21 +76,22 @@ public abstract class CamelSpringTestSupport extends CamelTestSupport {
     protected abstract AbstractApplicationContext createApplicationContext();
 
     @Override
-    public void postProcessTest() throws Exception {
-        if (isCreateCamelContextPerClass()) {
+    protected final void postProcessTest() throws Exception {
+        if (testConfiguration().isCreateCamelContextPerClass()) {
             applicationContext = THREAD_APP_CONTEXT.get();
         }
         super.postProcessTest();
     }
 
     @Override
-    public void doPreSetup() throws Exception {
-        if (!"true".equalsIgnoreCase(System.getProperty("skipStartingCamelContext"))) {
+    protected final void doPreSetup() throws Exception {
+        boolean skip = CamelContextTestHelper.isSkipAutoStartContext(testConfiguration());
+        if (!skip) {
             // tell camel-spring it should not trigger starting CamelContext, since we do that later
             // after we are finished setting up the unit test
             synchronized (LOCK) {
                 SpringCamelContext.setNoStart(true);
-                if (isCreateCamelContextPerClass()) {
+                if (testConfiguration().isCreateCamelContextPerClass()) {
                     applicationContext = THREAD_APP_CONTEXT.get();
                     if (applicationContext == null) {
                         applicationContext = doCreateApplicationContext();
@@ -132,24 +133,18 @@ public abstract class CamelSpringTestSupport extends CamelTestSupport {
     }
 
     @Override
-    @AfterEach
-    public void tearDown() throws Exception {
-        super.tearDown();
-
-        if (!isCreateCamelContextPerClass()) {
+    public void doPostTearDown() throws Exception {
+        if (!testConfiguration().isCreateCamelContextPerClass()) {
             IOHelper.close(applicationContext);
             applicationContext = null;
         }
-    }
-
-    @Override
-    public void doPostTearDown() throws Exception {
-        super.doPostTearDown();
 
         if (THREAD_APP_CONTEXT.get() != null) {
             IOHelper.close(THREAD_APP_CONTEXT.get());
             THREAD_APP_CONTEXT.remove();
         }
+
+        super.doPostTearDown();
     }
 
     /**
@@ -315,7 +310,7 @@ public abstract class CamelSpringTestSupport extends CamelTestSupport {
 
         @Override
         public InputStream getInputStream() throws IOException {
-            if (properties.size() > 0) {
+            if (!properties.isEmpty()) {
                 StringWriter sw = new StringWriter();
                 try (InputStreamReader r = new InputStreamReader(delegate.getInputStream(), StandardCharsets.UTF_8)) {
                     char[] buf = new char[32768];

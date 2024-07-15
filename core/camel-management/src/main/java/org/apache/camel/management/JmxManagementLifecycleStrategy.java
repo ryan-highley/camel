@@ -60,6 +60,7 @@ import org.apache.camel.management.mbean.ManagedConsumerCache;
 import org.apache.camel.management.mbean.ManagedDumpRouteStrategy;
 import org.apache.camel.management.mbean.ManagedEndpoint;
 import org.apache.camel.management.mbean.ManagedEndpointRegistry;
+import org.apache.camel.management.mbean.ManagedEndpointServiceRegistry;
 import org.apache.camel.management.mbean.ManagedExchangeFactoryManager;
 import org.apache.camel.management.mbean.ManagedInflightRepository;
 import org.apache.camel.management.mbean.ManagedProducerCache;
@@ -89,6 +90,7 @@ import org.apache.camel.spi.ConsumerCache;
 import org.apache.camel.spi.DataFormat;
 import org.apache.camel.spi.DumpRoutesStrategy;
 import org.apache.camel.spi.EndpointRegistry;
+import org.apache.camel.spi.EndpointServiceRegistry;
 import org.apache.camel.spi.EventNotifier;
 import org.apache.camel.spi.ExchangeFactoryManager;
 import org.apache.camel.spi.InflightRepository;
@@ -240,7 +242,7 @@ public class JmxManagementLifecycleStrategy extends ServiceSupport implements Li
             camelContextMBean = (ManagedCamelContext) mc;
         }
 
-        // register any pre registered now that we are initialized
+        // register any pre-registered now that we are initialized
         enlistPreRegisteredServices();
 
         // register health check if detected
@@ -438,7 +440,7 @@ public class JmxManagementLifecycleStrategy extends ServiceSupport implements Li
     @Override
     public void onServiceAdd(CamelContext context, Service service, Route route) {
         if (!initialized) {
-            // pre register so we can register later when we have been initialized
+            // pre-register so we can register later when we have been initialized
             preServices.add(lf -> lf.onServiceAdd(camelContext, service, route));
             return;
         }
@@ -545,7 +547,7 @@ public class JmxManagementLifecycleStrategy extends ServiceSupport implements Li
             answer = new ManagedProducerCache(context, (ProducerCache) service);
         } else if (service instanceof ExchangeFactoryManager) {
             answer = new ManagedExchangeFactoryManager(context, (ExchangeFactoryManager) service);
-        } else if (service instanceof EndpointRegistry<?> endpointRegistry) {
+        } else if (service instanceof EndpointRegistry endpointRegistry) {
             answer = new ManagedEndpointRegistry(context, endpointRegistry);
         } else if (service instanceof BeanIntrospection) {
             answer = new ManagedBeanIntrospection(context, (BeanIntrospection) service);
@@ -553,6 +555,8 @@ public class JmxManagementLifecycleStrategy extends ServiceSupport implements Li
             answer = new ManagedTypeConverterRegistry(context, (TypeConverterRegistry) service);
         } else if (service instanceof RestRegistry) {
             answer = new ManagedRestRegistry(context, (RestRegistry) service);
+        } else if (service instanceof EndpointServiceRegistry) {
+            answer = new ManagedEndpointServiceRegistry(context, (EndpointServiceRegistry) service);
         } else if (service instanceof InflightRepository) {
             answer = new ManagedInflightRepository(context, (InflightRepository) service);
         } else if (service instanceof AsyncProcessorAwaitManager) {
@@ -563,9 +567,9 @@ public class JmxManagementLifecycleStrategy extends ServiceSupport implements Li
             answer = new ManagedStreamCachingStrategy(context, (StreamCachingStrategy) service);
         } else if (service instanceof EventNotifier) {
             answer = getManagementObjectStrategy().getManagedObjectForEventNotifier(context, (EventNotifier) service);
-        } else if (service instanceof TransformerRegistry<?> transformerRegistry) {
+        } else if (service instanceof TransformerRegistry transformerRegistry) {
             answer = new ManagedTransformerRegistry(context, transformerRegistry);
-        } else if (service instanceof ValidatorRegistry<?> validatorRegistry) {
+        } else if (service instanceof ValidatorRegistry validatorRegistry) {
             answer = new ManagedValidatorRegistry(context, validatorRegistry);
         } else if (service instanceof BrowsableVariableRepository variableRepository) {
             answer = new ManagedVariableRepository(context, variableRepository);

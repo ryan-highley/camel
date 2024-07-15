@@ -19,7 +19,7 @@ The following tables lists all the options:
 
 // main options: START
 === Camel Main configurations
-The camel.main supports 117 options, which are listed below.
+The camel.main supports 120 options, which are listed below.
 
 [width="100%",cols="2,5,^1,2",options="header"]
 |===
@@ -84,6 +84,9 @@ The camel.main supports 117 options, which are listed below.
 | *camel.main.logDebugMaxChars* | Is used to limit the maximum length of the logging Camel message bodies. If the message body is longer than the limit, the log message is clipped. Use -1 to have unlimited length. Use for example 1000 to log at most 1000 characters. |  | int
 | *camel.main.logExhaustedMessage{zwsp}Body* | Sets whether to log exhausted message body with message history. Default is false. | false | boolean
 | *camel.main.logMask* | Sets whether log mask is enabled or not. Default is false. | false | boolean
+| *camel.main.logName* | The global name to use for Log EIP The name is default the routeId or the source:line if source location is enabled. You can also specify the name using tokens: $\{class} - the logger class name (org.apache.camel.processor.LogProcessor) $\{contextId} - the camel context id $\{routeId} - the route id $\{groupId} - the route group id $\{nodeId} - the node id $\{nodePrefixId} - the node prefix id $\{source} - the source:line (source location must be enabled) ${source.name} - the source filename (source location must be enabled) ${source.line} - the source line number (source location must be enabled) For example to use the route and node id you can specify the name as: $\{routeId}/$\{nodeId} |  | String
+| *camel.main.mainListenerClasses* | Sets classes names that will be used for MainListener that makes it possible to do custom logic during starting and stopping camel-main. |  | String
+| *camel.main.mainListeners* | Sets main listener objects that will be used for MainListener that makes it possible to do custom logic during starting and stopping camel-main. |  | List
 | *camel.main.mdcLoggingKeys{zwsp}Pattern* | Sets the pattern used for determine which custom MDC keys to propagate during message routing when the routing engine continues routing asynchronously for the given message. Setting this pattern to will propagate all custom keys. Or setting the pattern to foo,bar will propagate any keys starting with either foo or bar. Notice that a set of standard Camel MDC keys are always propagated which starts with camel. as key name. The match rules are applied in this order (case insensitive): 1. exact match, returns true 2. wildcard match (pattern ends with a and the name starts with the pattern), returns true 3. regular expression match, returns true 4. otherwise returns false |  | String
 | *camel.main.messageHistory* | Sets whether message history is enabled or not. Default is false. | false | boolean
 | *camel.main.modeline* | Whether camel-k style modeline is also enabled when not using camel-k. Enabling this allows to use a camel-k like experience by being able to configure various settings using modeline directly in your route source code. | false | boolean
@@ -160,8 +163,8 @@ The camel.routecontroller supports 12 options, which are listed below.
 | *camel.routecontroller.include{zwsp}Routes* | Pattern for filtering routes to be included as supervised. The pattern is matching on route id, and endpoint uri for the route. Multiple patterns can be separated by comma. For example to include all kafka routes, you can say kafka:. And to include routes with specific route ids myRoute,myOtherRoute. The pattern supports wildcards and uses the matcher from org.apache.camel.support.PatternHelper#matchPattern. |  | String
 | *camel.routecontroller.initial{zwsp}Delay* | Initial delay in milli seconds before the route controller starts, after CamelContext has been started. |  | long
 | *camel.routecontroller.thread{zwsp}PoolSize* | The number of threads used by the route controller scheduled thread pool that are used for restarting routes. The pool uses 1 thread by default, but you can increase this to allow the controller to concurrently attempt to restart multiple routes in case more than one route has problems starting. | 1 | int
-| *{zwsp}camel.routecontroller.unhealthy{zwsp}OnExhausted* | Whether to mark the route as unhealthy (down) when all restarting attempts (backoff) have failed and the route is not successfully started and the route manager is giving up. Setting this to true allows health checks to know about this and can report the Camel application as DOWN. The default is false. | false | boolean
-| *{zwsp}camel.routecontroller.unhealthy{zwsp}OnRestarting* | Whether to mark the route as unhealthy (down) when the route failed to initially start, and is being controlled for restarting (backoff). Setting this to true allows health checks to know about this and can report the Camel application as DOWN. The default is false. | false | boolean
+| *{zwsp}camel.routecontroller.unhealthy{zwsp}OnExhausted* | Whether to mark the route as unhealthy (down) when all restarting attempts (backoff) have failed and the route is not successfully started and the route manager is giving up. If setting this to false will make health checks ignore this problem and allow to report the Camel application as UP. | true | boolean
+| *{zwsp}camel.routecontroller.unhealthy{zwsp}OnRestarting* | Whether to mark the route as unhealthy (down) when the route failed to initially start, and is being controlled for restarting (backoff). If setting this to false will make health checks ignore this problem and allow to report the Camel application as UP. | true | boolean
 |===
 
 
@@ -188,7 +191,7 @@ The camel.server supports 13 options, which are listed below.
 
 
 === Camel Debugger configurations
-The camel.debug supports 13 options, which are listed below.
+The camel.debug supports 15 options, which are listed below.
 
 [width="100%",cols="2,5,^1,2",options="header"]
 |===
@@ -202,6 +205,8 @@ The camel.debug supports 13 options, which are listed below.
 | *camel.debug.includeException* | Trace messages to include exception if the message failed | true | boolean
 | *camel.debug.includeExchange{zwsp}Properties* | Whether to include the exchange properties in the traced message | true | boolean
 | *camel.debug.includeExchange{zwsp}Variables* | Whether to include the exchange variables in the traced message | true | boolean
+| *camel.debug.jmxConnector{zwsp}Enabled* | Whether to create JMX connector that allows tooling to control the Camel debugger. This is what the IDEA and VSCode tooling is using. | true | boolean
+| *camel.debug.jmxConnectorPort* | Port number to expose a JMX RMI connector for tooling that needs to control the debugger. | 1099 | int
 | *camel.debug.loggingLevel* | The debugger logging level to use when logging activity. | INFO | LoggingLevel
 | *camel.debug.singleStepInclude{zwsp}StartEnd* | In single step mode, then when the exchange is created and completed, then simulate a breakpoint at start and end, that allows to suspend and watch the incoming/complete exchange at the route (you can see message body as response, failed exception etc). | false | boolean
 | *camel.debug.standby* | To set the debugger in standby mode, where the debugger will be installed by not automatic enabled. The debugger can then later be enabled explicit from Java, JMX or tooling. | false | boolean
@@ -374,8 +379,8 @@ The camel.vault.azure supports 12 options, which are listed below.
 |===
 
 
-=== Camel OpenTelemtry configurations
-The camel.opentelemetry supports 4 options, which are listed below.
+=== Camel OpenTelemetry configurations
+The camel.opentelemetry supports 5 options, which are listed below.
 
 [width="100%",cols="2,5,^1,2",options="header"]
 |===
@@ -384,6 +389,7 @@ The camel.opentelemetry supports 4 options, which are listed below.
 | *camel.opentelemetry.encoding* | Sets whether the header keys need to be encoded (connector specific) or not. The value is a boolean. Dashes need for instances to be encoded for JMS property keys. | false | boolean
 | *camel.opentelemetry.exclude{zwsp}Patterns* | Adds an exclude pattern that will disable tracing for Camel messages that matches the pattern. Multiple patterns can be separated by comma. |  | String
 | *{zwsp}camel.opentelemetry.instrumentation{zwsp}Name* | A name uniquely identifying the instrumentation scope, such as the instrumentation library, package, or fully qualified class name. Must not be null. | camel | String
+| *camel.opentelemetry.trace{zwsp}Processors* | Setting this to true will create new OpenTelemetry Spans for each Camel Processors. Use the excludePattern property to filter out Processors. | false | boolean
 |===
 
 

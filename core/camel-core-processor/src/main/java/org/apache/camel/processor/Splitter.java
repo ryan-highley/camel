@@ -45,8 +45,6 @@ import org.apache.camel.support.ExchangeHelper;
 import org.apache.camel.support.ObjectHelper;
 import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.StringHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.apache.camel.util.ObjectHelper.notNull;
 
@@ -55,8 +53,6 @@ import static org.apache.camel.util.ObjectHelper.notNull;
  * evaluated to iterate through each of the parts of a message and then each part is then send to some endpoint.
  */
 public class Splitter extends MulticastProcessor implements AsyncProcessor, Traceable {
-
-    private static final Logger LOG = LoggerFactory.getLogger(Splitter.class);
 
     private static final String IGNORE_DELIMITER_MARKER = "false";
     private static final String SINGLE_DELIMITER_MARKER = "single";
@@ -80,7 +76,7 @@ public class Splitter extends MulticastProcessor implements AsyncProcessor, Trac
                     boolean useSubUnitOfWork, boolean parallelAggregate, String delimiter) {
         super(camelContext, route, Collections.singleton(destination), aggregationStrategy, parallelProcessing, executorService,
               shutdownExecutorService, streaming, stopOnException,
-              timeout, onPrepare, useSubUnitOfWork, parallelAggregate);
+              timeout, onPrepare, useSubUnitOfWork, parallelAggregate, 0);
         this.expression = expression;
         StringHelper.notEmpty(delimiter, "delimiter");
         this.delimiter = delimiter;
@@ -109,9 +105,8 @@ public class Splitter extends MulticastProcessor implements AsyncProcessor, Trac
         AggregationStrategy strategy = getAggregationStrategy();
 
         // set original exchange if not already pre-configured
-        if (strategy instanceof UseOriginalAggregationStrategy) {
+        if (strategy instanceof UseOriginalAggregationStrategy original) {
             // need to create a new private instance, as we can also have concurrency issue so we cannot store state
-            UseOriginalAggregationStrategy original = (UseOriginalAggregationStrategy) strategy;
             AggregationStrategy clone = original.newInstance(exchange);
             if (isShareUnitOfWork()) {
                 clone = new ShareUnitOfWorkAggregationStrategy(clone);
@@ -163,23 +158,11 @@ public class Splitter extends MulticastProcessor implements AsyncProcessor, Trac
 
         // create a copy which we use as master to copy during splitting
         // this avoids any side effect reflected upon the incoming exchange
-        final Object value;
-        final Iterator<?> iterator;
+        private final Object value;
+        private final Iterator<?> iterator;
         private Exchange copy;
         private final Route route;
         private final Exchange original;
-
-        private SplitterIterable() {
-            // used for eager classloading
-            value = null;
-            iterator = null;
-            copy = null;
-            route = null;
-            original = null;
-            // for loading classes from iterator
-            Object dummy = iterator();
-            LOG.trace("Loaded {}", dummy.getClass().getName());
-        }
 
         private SplitterIterable(Exchange exchange, Object value) {
             this.original = exchange;
@@ -308,7 +291,7 @@ public class Splitter extends MulticastProcessor implements AsyncProcessor, Trac
     protected void updateNewExchange(Exchange exchange, int index, Iterable<ProcessorExchangePair> allPairs, boolean hasNext) {
         exchange.setProperty(ExchangePropertyKey.SPLIT_INDEX, index);
         if (allPairs instanceof Collection) {
-            // non streaming mode, so we know the total size already
+            // non-streaming mode, so we know the total size already
             exchange.setProperty(ExchangePropertyKey.SPLIT_SIZE, ((Collection<?>) allPairs).size());
         }
         if (hasNext) {

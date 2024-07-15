@@ -106,42 +106,49 @@ public class CamelServlet extends HttpServlet implements HttpRegistryProvider {
 
     protected void handleService(HttpServletRequest req, HttpServletResponse resp) throws Exception {
         if (isAsync()) {
-            if (executorRef != null) {
-                HttpConsumer consumer = doResolve(req, resp); // can be done sync
-                if (consumer == null) {
-                    return;
-                }
-                Executor pool = ObjectHelper.notNull(getExecutorService(consumer), executorRef);
-                final AsyncContext context = req.startAsync();
-                try {
-                    pool.execute(() -> {
-                        try {
-                            final CompletionStage<?> promise = doExecute(req, resp, consumer);
-                            if (promise == null) { // early quit
-                                context.complete();
-                            } else {
-                                promise.whenComplete((r, e) -> context.complete());
-                            }
-                        } catch (Exception e) {
-                            onError(resp, e);
-                            context.complete();
-                        }
-                    });
-                } catch (final RuntimeException re) { // submit fails
-                    context.complete();
-                    throw re;
-                }
-            } else { // will use http servlet threads so normally http threads so better to enable useCamelExecutor
-                final AsyncContext context = req.startAsync();
-                try {
-                    context.start(() -> doServiceAsync(context));
-                } catch (final RuntimeException re) { // submit fails
-                    context.complete();
-                    throw re;
-                }
-            }
+            handleAsync(req, resp);
         } else {
             doService(req, resp);
+        }
+    }
+
+    private void handleAsync(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        if (executorRef != null) {
+            HttpConsumer consumer = doResolve(req, resp); // can be done sync
+            if (consumer == null) {
+                return;
+            }
+            Executor pool = ObjectHelper.notNull(getExecutorService(consumer), executorRef);
+            final AsyncContext context = req.startAsync();
+            try {
+                pool.execute(() -> doAsyncExecution(req, resp, consumer, context));
+            } catch (final RuntimeException re) { // submit fails
+                context.complete();
+                throw re;
+            }
+        } else { // will use http servlet threads so normally http threads so better to enable useCamelExecutor
+            final AsyncContext context = req.startAsync();
+            try {
+                context.start(() -> doServiceAsync(context));
+            } catch (final RuntimeException re) { // submit fails
+                context.complete();
+                throw re;
+            }
+        }
+    }
+
+    private void doAsyncExecution(
+            HttpServletRequest req, HttpServletResponse resp, HttpConsumer consumer, AsyncContext context) {
+        try {
+            final CompletionStage<?> promise = doExecute(req, resp, consumer);
+            if (promise == null) { // early quit
+                context.complete();
+            } else {
+                promise.whenComplete((r, e) -> context.complete());
+            }
+        } catch (Exception e) {
+            onError(resp, e);
+            context.complete();
         }
     }
 
@@ -163,31 +170,37 @@ public class CamelServlet extends HttpServlet implements HttpRegistryProvider {
         if (camelContext.isStopping() || camelContext.isStopped()) { // shouldn't occur but as a protection
             return null;
         }
-        return executorServicePerContext.computeIfAbsent(camelContext, ctx -> {
-            ExecutorServiceManager manager = camelContext.getExecutorServiceManager();
-            ExecutorService es = manager.newThreadPool(this, getClass().getSimpleName() + "Executor", executorRef);
-            if (es == null) {
-                getServletContext().log(
-                        "ExecutorServiceRef " + executorRef + " not found in registry (as an ExecutorService instance) " +
-                                        "or as a thread pool profile, will default for " + ctx.getName() + ".");
-                es = manager.newDefaultThreadPool(this, getClass().getSimpleName() + "Executor");
-            }
-            ctx.addLifecycleStrategy(new LifecycleStrategySupport() {
-                @Override
-                public void onContextStopping(final CamelContext context) {
-                    final ExecutorService service = executorServicePerContext.remove(context);
-                    if (service != null && !service.isShutdown() && !service.isTerminated()) {
-                        service.shutdownNow();
-                        try { // give it a chance to finish before quitting
-                            service.awaitTermination(1, MINUTES);
-                        } catch (final InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                        }
+        return executorServicePerContext.computeIfAbsent(camelContext, ctx -> createExecutorService(ctx, camelContext));
+    }
+
+    private ExecutorService createExecutorService(CamelContext ctx, CamelContext camelContext) {
+        ExecutorServiceManager manager = camelContext.getExecutorServiceManager();
+        ExecutorService es = manager.newThreadPool(this, getClass().getSimpleName() + "Executor", executorRef);
+        if (es == null) {
+            getServletContext().log(
+                    "ExecutorServiceRef " + executorRef + " not found in registry (as an ExecutorService instance) " +
+                                    "or as a thread pool profile, will default for " + ctx.getName() + ".");
+            es = manager.newDefaultThreadPool(this, getClass().getSimpleName() + "Executor");
+        }
+        ctx.addLifecycleStrategy(createLifecycleStrategy());
+        return es;
+    }
+
+    private LifecycleStrategySupport createLifecycleStrategy() {
+        return new LifecycleStrategySupport() {
+            @Override
+            public void onContextStopping(final CamelContext context) {
+                final ExecutorService service = executorServicePerContext.remove(context);
+                if (service != null && !service.isShutdown() && !service.isTerminated()) {
+                    service.shutdownNow();
+                    try { // give it a chance to finish before quitting
+                        service.awaitTermination(1, MINUTES);
+                    } catch (final InterruptedException e) {
+                        Thread.currentThread().interrupt();
                     }
                 }
-            });
-            return es;
-        });
+            }
+        };
     }
 
     /**
@@ -234,21 +247,7 @@ public class CamelServlet extends HttpServlet implements HttpRegistryProvider {
 
         // if its an OPTIONS request then return which method is allowed
         if ("OPTIONS".equals(req.getMethod()) && !consumer.isOptionsEnabled()) {
-            String allowedMethods = METHODS.stream()
-                    .filter(m -> getServletResolveConsumerStrategy().isHttpMethodAllowed(req, m, getConsumers()))
-                    .collect(Collectors.joining(","));
-            if (allowedMethods == null && consumer.getEndpoint().getHttpMethodRestrict() != null) {
-                allowedMethods = consumer.getEndpoint().getHttpMethodRestrict();
-            }
-            if (allowedMethods == null) {
-                // allow them all
-                allowedMethods = "GET,HEAD,POST,PUT,DELETE,TRACE,OPTIONS,CONNECT,PATCH";
-            }
-            if (!allowedMethods.contains("OPTIONS")) {
-                allowedMethods = allowedMethods + ",OPTIONS";
-            }
-            res.addHeader("Allow", allowedMethods);
-            res.setStatus(HttpServletResponse.SC_OK);
+            performOptionsRequest(req, res, consumer);
             return null;
         }
 
@@ -309,19 +308,7 @@ public class CamelServlet extends HttpServlet implements HttpRegistryProvider {
             final Processor processor = consumer.getProcessor();
             isAsync = isAsync() && !forceAwait && AsyncProcessor.class.isInstance(processor);
             if (isAsync) {
-                result = AsyncProcessor.class.cast(processor)
-                        .processAsync(exchange)
-                        .whenComplete((r, ex) -> {
-                            if (ex != null) {
-                                exchange.setException(ex);
-                            } else {
-                                try {
-                                    afterProcess(res, consumer, exchange, false);
-                                } catch (Exception e) {
-                                    exchange.setException(e);
-                                }
-                            }
-                        });
+                result = tryAsyncProcess(res, consumer, processor, exchange);
             } else {
                 processor.process(exchange);
             }
@@ -337,6 +324,43 @@ public class CamelServlet extends HttpServlet implements HttpRegistryProvider {
             restoreTccl(exchange, oldTccl);
         }
         return result;
+    }
+
+    private CompletionStage<?> tryAsyncProcess(
+            HttpServletResponse res, HttpConsumer consumer, Processor processor, Exchange exchange) {
+        CompletionStage<?> result;
+        result = AsyncProcessor.class.cast(processor)
+                .processAsync(exchange)
+                .whenComplete((r, ex) -> {
+                    if (ex != null) {
+                        exchange.setException(ex);
+                    } else {
+                        try {
+                            afterProcess(res, consumer, exchange, false);
+                        } catch (Exception e) {
+                            exchange.setException(e);
+                        }
+                    }
+                });
+        return result;
+    }
+
+    private void performOptionsRequest(HttpServletRequest req, HttpServletResponse res, HttpConsumer consumer) {
+        String allowedMethods = METHODS.stream()
+                .filter(m -> getServletResolveConsumerStrategy().isHttpMethodAllowed(req, m, getConsumers()))
+                .collect(Collectors.joining(","));
+        if (allowedMethods == null && consumer.getEndpoint().getHttpMethodRestrict() != null) {
+            allowedMethods = consumer.getEndpoint().getHttpMethodRestrict();
+        }
+        if (allowedMethods == null) {
+            // allow them all
+            allowedMethods = "GET,HEAD,POST,PUT,DELETE,TRACE,OPTIONS,CONNECT,PATCH";
+        }
+        if (!allowedMethods.contains("OPTIONS")) {
+            allowedMethods = allowedMethods + ",OPTIONS";
+        }
+        res.addHeader("Allow", allowedMethods);
+        res.setStatus(HttpServletResponse.SC_OK);
     }
 
     protected void afterProcess(
@@ -355,26 +379,34 @@ public class CamelServlet extends HttpServlet implements HttpRegistryProvider {
             }
             consumer.getBinding().writeResponse(exchange, res);
         } catch (IOException e) {
-            log.error("Error processing request", e);
-            if (rethrow) {
-                throw e;
-            } else {
-                exchange.setException(e);
-            }
+            handleIOException(exchange, rethrow, e);
         } catch (Exception e) {
-            log.error("Error processing request", e);
-            if (rethrow) {
-                throw new RuntimeCamelException(e);
-            } else {
-                exchange.setException(e);
-            }
+            handleException(exchange, rethrow, e);
         } finally {
             consumer.doneUoW(exchange);
             consumer.releaseExchange(exchange, false);
         }
     }
 
-    private HttpConsumer doResolve(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    private void handleException(Exchange exchange, boolean rethrow, Exception e) {
+        log.error("Error processing request", e);
+        if (rethrow) {
+            throw new RuntimeCamelException(e);
+        } else {
+            exchange.setException(e);
+        }
+    }
+
+    private void handleIOException(Exchange exchange, boolean rethrow, IOException e) throws IOException {
+        log.error("Error processing request", e);
+        if (rethrow) {
+            throw e;
+        } else {
+            exchange.setException(e);
+        }
+    }
+
+    private HttpConsumer doResolve(HttpServletRequest request, HttpServletResponse response) {
         // Is there a consumer registered for the request.
         HttpConsumer consumer = getServletResolveConsumerStrategy().resolve(request, getConsumers());
         if (consumer == null) {

@@ -36,7 +36,7 @@ import org.fusesource.jansi.AnsiConsole;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "send",
-                     description = "Sends a message to a system via an existing running Camel integration", sortOptions = false)
+                     description = "Send messages to endpoints via running Camel", sortOptions = false)
 public class CamelSendAction extends ActionBaseCommand {
 
     @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "0..1")
@@ -173,7 +173,7 @@ public class CamelSendAction extends ActionBaseCommand {
                     tableHelper.setPretty(pretty);
                     tableHelper.setLoggingColor(loggingColor);
                     tableHelper.setShowExchangeProperties(showExchangeProperties);
-                    String table = tableHelper.getDataAsTable(exchangeId, mep, jo, message, cause);
+                    String table = tableHelper.getDataAsTable(exchangeId, mep, jo, null, message, cause);
                     printer().println(table);
                 }
             }

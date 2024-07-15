@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.camel.dsl.jbang.core.common;
 
 import java.util.Arrays;
@@ -25,16 +24,20 @@ import java.util.Optional;
  */
 public enum PluginType {
 
-    CAMEL_K("camel-k", "k", "Manage Camel integrations on Kubernetes");
+    CAMEL_K("camel-k", "k", "Managed Camel integrations on Kubernetes", "4.4.0"),
+    KUBERNETES("kubernetes", "kubernetes", "Run Camel applications on Kubernetes", "4.8.0"),
+    GENERATE("generate", "generate", "Generate code such as DTOs", "4.7.0");
 
     private final String name;
     private final String command;
     private final String description;
+    private final String firstVersion;
 
-    PluginType(String name, String command, String description) {
+    PluginType(String name, String command, String description, String firstVersion) {
         this.name = name;
         this.command = command;
         this.description = description;
+        this.firstVersion = firstVersion;
     }
 
     public static Optional<PluginType> findByName(String name) {
@@ -53,5 +56,9 @@ public enum PluginType {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getFirstVersion() {
+        return firstVersion;
     }
 }

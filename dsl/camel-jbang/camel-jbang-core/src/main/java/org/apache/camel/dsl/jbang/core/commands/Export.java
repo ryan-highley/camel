@@ -20,9 +20,13 @@ import java.io.File;
 import java.util.Comparator;
 import java.util.Properties;
 
+import org.apache.camel.RuntimeCamelException;
+import org.apache.camel.dsl.jbang.core.common.RuntimeType;
 import org.apache.camel.dsl.jbang.core.common.RuntimeUtil;
+import org.apache.camel.dsl.jbang.core.common.SourceScheme;
 import org.apache.camel.tooling.maven.MavenGav;
 import org.apache.camel.util.CamelCaseOrderedProperties;
+import org.apache.camel.util.FileUtil;
 import picocli.CommandLine.Command;
 
 @Command(name = "export",
@@ -46,20 +50,25 @@ public class Export extends ExportBaseCommand {
             System.err.println("The runtime option must be specified");
             return 1;
         }
+
         if (gav == null) {
-            System.err.println("The gav option must be specified");
-            return 1;
+            gav = "org.example.project:%s:%s".formatted(getProjectName(), getVersion());
         }
 
-        if ("spring-boot".equals(runtime) || "camel-spring-boot".equals(runtime)) {
-            return export(new ExportSpringBoot(getMain()));
-        } else if ("quarkus".equals(runtime) || "camel-quarkus".equals(runtime)) {
-            return export(new ExportQuarkus(getMain()));
-        } else if ("main".equals(runtime) || "camel-main".equals(runtime)) {
-            return export(new ExportCamelMain(getMain()));
-        } else {
-            System.err.println("Unknown runtime: " + runtime);
-            return 1;
+        switch (runtime) {
+            case springBoot -> {
+                return export(new ExportSpringBoot(getMain()));
+            }
+            case quarkus -> {
+                return export(new ExportQuarkus(getMain()));
+            }
+            case main -> {
+                return export(new ExportCamelMain(getMain()));
+            }
+            default -> {
+                System.err.println("Unknown runtime: " + runtime);
+                return 1;
+            }
         }
     }
 
@@ -68,7 +77,9 @@ public class Export extends ExportBaseCommand {
             Properties prop = new CamelCaseOrderedProperties();
             RuntimeUtil.loadProperties(prop, file);
             // read runtime and gav from profile if not configured
-            this.runtime = prop.getProperty("camel.jbang.runtime", this.runtime);
+            if (prop.containsKey("camel.jbang.runtime")) {
+                this.runtime = RuntimeType.fromValue(prop.getProperty("camel.jbang.runtime"));
+            }
             this.gav = prop.getProperty("camel.jbang.gav", this.gav);
             // allow configuring versions from profile
             this.javaVersion = prop.getProperty("camel.jbang.javaVersion", this.javaVersion);
@@ -136,6 +147,33 @@ public class Export extends ExportBaseCommand {
         cmd.ignoreLoadingError = this.ignoreLoadingError;
         // run export
         return cmd.export();
+    }
+
+    protected String getProjectName() {
+        if (gav != null) {
+            String[] ids = gav.split(":");
+            if (ids.length > 1) {
+                return ids[1]; // artifactId
+            }
+        }
+
+        if (!files.isEmpty()) {
+            return FileUtil.onlyName(SourceScheme.onlyName(files.get(0)));
+        }
+
+        throw new RuntimeCamelException(
+                "Failed to resolve project name - please provide --gav option or at least one source file");
+    }
+
+    protected String getVersion() {
+        if (gav != null) {
+            String[] ids = gav.split(":");
+            if (ids.length > 2) {
+                return ids[2]; // g:a:v version
+            }
+        }
+
+        return "1.0-SNAPSHOT";
     }
 
     public Comparator<MavenGav> mavenGavComparator() {

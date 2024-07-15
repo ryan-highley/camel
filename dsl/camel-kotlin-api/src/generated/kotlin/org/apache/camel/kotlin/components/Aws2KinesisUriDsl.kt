@@ -216,6 +216,20 @@ public class Aws2KinesisUriDsl(
   }
 
   /**
+   * The interval in milliseconds to wait between shard polling
+   */
+  public fun shardMonitorInterval(shardMonitorInterval: String) {
+    it.property("shardMonitorInterval", shardMonitorInterval)
+  }
+
+  /**
+   * The interval in milliseconds to wait between shard polling
+   */
+  public fun shardMonitorInterval(shardMonitorInterval: Int) {
+    it.property("shardMonitorInterval", shardMonitorInterval.toString())
+  }
+
+  /**
    * Whether the producer should be started lazy (on the first message). By starting lazy you can
    * use this to allow CamelContext and routes to startup in situations where a producer may otherwise
    * fail during starting and cause the route to fail being started. By deferring this startup to be
@@ -258,6 +272,34 @@ public class Aws2KinesisUriDsl(
    */
   public fun asyncClient(asyncClient: Boolean) {
     it.property("asyncClient", asyncClient.toString())
+  }
+
+  /**
+   * If we want to a KCL Consumer, we can pass an instance of CloudWatchAsyncClient
+   */
+  public fun cloudWatchAsyncClient(cloudWatchAsyncClient: String) {
+    it.property("cloudWatchAsyncClient", cloudWatchAsyncClient)
+  }
+
+  /**
+   * If we want to a KCL Consumer, we can pass an instance of DynamoDbAsyncClient
+   */
+  public fun dynamoDbAsyncClient(dynamoDbAsyncClient: String) {
+    it.property("dynamoDbAsyncClient", dynamoDbAsyncClient)
+  }
+
+  /**
+   * If we want to a KCL Consumer set it to true
+   */
+  public fun useKclConsumers(useKclConsumers: String) {
+    it.property("useKclConsumers", useKclConsumers)
+  }
+
+  /**
+   * If we want to a KCL Consumer set it to true
+   */
+  public fun useKclConsumers(useKclConsumers: Boolean) {
+    it.property("useKclConsumers", useKclConsumers.toString())
   }
 
   /**

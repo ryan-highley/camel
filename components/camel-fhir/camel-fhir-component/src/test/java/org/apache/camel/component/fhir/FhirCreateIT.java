@@ -28,11 +28,9 @@ import org.apache.camel.component.fhir.api.ExtraParameters;
 import org.apache.camel.component.fhir.internal.FhirApiCollection;
 import org.apache.camel.component.fhir.internal.FhirCreateApiMethod;
 import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.camel.spi.Registry;
 import org.hl7.fhir.r4.model.HumanName;
 import org.hl7.fhir.r4.model.Patient;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,8 +41,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Test class for {@link org.apache.camel.component.fhir.api.FhirCreate} APIs. The class source won't be generated again
  * if the generator MOJO finds it under src/test/java.
  */
-@DisabledIfSystemProperty(named = "ci.env.name", matches = "apache.org",
-                          disabledReason = "Apache CI nodes are too resource constrained for this test - see CAMEL-19659")
 public class FhirCreateIT extends AbstractFhirTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(FhirCreateIT.class);
@@ -52,14 +48,7 @@ public class FhirCreateIT extends AbstractFhirTestSupport {
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
-        //don't set serverUrl on component, use it from endpoint configration
-        Registry registry = createCamelRegistry();
-
-        if (registry != null) {
-            context = new DefaultCamelContext(registry);
-        } else {
-            context = new DefaultCamelContext();
-        }
+        context = new DefaultCamelContext();
 
         this.fhirContext = new FhirContext(FhirVersionEnum.R4);
         // Set proxy so that FHIR resource URLs returned by the server are using the correct host and port

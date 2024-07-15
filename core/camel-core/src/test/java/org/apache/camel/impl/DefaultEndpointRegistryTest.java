@@ -29,7 +29,6 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.engine.DefaultEndpointRegistry;
 import org.apache.camel.impl.engine.SimpleCamelContext;
 import org.apache.camel.spi.EndpointRegistry;
-import org.apache.camel.support.NormalizedUri;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -91,7 +90,7 @@ public class DefaultEndpointRegistryTest {
 
         FluentProducerTemplate template = ctx.createFluentProducerTemplate();
         for (int i = 0; i < 100; i++) {
-            template.withBody("Hello").withHeader("foo", "" + i).to("direct:start").send();
+            template.withBody("Hello").withHeader("foo", Integer.toString(i)).to("direct:start").send();
         }
 
         Awaitility.await().untilAsserted(() -> {
@@ -154,7 +153,7 @@ public class DefaultEndpointRegistryTest {
         context.start();
 
         ProducerTemplate producerTemplate = context.createProducerTemplate();
-        EndpointRegistry<NormalizedUri> endpointRegistry = context.getEndpointRegistry();
+        EndpointRegistry endpointRegistry = context.getEndpointRegistry();
 
         int nThreads = 4;
         ExecutorService executorService = Executors.newFixedThreadPool(nThreads);

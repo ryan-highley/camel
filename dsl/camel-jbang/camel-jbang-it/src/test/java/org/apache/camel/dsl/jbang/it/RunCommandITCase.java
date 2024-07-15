@@ -83,7 +83,7 @@ public class RunCommandITCase extends JBangTestSupport {
     public void runRouteFromInputParameterTest() {
         executeBackground("run --code='from(\"kamelet:beer-source\").to(\"log:beer\")'");
         checkLogContains("Started route1 (kamelet://beer-source)");
-        checkLogContains("Started beer-source-1 (timer://beer)");
+        checkLogContains("[ - timer://beer] beer");
     }
 
     @Test
@@ -105,7 +105,8 @@ public class RunCommandITCase extends JBangTestSupport {
         executeBackground("run https://github.com/apache/camel-kamelets-examples/tree/main/jbang/languages/*.groovy");
         checkLogContains("Hello Camel K from groovy");
         execute("stop simple");
-        executeBackground("run https://github.com/apache/camel-kamelets-examples/tree/main/jbang/languages/rou*");
+        execute("init https://github.com/apache/camel-kamelets-examples/tree/main/jbang/languages/rou*");
+        executeBackground("run *");
         checkLogContains("Hello Camel K from kotlin");
         checkLogContains("HELLO YAML !!!");
     }
@@ -131,10 +132,11 @@ public class RunCommandITCase extends JBangTestSupport {
     public void runDownloadedInDirectoryFromGithubTest() {
         execute("init https://github.com/apache/camel-kamelets-examples/tree/main/jbang/dependency-injection --directory="
                 + mountPoint());
-        Assertions.assertThat(Paths.get(getDataFolder()).toFile().listFiles())
+        Assertions
+                .assertThat(Paths.get(getDataFolder()).toFile().listFiles())
+                .as("custom route directory")
                 .extracting("name")
-                .containsExactlyInAnyOrder("Echo.java", "Hello.java", "README.adoc", "application.properties")
-                .as("custom route directory");
+                .containsExactlyInAnyOrder("Echo.java", "Hello.java", "README.adoc", "application.properties");
         executeBackground(String.format("run %s/*", mountPoint()));
         checkLogContains("JackJack!! from Echo");
     }

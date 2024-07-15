@@ -17,6 +17,7 @@
 package org.apache.camel.component.kafka;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -27,6 +28,8 @@ import java.util.stream.Collectors;
 
 import org.apache.camel.Processor;
 import org.apache.camel.Suspendable;
+import org.apache.camel.api.management.ManagedAttribute;
+import org.apache.camel.api.management.ManagedResource;
 import org.apache.camel.component.kafka.consumer.errorhandler.KafkaConsumerListener;
 import org.apache.camel.health.HealthCheckAware;
 import org.apache.camel.health.HealthCheckHelper;
@@ -46,6 +49,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@ManagedResource(description = "Managed KafkaConsumer")
 public class KafkaConsumer extends DefaultConsumer
         implements ResumeAware<ResumeStrategy>, HealthCheckAware, ConsumerListenerAware<KafkaConsumerListener>,
         Suspendable {
@@ -242,7 +246,19 @@ public class KafkaConsumer extends DefaultConsumer
     }
 
     public List<TaskHealthState> healthStates() {
-        return tasks.stream().map(t -> t.healthState()).collect(Collectors.toList());
+        return tasks.stream().map(KafkaFetchRecords::healthState).collect(Collectors.toList());
+    }
+
+    /**
+     * Whether the Kafka client is currently paused
+     */
+    @ManagedAttribute(description = "Whether the Kafka client is currently paused")
+    public boolean isKafkaPaused() {
+        return tasks.stream().allMatch(KafkaFetchRecords::isPaused);
+    }
+
+    protected List<KafkaFetchRecords> tasks() {
+        return Collections.unmodifiableList(tasks);
     }
 
     @Override

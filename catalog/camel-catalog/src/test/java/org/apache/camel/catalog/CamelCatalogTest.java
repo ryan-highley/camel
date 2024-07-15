@@ -162,7 +162,6 @@ public class CamelCatalogTest {
         assertTrue(names.contains("aws-secrets"));
         assertTrue(names.contains("gc"));
         assertTrue(names.contains("inflight"));
-        assertTrue(names.contains("mina"));
         assertTrue(names.contains("platform-http"));
         assertTrue(names.contains("variables"));
     }
@@ -1633,7 +1632,7 @@ public class CamelCatalogTest {
         assertEquals(Kind.bean, model.getKind());
         assertEquals("ZipAggregationStrategy", model.getName());
         assertEquals("org.apache.camel.processor.aggregate.zipfile.ZipAggregationStrategy", model.getJavaType());
-        assertEquals(6, model.getOptions().size());
+        assertEquals(7, model.getOptions().size());
     }
 
 }

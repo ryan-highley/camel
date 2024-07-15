@@ -94,6 +94,20 @@ public class SmbUriDsl(
   }
 
   /**
+   * If a directory, will look for files in all the sub-directories as well.
+   */
+  public fun recursive(recursive: String) {
+    it.property("recursive", recursive)
+  }
+
+  /**
+   * If a directory, will look for files in all the sub-directories as well.
+   */
+  public fun recursive(recursive: Boolean) {
+    it.property("recursive", recursive.toString())
+  }
+
+  /**
    * If the polling consumer did not poll any files, you can enable this option to send an empty
    * message (no body) instead.
    */
@@ -162,6 +176,65 @@ public class SmbUriDsl(
    */
   public fun pollStrategy(pollStrategy: String) {
     it.property("pollStrategy", pollStrategy)
+  }
+
+  /**
+   * Whether to create parent directory if it does not exist
+   */
+  public fun autoCreate(autoCreate: String) {
+    it.property("autoCreate", autoCreate)
+  }
+
+  /**
+   * Whether to create parent directory if it does not exist
+   */
+  public fun autoCreate(autoCreate: Boolean) {
+    it.property("autoCreate", autoCreate.toString())
+  }
+
+  /**
+   * What action to take if the SMB file already exists
+   */
+  public fun fileExist(fileExist: String) {
+    it.property("fileExist", fileExist)
+  }
+
+  /**
+   * Read buffer size when for file being produced
+   */
+  public fun readBufferSize(readBufferSize: String) {
+    it.property("readBufferSize", readBufferSize)
+  }
+
+  /**
+   * Read buffer size when for file being produced
+   */
+  public fun readBufferSize(readBufferSize: Int) {
+    it.property("readBufferSize", readBufferSize.toString())
+  }
+
+  /**
+   * Whether the producer should be started lazy (on the first message). By starting lazy you can
+   * use this to allow CamelContext and routes to startup in situations where a producer may otherwise
+   * fail during starting and cause the route to fail being started. By deferring this startup to be
+   * lazy then the startup failure can be handled during routing messages via Camel's routing error
+   * handlers. Beware that when the first message is processed then creating and starting the producer
+   * may take a little time and prolong the total processing time of the processing.
+   */
+  public fun lazyStartProducer(lazyStartProducer: String) {
+    it.property("lazyStartProducer", lazyStartProducer)
+  }
+
+  /**
+   * Whether the producer should be started lazy (on the first message). By starting lazy you can
+   * use this to allow CamelContext and routes to startup in situations where a producer may otherwise
+   * fail during starting and cause the route to fail being started. By deferring this startup to be
+   * lazy then the startup failure can be handled during routing messages via Camel's routing error
+   * handlers. Beware that when the first message is processed then creating and starting the producer
+   * may take a little time and prolong the total processing time of the processing.
+   */
+  public fun lazyStartProducer(lazyStartProducer: Boolean) {
+    it.property("lazyStartProducer", lazyStartProducer.toString())
   }
 
   /**

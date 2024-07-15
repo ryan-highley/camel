@@ -24,7 +24,7 @@ import org.apache.camel.kotlin.CamelDslMarker
 import org.apache.camel.kotlin.UriDsl
 
 /**
- * Send messages to (or consume from) Apache ActiveMQ. This component extends the Camel JMS
+ * Send messages to (or consume from) Apache ActiveMQ 5.x. This component extends the Camel JMS
  * component.
  */
 public fun UriDsl.activemq(i: ActivemqUriDsl.() -> Unit) {
@@ -1379,6 +1379,35 @@ public class ActivemqUriDsl(
       fun waitForProvisionCorrelationToBeUpdatedThreadSleepingTime(waitForProvisionCorrelationToBeUpdatedThreadSleepingTime: String) {
     it.property("waitForProvisionCorrelationToBeUpdatedThreadSleepingTime",
         waitForProvisionCorrelationToBeUpdatedThreadSleepingTime)
+  }
+
+  /**
+   * Number of times to wait for temporary replyTo queue to be created and ready when doing
+   * request/reply over JMS.
+   */
+  public
+      fun waitForTemporaryReplyToToBeUpdatedCounter(waitForTemporaryReplyToToBeUpdatedCounter: String) {
+    it.property("waitForTemporaryReplyToToBeUpdatedCounter",
+        waitForTemporaryReplyToToBeUpdatedCounter)
+  }
+
+  /**
+   * Number of times to wait for temporary replyTo queue to be created and ready when doing
+   * request/reply over JMS.
+   */
+  public
+      fun waitForTemporaryReplyToToBeUpdatedCounter(waitForTemporaryReplyToToBeUpdatedCounter: Int) {
+    it.property("waitForTemporaryReplyToToBeUpdatedCounter",
+        waitForTemporaryReplyToToBeUpdatedCounter.toString())
+  }
+
+  /**
+   * Interval in millis to sleep each time while waiting for temporary replyTo queue to be ready.
+   */
+  public
+      fun waitForTemporaryReplyToToBeUpdatedThreadSleepingTime(waitForTemporaryReplyToToBeUpdatedThreadSleepingTime: String) {
+    it.property("waitForTemporaryReplyToToBeUpdatedThreadSleepingTime",
+        waitForTemporaryReplyToToBeUpdatedThreadSleepingTime)
   }
 
   /**

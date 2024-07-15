@@ -18,6 +18,8 @@ package org.apache.camel.spi;
 
 import java.util.Map;
 
+import org.apache.camel.Endpoint;
+
 /**
  * Represents a traced message by the BacklogTracer.
  */
@@ -136,6 +138,39 @@ public interface BacklogTracerEventMessage {
      * as (to, toD, wireTap) etc.
      */
     String getEndpointUri();
+
+    /**
+     * Whether the endpoint is remote.
+     *
+     * @see Endpoint#isRemote()
+     */
+    boolean isRemoteEndpoint();
+
+    /**
+     * Gets the endpoint remote address such as URL, hostname, connection-string, or cloud region, that are component
+     * specific.
+     *
+     * @return the address or null if no address can be determined.
+     * @see    EndpointServiceLocation
+     */
+    String getEndpointServiceUrl();
+
+    /**
+     * Get the endpoint protocol the service is using such as http, amqp, tcp.
+     *
+     * @see EndpointServiceLocation
+     */
+    String getEndpointServiceProtocol();
+
+    /**
+     * Optional endpoint metadata that is relevant to the service as key value pairs. Notice that the metadata is not
+     * supposed to contain sensitive security details such as access token, api keys, or passwords. Only share
+     * information that can be safely accessed and written to logs.
+     *
+     * @return optional metadata or null if no data
+     * @see    EndpointServiceLocation
+     */
+    Map<String, String> getEndpointServiceMetadata();
 
     /**
      * Dumps the event message as XML using the {@link #ROOT_TAG} as root tag.

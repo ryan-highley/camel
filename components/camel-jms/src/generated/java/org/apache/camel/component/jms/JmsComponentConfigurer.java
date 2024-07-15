@@ -188,6 +188,8 @@ public class JmsComponentConfigurer extends PropertyConfigurerSupport implements
         case "requesttimeoutcheckerinterval":
         case "requestTimeoutCheckerInterval": getOrCreateConfiguration(target).setRequestTimeoutCheckerInterval(property(camelContext, java.time.Duration.class, value).toMillis()); return true;
         case "selector": getOrCreateConfiguration(target).setSelector(property(camelContext, java.lang.String.class, value)); return true;
+        case "servicelocationenabled":
+        case "serviceLocationEnabled": target.setServiceLocationEnabled(property(camelContext, boolean.class, value)); return true;
         case "streammessagetypeenabled":
         case "streamMessageTypeEnabled": getOrCreateConfiguration(target).setStreamMessageTypeEnabled(property(camelContext, boolean.class, value)); return true;
         case "subscriptiondurable":
@@ -225,6 +227,10 @@ public class JmsComponentConfigurer extends PropertyConfigurerSupport implements
         case "waitForProvisionCorrelationToBeUpdatedCounter": getOrCreateConfiguration(target).setWaitForProvisionCorrelationToBeUpdatedCounter(property(camelContext, int.class, value)); return true;
         case "waitforprovisioncorrelationtobeupdatedthreadsleepingtime":
         case "waitForProvisionCorrelationToBeUpdatedThreadSleepingTime": getOrCreateConfiguration(target).setWaitForProvisionCorrelationToBeUpdatedThreadSleepingTime(property(camelContext, java.time.Duration.class, value).toMillis()); return true;
+        case "waitfortemporaryreplytotobeupdatedcounter":
+        case "waitForTemporaryReplyToToBeUpdatedCounter": getOrCreateConfiguration(target).setWaitForTemporaryReplyToToBeUpdatedCounter(property(camelContext, int.class, value)); return true;
+        case "waitfortemporaryreplytotobeupdatedthreadsleepingtime":
+        case "waitForTemporaryReplyToToBeUpdatedThreadSleepingTime": getOrCreateConfiguration(target).setWaitForTemporaryReplyToToBeUpdatedThreadSleepingTime(property(camelContext, java.time.Duration.class, value).toMillis()); return true;
         default: return false;
         }
     }
@@ -390,6 +396,8 @@ public class JmsComponentConfigurer extends PropertyConfigurerSupport implements
         case "requesttimeoutcheckerinterval":
         case "requestTimeoutCheckerInterval": return long.class;
         case "selector": return java.lang.String.class;
+        case "servicelocationenabled":
+        case "serviceLocationEnabled": return boolean.class;
         case "streammessagetypeenabled":
         case "streamMessageTypeEnabled": return boolean.class;
         case "subscriptiondurable":
@@ -427,6 +435,10 @@ public class JmsComponentConfigurer extends PropertyConfigurerSupport implements
         case "waitForProvisionCorrelationToBeUpdatedCounter": return int.class;
         case "waitforprovisioncorrelationtobeupdatedthreadsleepingtime":
         case "waitForProvisionCorrelationToBeUpdatedThreadSleepingTime": return long.class;
+        case "waitfortemporaryreplytotobeupdatedcounter":
+        case "waitForTemporaryReplyToToBeUpdatedCounter": return int.class;
+        case "waitfortemporaryreplytotobeupdatedthreadsleepingtime":
+        case "waitForTemporaryReplyToToBeUpdatedThreadSleepingTime": return long.class;
         default: return null;
         }
     }
@@ -593,6 +605,8 @@ public class JmsComponentConfigurer extends PropertyConfigurerSupport implements
         case "requesttimeoutcheckerinterval":
         case "requestTimeoutCheckerInterval": return getOrCreateConfiguration(target).getRequestTimeoutCheckerInterval();
         case "selector": return getOrCreateConfiguration(target).getSelector();
+        case "servicelocationenabled":
+        case "serviceLocationEnabled": return target.isServiceLocationEnabled();
         case "streammessagetypeenabled":
         case "streamMessageTypeEnabled": return getOrCreateConfiguration(target).isStreamMessageTypeEnabled();
         case "subscriptiondurable":
@@ -630,6 +644,10 @@ public class JmsComponentConfigurer extends PropertyConfigurerSupport implements
         case "waitForProvisionCorrelationToBeUpdatedCounter": return getOrCreateConfiguration(target).getWaitForProvisionCorrelationToBeUpdatedCounter();
         case "waitforprovisioncorrelationtobeupdatedthreadsleepingtime":
         case "waitForProvisionCorrelationToBeUpdatedThreadSleepingTime": return getOrCreateConfiguration(target).getWaitForProvisionCorrelationToBeUpdatedThreadSleepingTime();
+        case "waitfortemporaryreplytotobeupdatedcounter":
+        case "waitForTemporaryReplyToToBeUpdatedCounter": return getOrCreateConfiguration(target).getWaitForTemporaryReplyToToBeUpdatedCounter();
+        case "waitfortemporaryreplytotobeupdatedthreadsleepingtime":
+        case "waitForTemporaryReplyToToBeUpdatedThreadSleepingTime": return getOrCreateConfiguration(target).getWaitForTemporaryReplyToToBeUpdatedThreadSleepingTime();
         default: return null;
         }
     }

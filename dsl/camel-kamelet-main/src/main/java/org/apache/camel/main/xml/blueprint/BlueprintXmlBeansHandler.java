@@ -30,12 +30,21 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.LoggingLevel;
+import org.apache.camel.RuntimeCamelException;
+import org.apache.camel.ShutdownRoute;
+import org.apache.camel.ShutdownRunningTask;
+import org.apache.camel.StartupSummaryLevel;
+import org.apache.camel.TypeConverterExists;
+import org.apache.camel.converter.jaxp.XmlConverter;
 import org.apache.camel.main.MainConfigurationProperties;
 import org.apache.camel.main.util.XmlHelper;
+import org.apache.camel.model.BeanFactoryDefinition;
 import org.apache.camel.model.Model;
-import org.apache.camel.model.app.RegistryBeanDefinition;
+import org.apache.camel.model.errorhandler.RefErrorHandlerDefinition;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.ResourceLoader;
+import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.support.ObjectHelper;
 import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.PropertyBindingSupport;
@@ -57,7 +66,7 @@ public class BlueprintXmlBeansHandler {
     // that's why some beans should be processed later
     private final Map<String, Node> delayedBeans = new LinkedHashMap<>();
     private final Map<String, Resource> resources = new LinkedHashMap<>();
-    private final List<RegistryBeanDefinition> delayedRegistrations = new ArrayList<>();
+    private final List<BeanFactoryDefinition<?>> delayedRegistrations = new ArrayList<>();
     private final Map<String, KeyValueHolder<Object, String>> beansToDestroy = new LinkedHashMap<>();
     private boolean transform;
 
@@ -82,6 +91,8 @@ public class BlueprintXmlBeansHandler {
                 // this is a camel bean via camel-xml-io-dsl
                 String fileName = StringHelper.afterLast(id, ":");
                 discoverBeans(camelContext, fileName, doc);
+                // configure <camelContext>
+                configureCamelContext(camelContext, fileName);
             }
         });
     }
@@ -98,7 +109,7 @@ public class BlueprintXmlBeansHandler {
         for (Map.Entry<String, Node> entry : delayedBeans.entrySet()) {
             String id = entry.getKey();
             Node n = entry.getValue();
-            RegistryBeanDefinition def = createBeanModel(camelContext, id, n);
+            BeanFactoryDefinition<?> def = createBeanModel(camelContext, id, n);
             if (transform) {
                 // transform mode should only discover and remember bean in model
                 LOG.debug("Discovered bean: {}", def.getName());
@@ -111,7 +122,7 @@ public class BlueprintXmlBeansHandler {
 
         if (!delayedRegistrations.isEmpty()) {
             // some of the beans were not available yet, so we have to try register them now
-            for (RegistryBeanDefinition def : delayedRegistrations) {
+            for (BeanFactoryDefinition<?> def : delayedRegistrations) {
                 LOG.debug("Creating bean (2nd-try): {}", def.getName());
                 registerAndCreateBean(camelContext, def, false);
             }
@@ -120,32 +131,32 @@ public class BlueprintXmlBeansHandler {
 
     }
 
-    private RegistryBeanDefinition createBeanModel(CamelContext camelContext, String name, Node node) {
-        RegistryBeanDefinition rrd = new RegistryBeanDefinition();
-        rrd.setResource(resources.get(name));
-        rrd.setType(XmlHelper.getAttribute(node, "class"));
-        rrd.setName(name);
+    private BeanFactoryDefinition<?> createBeanModel(CamelContext camelContext, String name, Node node) {
+        BeanFactoryDefinition<?> def = new BeanFactoryDefinition<>();
+        def.setResource(resources.get(name));
+        def.setType(XmlHelper.getAttribute(node, "class"));
+        def.setName(name);
 
         // factory bean/method
         String fb = XmlHelper.getAttribute(node, "factory-ref");
         if (fb != null) {
-            rrd.setFactoryBean(fb);
+            def.setFactoryBean(fb);
         }
         String fm = XmlHelper.getAttribute(node, "factory-method");
         if (fm != null) {
-            rrd.setFactoryMethod(fm);
+            def.setFactoryMethod(fm);
         }
         String im = XmlHelper.getAttribute(node, "init-method");
         if (im != null) {
-            rrd.setInitMethod(im);
+            def.setInitMethod(im);
         }
         String dm = XmlHelper.getAttribute(node, "destroy-method");
         if (dm != null) {
-            rrd.setDestroyMethod(dm);
+            def.setDestroyMethod(dm);
         }
         // constructor arguments
         Map<Integer, Object> constructors = new LinkedHashMap<>();
-        rrd.setConstructors(constructors);
+        def.setConstructors(constructors);
         NodeList props = node.getChildNodes();
         int index = 0;
         for (int i = 0; i < props.getLength(); i++) {
@@ -162,7 +173,7 @@ public class BlueprintXmlBeansHandler {
             }
         }
         if (!constructors.isEmpty()) {
-            rrd.setConstructors(constructors);
+            def.setConstructors(constructors);
         }
 
         // property values
@@ -204,10 +215,10 @@ public class BlueprintXmlBeansHandler {
             }
         }
         if (!properties.isEmpty()) {
-            rrd.setProperties(properties);
+            def.setProperties(properties);
         }
 
-        return rrd;
+        return def;
     }
 
     private static List<Node> getChildNodes(Node node, String name) {
@@ -220,6 +231,166 @@ public class BlueprintXmlBeansHandler {
             }
         }
         return answer;
+    }
+
+    private void configureCamelContext(CamelContext camelContext, String fileName) {
+        Resource resource = camelContext.getCamelContextExtension().getContextPlugin(ResourceLoader.class)
+                .resolveResource("file:" + fileName);
+        if (!resource.exists()) {
+            return;
+        }
+
+        try {
+            // need to load and parse again as we need to load <camelContext> to configure CamelContext from XML
+            Document dom = new XmlConverter().toDOMDocument(resource.getInputStream(), null);
+            NodeList camels = dom.getElementsByTagNameNS("http://camel.apache.org/schema/blueprint", "camelContext");
+            if (camels.getLength() == 1) {
+                Node n = camels.item(0);
+                if (n.hasAttributes()) {
+                    String value = XmlHelper.getAttribute(n, "id");
+                    if (value != null) {
+                        camelContext.getCamelContextExtension().setName(CamelContextHelper.parseText(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "startupSummaryLevel");
+                    if (value != null) {
+                        camelContext
+                                .setStartupSummaryLevel(
+                                        CamelContextHelper.parse(camelContext, StartupSummaryLevel.class, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "trace");
+                    if (value != null) {
+                        camelContext.setTracing(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "backlogTrace");
+                    if (value != null) {
+                        camelContext.setBacklogTracing(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "tracePattern");
+                    if (value != null) {
+                        camelContext.setTracingPattern(CamelContextHelper.parseText(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "traceLoggingFormat");
+                    if (value != null) {
+                        camelContext.setTracingLoggingFormat(CamelContextHelper.parseText(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "debug");
+                    if (value != null) {
+                        camelContext.setDebugging(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "messageHistory");
+                    if (value != null) {
+                        camelContext.setMessageHistory(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "sourceLocationEnabled");
+                    if (value != null) {
+                        camelContext.setSourceLocationEnabled(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "logMask");
+                    if (value != null) {
+                        camelContext.setLogMask(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "logExhaustedMessageBody");
+                    if (value != null) {
+                        camelContext.setLogExhaustedMessageBody(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "streamCache");
+                    if (value != null) {
+                        camelContext.setStreamCaching(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "delayer");
+                    if (value != null) {
+                        camelContext.setDelayer(CamelContextHelper.parseLong(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "autoStartup");
+                    if (value != null) {
+                        camelContext.setAutoStartup(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "dumpRoutes");
+                    if (value != null) {
+                        camelContext.setDumpRoutes(CamelContextHelper.parseText(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "useMDCLogging");
+                    if (value != null) {
+                        camelContext.setUseMDCLogging(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "mdcLoggingKeysPattern");
+                    if (value != null) {
+                        camelContext.setMDCLoggingKeysPattern(CamelContextHelper.parseText(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "useDataType");
+                    if (value != null) {
+                        camelContext.setUseDataType(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "useBreadcrumb");
+                    if (value != null) {
+                        camelContext.setUseBreadcrumb(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "allowUseOriginalMessage");
+                    if (value != null) {
+                        camelContext.setAllowUseOriginalMessage(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "caseInsensitiveHeaders");
+                    if (value != null) {
+                        camelContext.setCaseInsensitiveHeaders(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "autowiredEnabled");
+                    if (value != null) {
+                        camelContext.setAutowiredEnabled(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "threadNamePattern");
+                    if (value != null) {
+                        camelContext.getExecutorServiceManager()
+                                .setThreadNamePattern(CamelContextHelper.parseText(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "shutdownRoute");
+                    if (value != null) {
+                        camelContext.setShutdownRoute(CamelContextHelper.parse(camelContext, ShutdownRoute.class, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "shutdownRunningTask");
+                    if (value != null) {
+                        camelContext
+                                .setShutdownRunningTask(
+                                        CamelContextHelper.parse(camelContext, ShutdownRunningTask.class, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "shutdownRunningTask");
+                    if (value != null) {
+                        camelContext.setLoadTypeConverters(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "typeConverterStatisticsEnabled");
+                    if (value != null) {
+                        camelContext.setTypeConverterStatisticsEnabled(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "loadHealthChecks");
+                    if (value != null) {
+                        camelContext.setLoadHealthChecks(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "inflightRepositoryBrowseEnabled");
+                    if (value != null) {
+                        camelContext.getInflightRepository()
+                                .setInflightBrowseEnabled(CamelContextHelper.parseBoolean(camelContext, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "typeConverterExists");
+                    if (value != null) {
+                        camelContext.getTypeConverterRegistry()
+                                .setTypeConverterExists(
+                                        CamelContextHelper.parse(camelContext, TypeConverterExists.class, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "typeConverterExistsLoggingLevel");
+                    if (value != null) {
+                        camelContext.getTypeConverterRegistry().setTypeConverterExistsLoggingLevel(
+                                CamelContextHelper.parse(camelContext, LoggingLevel.class, value));
+                    }
+                    value = XmlHelper.getAttribute(n, "errorHandlerRef");
+                    if (value != null) {
+                        camelContext.getCamelContextExtension()
+                                .setErrorHandlerFactory(
+                                        new RefErrorHandlerDefinition(CamelContextHelper.parseText(camelContext, value)));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw RuntimeCamelException.wrapRuntimeException(e);
+        }
     }
 
     private void discoverBeans(CamelContext camelContext, String fileName, Document dom) {
@@ -261,7 +432,7 @@ public class BlueprintXmlBeansHandler {
     /**
      * Try to instantiate bean from the definition.
      */
-    private void registerAndCreateBean(CamelContext camelContext, RegistryBeanDefinition def, boolean delayIfFailed) {
+    private void registerAndCreateBean(CamelContext camelContext, BeanFactoryDefinition<?> def, boolean delayIfFailed) {
         String type = def.getType();
         String name = def.getName();
         if (name == null || name.isBlank()) {
@@ -316,7 +487,7 @@ public class BlueprintXmlBeansHandler {
         }
     }
 
-    protected void bindBean(CamelContext camelContext, RegistryBeanDefinition def, String name, Object target)
+    protected void bindBean(CamelContext camelContext, BeanFactoryDefinition<?> def, String name, Object target)
             throws Exception {
         // destroy and unbind any existing bean
         destroyBean(name, true);
@@ -337,12 +508,12 @@ public class BlueprintXmlBeansHandler {
         addBeanToCamelModel(camelContext, name, def);
     }
 
-    protected void addBeanToCamelModel(CamelContext camelContext, String name, RegistryBeanDefinition def) {
+    protected void addBeanToCamelModel(CamelContext camelContext, String name, BeanFactoryDefinition<?> def) {
         // register bean in model
         Model model = camelContext.getCamelContextExtension().getContextPlugin(Model.class);
         if (model != null) {
             LOG.debug("Adding OSGi <blueprint> XML bean: {} to DSL model", name);
-            model.addRegistryBean(def);
+            model.addCustomBean(def);
         }
     }
 

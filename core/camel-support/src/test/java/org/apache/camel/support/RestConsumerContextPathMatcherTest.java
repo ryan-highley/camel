@@ -18,9 +18,14 @@ package org.apache.camel.support;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -78,7 +83,33 @@ public class RestConsumerContextPathMatcherTest {
 
         RestConsumerContextPathMatcher.ConsumerPath<?> path = RestConsumerContextPathMatcher.matchBestPath("GET",
                 "/camel/a/b/3", consumerPaths);
-        assertEquals(path.getConsumerPath(), "/camel/a/b/{c}");
+        assertEquals("/camel/a/b/{c}", path.getConsumerPath());
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    public void testRestConsumerContextPathMatcherTemplateParseSuccess(String consumerPath, String requestPath) {
+
+        assertDoesNotThrow(() -> RestConsumerContextPathMatcher.register(consumerPath));
+
+        List<RestConsumerContextPathMatcher.ConsumerPath<MockConsumerPath>> consumerPaths = new ArrayList<>();
+        consumerPaths.add(new MockConsumerPath("GET", consumerPath));
+
+        RestConsumerContextPathMatcher.ConsumerPath<?> path = RestConsumerContextPathMatcher.matchBestPath("GET",
+                requestPath, consumerPaths);
+
+        assertEquals(consumerPath, path.getConsumerPath());
+    }
+
+    private static Stream<Arguments> testRestConsumerContextPathMatcherTemplateParseSuccess() {
+        return Stream.of(
+                Arguments.of("/camel/{myparamname1}", "/camel/param"),
+                Arguments.of("/camel/{myParamName1}", "/camel/param"),
+                Arguments.of("/camel/{my_param_name1}", "/camel/param"),
+                Arguments.of("/camel/{my-param-name1}", "/camel/param"),
+                Arguments.of("/camel/{my-param_name1}", "/camel/param"),
+                Arguments.of("/camel/{my-param_name1}/path-ab/{my-param_name2}", "/camel/param1/path-ab/param2"),
+                Arguments.of("/camel/{my-param_name1}/path-ab/{my-param_name2}/*", "/camel/param1/path-ab/param2/something"));
     }
 
     @Test
@@ -99,9 +130,9 @@ public class RestConsumerContextPathMatcherTest {
         RestConsumerContextPathMatcher.ConsumerPath<?> path3 = RestConsumerContextPathMatcher.matchBestPath("GET",
                 "/camel/myapp/order/foo", consumerPaths);
 
-        assertEquals(path1.getConsumerPath(), "/camel/myapp/info");
-        assertEquals(path2.getConsumerPath(), "/camel/myapp/{id}");
-        assertEquals(path3.getConsumerPath(), "/camel/myapp/order/*");
+        assertEquals("/camel/myapp/info", path1.getConsumerPath());
+        assertEquals("/camel/myapp/{id}", path2.getConsumerPath());
+        assertEquals("/camel/myapp/order/*", path3.getConsumerPath());
     }
 
     @Test
@@ -122,9 +153,9 @@ public class RestConsumerContextPathMatcherTest {
         RestConsumerContextPathMatcher.ConsumerPath<?> path3 = RestConsumerContextPathMatcher.matchBestPath("GET",
                 "/camel/foo/bar/1", consumerPaths);
 
-        assertEquals(path1.getConsumerPath(), "/camel/foo");
-        assertEquals(path2.getConsumerPath(), "/camel/foo/{id}");
-        assertEquals(path3.getConsumerPath(), "/camel/*");
+        assertEquals("/camel/foo", path1.getConsumerPath());
+        assertEquals("/camel/foo/{id}", path2.getConsumerPath());
+        assertEquals("/camel/*", path3.getConsumerPath());
     }
 
     @Test
@@ -138,38 +169,38 @@ public class RestConsumerContextPathMatcherTest {
         assertNull(path1);
         RestConsumerContextPathMatcher.ConsumerPath<?> path2 = RestConsumerContextPathMatcher.matchBestPath("POST",
                 "/pet", consumerPaths);
-        assertEquals(path2.getConsumerPath(), "/pet");
+        assertEquals("/pet", path2.getConsumerPath());
 
         RestConsumerContextPathMatcher.ConsumerPath<?> path3 = RestConsumerContextPathMatcher.matchBestPath("GET",
                 "/pet/findByStatus", consumerPaths);
-        assertEquals(path3.getConsumerPath(), "/pet/findByStatus");
+        assertEquals("/pet/findByStatus", path3.getConsumerPath());
         RestConsumerContextPathMatcher.ConsumerPath<?> path4 = RestConsumerContextPathMatcher.matchBestPath("DELETE",
                 "/pet/findByStatus", consumerPaths);
         assertNull(path4);
 
         RestConsumerContextPathMatcher.ConsumerPath<?> path5 = RestConsumerContextPathMatcher.matchBestPath("GET",
                 "/pet/findByTags", consumerPaths);
-        assertEquals(path5.getConsumerPath(), "/pet/findByTags");
+        assertEquals("/pet/findByTags", path5.getConsumerPath());
         RestConsumerContextPathMatcher.ConsumerPath<?> path6 = RestConsumerContextPathMatcher.matchBestPath("POST",
                 "/pet/findByStatus", consumerPaths);
         assertNull(path6);
 
         RestConsumerContextPathMatcher.ConsumerPath<?> path7 = RestConsumerContextPathMatcher.matchBestPath("GET",
                 "/pet/123", consumerPaths);
-        assertEquals(path7.getConsumerPath(), "/pet/{petId}");
+        assertEquals("/pet/{petId}", path7.getConsumerPath());
         RestConsumerContextPathMatcher.ConsumerPath<?> path8 = RestConsumerContextPathMatcher.matchBestPath("POST",
                 "/pet/222", consumerPaths);
-        assertEquals(path8.getConsumerPath(), "/pet/{petId}");
+        assertEquals("/pet/{petId}", path8.getConsumerPath());
         RestConsumerContextPathMatcher.ConsumerPath<?> path9 = RestConsumerContextPathMatcher.matchBestPath("DELETE",
                 "/pet/333", consumerPaths);
-        assertEquals(path9.getConsumerPath(), "/pet/{petId}");
+        assertEquals("/pet/{petId}", path9.getConsumerPath());
         RestConsumerContextPathMatcher.ConsumerPath<?> path10 = RestConsumerContextPathMatcher.matchBestPath("PUT",
                 "/pet/444", consumerPaths);
         assertNull(path10);
 
         RestConsumerContextPathMatcher.ConsumerPath<?> path11 = RestConsumerContextPathMatcher.matchBestPath("POST",
                 "/pet/123/uploadImage", consumerPaths);
-        assertEquals(path11.getConsumerPath(), "/pet/{petId}/uploadImage");
+        assertEquals("/pet/{petId}/uploadImage", path11.getConsumerPath());
         RestConsumerContextPathMatcher.ConsumerPath<?> path12 = RestConsumerContextPathMatcher.matchBestPath("DELETE",
                 "/pet/222/uploadImage", consumerPaths);
         assertNull(path12);

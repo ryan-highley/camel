@@ -37,9 +37,8 @@ public class LevelDBAggregateLoadTest extends LevelDBTestSupport {
 
     @BeforeEach
     @Override
-    public void setUp() throws Exception {
+    public void doPreSetup() throws Exception {
         deleteDirectory("target/data");
-        super.setUp();
     }
 
     @Test
@@ -54,7 +53,7 @@ public class LevelDBAggregateLoadTest extends LevelDBTestSupport {
             final int value = 1;
             char id = 'A';
             LOG.debug("Sending {} with id {}", value, id);
-            template.sendBodyAndHeader("seda:start?size=" + SIZE, value, "id", "" + id);
+            template.sendBodyAndHeader("seda:start?size=" + SIZE, value, "id", Character.toString(id));
         }
 
         LOG.info("Sending all {} message done. Now waiting for aggregation to complete.", SIZE);

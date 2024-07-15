@@ -52,8 +52,8 @@ public abstract class CamelCommand implements Callable<Integer> {
         return main;
     }
 
-    protected void configureLoggingOff() {
-        RuntimeUtil.configureLog("off", false, false, false, false, null);
+    protected void configureLoggingOff() throws Exception {
+        RuntimeUtil.configureLog("off", false, false, false, false, null, null);
     }
 
     protected boolean disarrangeLogging() {
@@ -119,20 +119,22 @@ public abstract class CamelCommand implements Callable<Integer> {
     }
 
     protected void printConfigurationValues(String header) {
-        final Properties configProperties = new Properties();
-        CommandLineHelper.loadProperties(configProperties::putAll);
-        List<String> lines = new ArrayList<>();
-        spec.options().forEach(opt -> {
-            if (Arrays.stream(opt.names()).anyMatch(name ->
-            // name starts with --
-            configProperties.containsKey(name.substring(2)))) {
-                lines.add(String.format("    %s=%s",
-                        opt.longestName(), opt.getValue().toString()));
+        if (spec != null) {
+            final Properties configProperties = new Properties();
+            CommandLineHelper.loadProperties(configProperties::putAll);
+            List<String> lines = new ArrayList<>();
+            spec.options().forEach(opt -> {
+                if (Arrays.stream(opt.names()).anyMatch(name ->
+                // name starts with --
+                configProperties.containsKey(name.substring(2)))) {
+                    lines.add(String.format("    %s=%s",
+                            opt.longestName(), opt.getValue().toString()));
+                }
+            });
+            if (!lines.isEmpty()) {
+                printer().println(header);
+                lines.forEach(printer()::println);
             }
-        });
-        if (!lines.isEmpty()) {
-            printer().println(header);
-            lines.forEach(printer()::println);
         }
     }
 

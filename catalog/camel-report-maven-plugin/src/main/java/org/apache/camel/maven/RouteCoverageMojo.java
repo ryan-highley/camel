@@ -77,6 +77,9 @@ import static org.apache.camel.catalog.common.CatalogHelper.stripRootPath;
 public class RouteCoverageMojo extends AbstractMojo {
 
     public static final String DESTINATION_DIR = "/target/camel-route-coverage";
+
+    private static final String MAIN_FORMAT_PATTERN = "%8s    %8s    %s%n";
+
     /**
      * The maven project.
      */
@@ -93,24 +96,18 @@ public class RouteCoverageMojo extends AbstractMojo {
      * Whether to fail if a route was not fully covered.
      *
      * Note the option coverageThreshold can be used to set a minimum coverage threshold in percentage.
-     *
-     * @parameter property="camel.failOnError" default-value="false"
      */
     @Parameter(property = "camel.failOnError", defaultValue = "false")
     private boolean failOnError;
 
     /**
      * The minimum route coverage in percent when using failOnError.
-     *
-     * @parameter property="camel.coverageThreshold" default-value="100"
      */
     @Parameter(property = "camel.coverageThreshold", defaultValue = "100")
     private byte coverageThreshold = 100;
 
     /**
      * The minimum coverage across all routes in percent when using failOnError.
-     *
-     * @parameter property="camel.overallCoverageThreshold" default-value="0"
      */
     @Parameter(property = "camel.overallCoverageThreshold", defaultValue = "0")
     private byte overallCoverageThreshold;
@@ -156,6 +153,17 @@ public class RouteCoverageMojo extends AbstractMojo {
     @Parameter(property = "camel.generateHtmlReport", defaultValue = "false")
     private boolean generateHtmlReport;
 
+    private File createJacocoDir() {
+        final File file = new File(project.getBasedir() + "/target/site/jacoco");
+        if (!file.exists()) {
+            if (!file.mkdirs()) {
+                getLog().warn("Could not create jacoco directory: " + file.getAbsolutePath());
+            }
+        }
+
+        return file;
+    }
+
     @Override
     public void execute() throws MojoExecutionException {
         if (skip) {
@@ -163,6 +171,91 @@ public class RouteCoverageMojo extends AbstractMojo {
             return;
         }
 
+        List<CamelNodeDetails> routeTrees = discoverRoutes();
+
+        final AtomicInteger notCovered = new AtomicInteger();
+        final AtomicInteger coveredNodes = new AtomicInteger();
+        int totalNumberOfNodes = 0;
+
+        List<CamelNodeDetails> routeIdTrees = routeTrees.stream().filter(t -> t.getRouteId() != null).toList();
+        List<CamelNodeDetails> anonymousRouteTrees = routeTrees.stream().filter(t -> t.getRouteId() == null).toList();
+        Document document = null;
+        File file = null;
+        Element report = null;
+
+        if (generateJacocoXmlReport) {
+            try {
+                // creates the folder for the xml.file
+                file = createJacocoDir();
+
+                document = createDocument();
+
+                // report tag
+                report = document.createElement("report");
+                createAttrString(document, report, "name", "Camel Xml");
+                document.appendChild(report);
+            } catch (Exception e) {
+                getLog().warn("Error generating Jacoco XML report due " + e.getMessage());
+            }
+        }
+
+        // favor strict matching on route ids
+        for (CamelNodeDetails t : routeIdTrees) {
+            String routeId = t.getRouteId();
+            String fileName = stripRootPath(asRelativeFile(t.getFileName(), project), project);
+            String sourceFileName = new File(fileName).getName();
+            String packageName = new File(fileName).getParent();
+            Element pack = null;
+
+            if (report != null) {
+                // package tag
+                pack = document.createElement("package");
+                createAttrString(document, pack, "name", packageName);
+                report.appendChild(pack);
+            }
+
+            // grab dump data for the route
+            totalNumberOfNodes
+                    = grabDumpData(t, routeId, totalNumberOfNodes, fileName, notCovered, coveredNodes, report, document,
+                            sourceFileName, pack);
+        }
+
+        if (report != null) {
+            doGenerateJacocoReport(file, document);
+        }
+
+        if (anonymousRoutes && !anonymousRouteTrees.isEmpty()) {
+            totalNumberOfNodes = handleAnonymousRoutes(anonymousRouteTrees, totalNumberOfNodes, notCovered, coveredNodes);
+        }
+
+        if (generateHtmlReport) {
+            doGenerateHtmlReport();
+        }
+
+        // compute and log overall coverage across routes
+        AtomicBoolean overallCoverageAboveThreshold = new AtomicBoolean();
+        String out = templateOverallCoverageData(coveredNodes.get(), totalNumberOfNodes, overallCoverageAboveThreshold);
+        getLog().info("Overall coverage summary:\n\n" + out);
+        getLog().info("");
+
+        evalFailingConditions(notCovered, overallCoverageAboveThreshold);
+    }
+
+    private void evalFailingConditions(AtomicInteger notCovered, AtomicBoolean overallCoverageAboveThreshold)
+            throws MojoExecutionException {
+        if (!failOnError) {
+            return;
+        }
+
+        if (notCovered.get() > 0) {
+            throw new MojoExecutionException("There are " + notCovered.get() + " route(s) not fully covered!");
+        }
+        if (!overallCoverageAboveThreshold.get()) {
+            throw new MojoExecutionException("The overall coverage is below " + overallCoverageThreshold + "%!");
+        }
+    }
+
+    private List<CamelNodeDetails> discoverRoutes() {
         Set<File> javaFiles = new LinkedHashSet<>();
         Set<File> xmlFiles = new LinkedHashSet<>();
 
@@ -190,78 +283,7 @@ public class RouteCoverageMojo extends AbstractMojo {
                     "Discovered " + anonymous + " anonymous routes. Add route ids to these routes for route coverage support");
         }
 
-        final AtomicInteger notCovered = new AtomicInteger();
-        final AtomicInteger coveredNodes = new AtomicInteger();
-        int totalNumberOfNodes = 0;
-
-        List<CamelNodeDetails> routeIdTrees = routeTrees.stream().filter(t -> t.getRouteId() != null).toList();
-        List<CamelNodeDetails> anonymousRouteTrees = routeTrees.stream().filter(t -> t.getRouteId() == null).toList();
-        Document document = null;
-        File file = null;
-        Element report = null;
-
-        if (generateJacocoXmlReport) {
-            try {
-                // creates the folder for the xml.file
-                file = new File(project.getBasedir() + "/target/site/jacoco");
-                if (!file.exists()) {
-                    file.mkdirs();
-                }
-                document = createDocument();
-
-                // report tag
-                report = document.createElement("report");
-                createAttrString(document, report, "name", "Camel Xml");
-                document.appendChild(report);
-            } catch (Exception e) {
-                getLog().warn("Error generating Jacoco XML report due " + e.getMessage());
-            }
-        }
-
-        // favor strict matching on route ids
-        for (CamelNodeDetails t : routeIdTrees) {
-            String routeId = t.getRouteId();
-            String fileName = stripRootPath(asRelativeFile(t.getFileName(), project), project);
-            String sourceFileName = new File(fileName).getName();
-            String packageName = new File(fileName).getParent();
-            Element pack = null;
-
-            if (generateJacocoXmlReport && report != null) {
-                // package tag
-                pack = document.createElement("package");
-                createAttrString(document, pack, "name", packageName);
-                report.appendChild(pack);
-            }
-
-            // grab dump data for the route
-            totalNumberOfNodes
-                    = grabDumpData(t, routeId, totalNumberOfNodes, fileName, notCovered, coveredNodes, report, document,
-                            sourceFileName, pack);
-        }
-
-        if (generateJacocoXmlReport && report != null) {
-            doGenerateJacocoReport(file, document);
-        }
-
-        if (anonymousRoutes && !anonymousRouteTrees.isEmpty()) {
-            totalNumberOfNodes = handleAnonymousRoutes(anonymousRouteTrees, totalNumberOfNodes, notCovered, coveredNodes);
-        }
-
-        if (generateHtmlReport) {
-            doGenerateHtmlReport();
-        }
-
-        // compute and log overall coverage across routes
-        AtomicBoolean overallCoverageAboveThreshold = new AtomicBoolean();
-        String out = templateOverallCoverageData(coveredNodes.get(), totalNumberOfNodes, overallCoverageAboveThreshold);
-        getLog().info("Overall coverage summary:\n\n" + out);
-        getLog().info("");
-
-        if (failOnError && notCovered.get() > 0) {
-            throw new MojoExecutionException("There are " + notCovered.get() + " route(s) not fully covered!");
-        } else if (failOnError && !overallCoverageAboveThreshold.get()) {
-            throw new MojoExecutionException("The overall coverage is below " + overallCoverageThreshold + "%!");
-        }
+        return routeTrees;
     }
 
     private int grabDumpData(
@@ -281,7 +303,7 @@ public class RouteCoverageMojo extends AbstractMojo {
                 getLog().info("Route coverage summary:\n\n" + out);
                 getLog().info("");
 
-                if (generateJacocoXmlReport && report != null) {
+                if (report != null) {
                     appendSourcefileNode(document, sourceFileName, pack, coverage);
                 }
             }
@@ -371,7 +393,7 @@ public class RouteCoverageMojo extends AbstractMojo {
             String out = processor.generateReport(project, xmlPath, htmlPath);
             getLog().info(out);
         } catch (Exception e) {
-            getLog().warn("Error generating HTML route coverage reports " + e.getMessage());
+            getLog().warn("Error generating HTML route coverage reports due " + e.getMessage());
         }
     }
 
@@ -476,8 +498,8 @@ public class RouteCoverageMojo extends AbstractMojo {
             sw.println("Route:\t" + routeId);
         }
         sw.println();
-        sw.printf("%8s    %8s    %s%n", "Line #", "Count", "Route");
-        sw.printf("%8s    %8s    %s%n", "------", "-----", "-----");
+        sw.printf(MAIN_FORMAT_PATTERN, "Line #", "Count", "Route");
+        sw.printf(MAIN_FORMAT_PATTERN, "------", "-----", "-----");
 
         int covered = 0;
         for (RouteCoverageNode node : model) {
@@ -485,7 +507,7 @@ public class RouteCoverageMojo extends AbstractMojo {
                 covered++;
             }
             String pad = padString(node.getLevel());
-            sw.printf("%8s    %8s    %s%n", node.getLineNumber(), node.getCount(), pad + node.getName());
+            sw.printf(MAIN_FORMAT_PATTERN, node.getLineNumber(), node.getCount(), pad + node.getName());
         }
 
         coveredNodes.addAndGet(covered);
@@ -552,11 +574,6 @@ public class RouteCoverageMojo extends AbstractMojo {
             return;
         }
 
-        // end block to make doTry .. doCatch .. doFinally aligned
-        if ("doCatch".equals(node.getName()) || "doFinally".equals(node.getName())) {
-            level.decrementAndGet();
-        }
-
         RouteCoverageNode data = new RouteCoverageNode();
         data.setName(node.getName());
         data.setLineNumber(Integer.parseInt(node.getLineNumber()));
@@ -587,7 +604,11 @@ public class RouteCoverageMojo extends AbstractMojo {
     }
 
     private static String padString(int level) {
-        return "  ".repeat(level);
+        if (level > 0) {
+            return "  ".repeat(level);
+        } else {
+            return "";
+        }
     }
 
     private boolean matchFile(File file) {

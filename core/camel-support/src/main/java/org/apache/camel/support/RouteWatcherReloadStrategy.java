@@ -224,6 +224,7 @@ public class RouteWatcherReloadStrategy extends FileWatcherResourceReloadStrateg
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     protected void onRouteReload(Collection<Resource> resources, boolean removeEverything) {
         // remember all existing resources
         List<Resource> sources = new ArrayList<>();
@@ -297,19 +298,26 @@ public class RouteWatcherReloadStrategy extends FileWatcherResourceReloadStrateg
                 int started = 0;
                 for (String id : ids) {
                     total++;
-                    String status = getCamelContext().getRouteController().getRouteStatus(id).name();
-                    if (ServiceStatus.Started.name().equals(status)) {
-                        started++;
-                    }
                     Route route = getCamelContext().getRoute(id);
-                    // use basic endpoint uri to not log verbose details or potential sensitive data
-                    String uri = route.getEndpoint().getEndpointBaseUri();
-                    uri = URISupport.sanitizeUri(uri);
-                    String loc = route.getSourceLocationShort();
-                    if (loc == null) {
-                        loc = "";
+                    if (route != null) {
+                        ServiceStatus status = getCamelContext().getRouteController().getRouteStatus(id);
+                        if (status == null) {
+                            // undefined status of route (should not really happen)
+                            LOG.warn("Cannot get route status for route: {}. This route is skipped.", id);
+                            continue;
+                        }
+                        if (ServiceStatus.Started.equals(status)) {
+                            started++;
+                        }
+                        // use basic endpoint uri to not log verbose details or potential sensitive data
+                        String uri = route.getEndpoint().getEndpointBaseUri();
+                        uri = URISupport.sanitizeUri(uri);
+                        String loc = route.getSourceLocationShort();
+                        if (loc == null) {
+                            loc = "";
+                        }
+                        lines.add(String.format("    %s %s (%s) (source: %s)", status, id, uri, loc));
                     }
-                    lines.add(String.format("    %s %s (%s) (source: %s)", status, id, uri, loc));
                 }
                 LOG.info(String.format("Routes reloaded summary (total:%s started:%s)", total, started));
                 // if we are default/verbose then log each route line
@@ -326,7 +334,9 @@ public class RouteWatcherReloadStrategy extends FileWatcherResourceReloadStrateg
             int total = ids.size();
             for (String id : ids) {
                 Route route = getCamelContext().getRoute(id);
-                EventHelper.notifyRouteReloaded(getCamelContext(), route, index++, total);
+                if (route != null) {
+                    EventHelper.notifyRouteReloaded(getCamelContext(), route, index++, total);
+                }
             }
 
             if (!removeAllRoutes) {
@@ -335,7 +345,7 @@ public class RouteWatcherReloadStrategy extends FileWatcherResourceReloadStrateg
                 StringJoiner sj = new StringJoiner("\n    ");
                 for (String id : ids) {
                     Route route = getCamelContext().getRoute(id);
-                    if (!route.isCustomId()) {
+                    if (route != null && !route.isCustomId()) {
                         sj.add(route.getEndpoint().getEndpointUri());
                     }
                 }

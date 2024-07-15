@@ -33,9 +33,10 @@ import org.apache.camel.spi.Metadata;
  * In case of failures the exchange will be tried on the next endpoint.
  */
 @Metadata(label = "eip,routing")
-@XmlRootElement(name = "failover")
+@XmlRootElement(name = "failoverLoadBalancer")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class FailoverLoadBalancerDefinition extends LoadBalancerDefinition {
+
     @XmlTransient
     private List<Class<?>> exceptionTypes = new ArrayList<>();
 
@@ -50,6 +51,20 @@ public class FailoverLoadBalancerDefinition extends LoadBalancerDefinition {
     private String maximumFailoverAttempts;
 
     public FailoverLoadBalancerDefinition() {
+    }
+
+    protected FailoverLoadBalancerDefinition(FailoverLoadBalancerDefinition source) {
+        super(source);
+        this.exceptionTypes = new ArrayList<>(source.exceptionTypes);
+        this.exceptions = new ArrayList<>(source.exceptions);
+        this.roundRobin = source.roundRobin;
+        this.sticky = source.sticky;
+        this.maximumFailoverAttempts = source.maximumFailoverAttempts;
+    }
+
+    @Override
+    public FailoverLoadBalancerDefinition copyDefinition() {
+        return new FailoverLoadBalancerDefinition(this);
     }
 
     public List<String> getExceptions() {
@@ -115,7 +130,7 @@ public class FailoverLoadBalancerDefinition extends LoadBalancerDefinition {
     /**
      * A value to indicate after X failover attempts we should exhaust (give up). Use -1 to indicate never give up and
      * continuously try to failover. Use 0 to never failover. And use e.g. 3 to failover at most 3 times before giving
-     * up. his option can be used whether or not roundRobin is enabled or not.
+     * up. This option can be used whether roundRobin is enabled or not.
      */
     public void setMaximumFailoverAttempts(String maximumFailoverAttempts) {
         this.maximumFailoverAttempts = maximumFailoverAttempts;

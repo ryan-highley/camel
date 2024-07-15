@@ -17,6 +17,7 @@
 package org.apache.camel.component.jira;
 
 import java.net.URI;
+import java.util.Map;
 
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
@@ -40,6 +41,7 @@ import org.apache.camel.component.jira.producer.FetchIssueProducer;
 import org.apache.camel.component.jira.producer.TransitionIssueProducer;
 import org.apache.camel.component.jira.producer.UpdateIssueProducer;
 import org.apache.camel.component.jira.producer.WatcherProducer;
+import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.Registry;
 import org.apache.camel.spi.UriEndpoint;
@@ -75,11 +77,9 @@ import static org.apache.camel.component.jira.JiraConstants.JIRA_REST_CLIENT_FAC
  */
 @UriEndpoint(firstVersion = "3.0", scheme = "jira", title = "Jira", syntax = "jira:type",
              category = { Category.DOCUMENT }, headersClass = JiraConstants.class)
-public class JiraEndpoint extends DefaultEndpoint {
+public class JiraEndpoint extends DefaultEndpoint implements EndpointServiceLocation {
 
-    private static final transient Logger LOG = LoggerFactory.getLogger(JiraEndpoint.class);
-
-    private final Object lock = new Object();
+    private static final Logger LOG = LoggerFactory.getLogger(JiraEndpoint.class);
 
     @UriPath
     @Metadata(required = true)
@@ -102,6 +102,24 @@ public class JiraEndpoint extends DefaultEndpoint {
         this.configuration = configuration;
     }
 
+    @Override
+    public String getServiceUrl() {
+        return configuration.getJiraUrl();
+    }
+
+    @Override
+    public String getServiceProtocol() {
+        return "rest";
+    }
+
+    @Override
+    public Map<String, String> getServiceMetadata() {
+        if (configuration.getUsername() != null) {
+            return Map.of("username", configuration.getUsername());
+        }
+        return null;
+    }
+
     public JiraConfiguration getConfiguration() {
         return configuration;
     }
@@ -118,43 +136,39 @@ public class JiraEndpoint extends DefaultEndpoint {
         disconnect();
     }
 
-    public void connect() {
+    public synchronized void connect() {
         if (client == null) {
-            synchronized (lock) {
-                if (client == null) {
-                    Registry registry = getCamelContext().getRegistry();
-                    JiraRestClientFactory factory
-                            = registry.lookupByNameAndType(JIRA_REST_CLIENT_FACTORY, JiraRestClientFactory.class);
-                    if (factory == null) {
-                        factory = new OAuthAsynchronousJiraRestClientFactory();
-                    }
-                    final URI jiraServerUri = URI.create(configuration.getJiraUrl());
-                    if (configuration.getUsername() != null) {
-                        LOG.debug("Connecting to JIRA with Basic authentication with username/password");
-                        client = factory.createWithBasicHttpAuthentication(jiraServerUri, configuration.getUsername(),
-                                configuration.getPassword());
-                    } else if (configuration.getAccessToken() != null
-                            && configuration.getVerificationCode() == null
-                            && configuration.getPrivateKey() == null
-                            && configuration.getConsumerKey() == null) {
-                        client = factory.create(jiraServerUri, builder -> {
-                            builder.setHeader("Authorization", "Bearer " + configuration.getAccessToken());
-                        });
-                    } else {
-                        LOG.debug("Connecting to JIRA with OAuth authentication");
-                        JiraOAuthAuthenticationHandler oAuthHandler = new JiraOAuthAuthenticationHandler(
-                                configuration.getConsumerKey(),
-                                configuration.getVerificationCode(), configuration.getPrivateKey(),
-                                configuration.getAccessToken(),
-                                configuration.getJiraUrl());
-                        client = factory.create(jiraServerUri, oAuthHandler);
-                    }
-                }
+            Registry registry = getCamelContext().getRegistry();
+            JiraRestClientFactory factory
+                    = registry.lookupByNameAndType(JIRA_REST_CLIENT_FACTORY, JiraRestClientFactory.class);
+            if (factory == null) {
+                factory = new OAuthAsynchronousJiraRestClientFactory();
+            }
+            final URI jiraServerUri = URI.create(configuration.getJiraUrl());
+            if (configuration.getUsername() != null) {
+                LOG.debug("Connecting to JIRA with Basic authentication with username/password");
+                client = factory.createWithBasicHttpAuthentication(jiraServerUri, configuration.getUsername(),
+                        configuration.getPassword());
+            } else if (configuration.getAccessToken() != null
+                    && configuration.getVerificationCode() == null
+                    && configuration.getPrivateKey() == null
+                    && configuration.getConsumerKey() == null) {
+                client = factory.create(jiraServerUri, builder -> {
+                    builder.setHeader("Authorization", "Bearer " + configuration.getAccessToken());
+                });
+            } else {
+                LOG.debug("Connecting to JIRA with OAuth authentication");
+                JiraOAuthAuthenticationHandler oAuthHandler = new JiraOAuthAuthenticationHandler(
+                        configuration.getConsumerKey(),
+                        configuration.getVerificationCode(), configuration.getPrivateKey(),
+                        configuration.getAccessToken(),
+                        configuration.getJiraUrl());
+                client = factory.create(jiraServerUri, oAuthHandler);
             }
         }
     }
 
-    public void disconnect() throws Exception {
+    public synchronized void disconnect() throws Exception {
         if (client != null) {
             LOG.debug("Disconnecting from JIRA");
             client.close();

@@ -36,7 +36,7 @@ import org.apache.camel.spi.Debugger;
 import org.apache.camel.spi.EventNotifier;
 import org.apache.camel.spi.PropertiesComponent;
 import org.apache.camel.spring.SpringCamelContext;
-import org.apache.camel.test.junit5.CamelTestSupport;
+import org.apache.camel.test.junit5.util.CamelContextTestHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -122,7 +122,7 @@ public final class CamelAnnotationsHandler {
     public static void handleRouteCoverage(ConfigurableApplicationContext context, Class<?> testClass, Function testMethod)
             throws Exception {
         if (testClass.isAnnotationPresent(EnableRouteCoverage.class)) {
-            System.setProperty(CamelTestSupport.ROUTE_COVERAGE_ENABLED, "true");
+            System.setProperty(CamelContextTestHelper.ROUTE_COVERAGE_ENABLED, "true");
 
             CamelSpringTestHelper.doToSpringCamelContexts(context, new CamelSpringTestHelper.DoToSpringCamelContextsStrategy() {
 
@@ -209,24 +209,20 @@ public final class CamelAnnotationsHandler {
         }
 
         if (!breakpoints.isEmpty()) {
-            CamelSpringTestHelper.doToSpringCamelContexts(context, new CamelSpringTestHelper.DoToSpringCamelContextsStrategy() {
+            CamelSpringTestHelper.doToSpringCamelContexts(context, (contextName, camelContext) -> {
 
-                public void execute(String contextName, SpringCamelContext camelContext)
-                        throws Exception {
+                // automatic turn on debugging when we have breakpoints
+                camelContext.setDebugging(true);
 
-                    // automatic turn on debugging when we have breakpoints
-                    camelContext.setDebugging(true);
+                Debugger debugger = camelContext.getDebugger();
+                if (debugger == null) {
+                    debugger = new DefaultDebugger();
+                    camelContext.setDebugger(debugger);
+                }
 
-                    Debugger debugger = camelContext.getDebugger();
-                    if (debugger == null) {
-                        debugger = new DefaultDebugger();
-                        camelContext.setDebugger(debugger);
-                    }
-
-                    for (Breakpoint breakpoint : breakpoints) {
-                        LOGGER.info("Adding Breakpoint [{}] to CamelContext with name [{}].", breakpoint, contextName);
-                        debugger.addBreakpoint(breakpoint);
-                    }
+                for (Breakpoint breakpoint : breakpoints) {
+                    LOGGER.info("Adding Breakpoint [{}] to CamelContext with name [{}].", breakpoint, contextName);
+                    debugger.addBreakpoint(breakpoint);
                 }
             });
         }
@@ -249,15 +245,11 @@ public final class CamelAnnotationsHandler {
             shutdownTimeUnit = TimeUnit.SECONDS;
         }
 
-        CamelSpringTestHelper.doToSpringCamelContexts(context, new CamelSpringTestHelper.DoToSpringCamelContextsStrategy() {
-
-            public void execute(String contextName, SpringCamelContext camelContext)
-                    throws Exception {
-                LOGGER.info("Setting shutdown timeout to [{} {}] on CamelContext with name [{}].", shutdownTimeout,
-                        shutdownTimeUnit, contextName);
-                camelContext.getShutdownStrategy().setTimeout(shutdownTimeout);
-                camelContext.getShutdownStrategy().setTimeUnit(shutdownTimeUnit);
-            }
+        CamelSpringTestHelper.doToSpringCamelContexts(context, (contextName, camelContext) -> {
+            LOGGER.info("Setting shutdown timeout to [{} {}] on CamelContext with name [{}].", shutdownTimeout,
+                    shutdownTimeUnit, contextName);
+            camelContext.getShutdownStrategy().setTimeout(shutdownTimeout);
+            camelContext.getShutdownStrategy().setTimeUnit(shutdownTimeUnit);
         });
     }
 
@@ -270,15 +262,11 @@ public final class CamelAnnotationsHandler {
     public static void handleMockEndpoints(ConfigurableApplicationContext context, Class<?> testClass) throws Exception {
         if (testClass.isAnnotationPresent(MockEndpoints.class)) {
             final String mockEndpoints = testClass.getAnnotation(MockEndpoints.class).value();
-            CamelSpringTestHelper.doToSpringCamelContexts(context, new CamelSpringTestHelper.DoToSpringCamelContextsStrategy() {
-
-                public void execute(String contextName, SpringCamelContext camelContext)
-                        throws Exception {
-                    LOGGER.info("Enabling auto mocking of endpoints matching pattern [{}] on CamelContext with name [{}].",
-                            mockEndpoints, contextName);
-                    camelContext.getCamelContextExtension()
-                            .registerEndpointCallback(new InterceptSendToMockEndpointStrategy(mockEndpoints));
-                }
+            CamelSpringTestHelper.doToSpringCamelContexts(context, (contextName, camelContext) -> {
+                LOGGER.info("Enabling auto mocking of endpoints matching pattern [{}] on CamelContext with name [{}].",
+                        mockEndpoints, contextName);
+                camelContext.getCamelContextExtension()
+                        .registerEndpointCallback(new InterceptSendToMockEndpointStrategy(mockEndpoints));
             });
         }
     }
@@ -293,18 +281,14 @@ public final class CamelAnnotationsHandler {
     public static void handleMockEndpointsAndSkip(ConfigurableApplicationContext context, Class<?> testClass) throws Exception {
         if (testClass.isAnnotationPresent(MockEndpointsAndSkip.class)) {
             final String mockEndpoints = testClass.getAnnotation(MockEndpointsAndSkip.class).value();
-            CamelSpringTestHelper.doToSpringCamelContexts(context, new CamelSpringTestHelper.DoToSpringCamelContextsStrategy() {
-
-                public void execute(String contextName, SpringCamelContext camelContext)
-                        throws Exception {
-                    // resolve the property place holders of the mockEndpoints
-                    String mockEndpointsValue = camelContext.resolvePropertyPlaceholders(mockEndpoints);
-                    LOGGER.info(
-                            "Enabling auto mocking and skipping of endpoints matching pattern [{}] on CamelContext with name [{}].",
-                            mockEndpointsValue, contextName);
-                    camelContext.getCamelContextExtension()
-                            .registerEndpointCallback(new InterceptSendToMockEndpointStrategy(mockEndpointsValue, true));
-                }
+            CamelSpringTestHelper.doToSpringCamelContexts(context, (contextName, camelContext) -> {
+                // resolve the property place holders of the mockEndpoints
+                String mockEndpointsValue = camelContext.resolvePropertyPlaceholders(mockEndpoints);
+                LOGGER.info(
+                        "Enabling auto mocking and skipping of endpoints matching pattern [{}] on CamelContext with name [{}].",
+                        mockEndpointsValue, contextName);
+                camelContext.getCamelContextExtension()
+                        .registerEndpointCallback(new InterceptSendToMockEndpointStrategy(mockEndpointsValue, true));
             });
         }
     }

@@ -20,6 +20,7 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -48,9 +49,11 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.platform.http.HttpEndpointModel;
 import org.apache.camel.component.platform.http.PlatformHttpComponent;
 import org.apache.camel.component.platform.http.spi.Method;
+import org.apache.camel.component.platform.http.spi.PlatformHttpEngine;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.model.rest.RestBindingMode;
 import org.apache.camel.model.rest.RestParamType;
+import org.apache.camel.spi.EmbeddedHttpService;
 import org.apache.camel.spi.RestConfiguration;
 import org.apache.camel.support.jsse.KeyManagersParameters;
 import org.apache.camel.support.jsse.KeyStoreParameters;
@@ -170,6 +173,12 @@ public class VertxPlatformHttpEngineTest {
             assertEquals("/get", it.next().getUri());
             assertEquals("/post", it.next().getUri());
 
+            // should find engine in registry
+            assertNotNull(context.getRegistry().findSingleByType(PlatformHttpEngine.class));
+            EmbeddedHttpService server = context.getRegistry().findSingleByType(EmbeddedHttpService.class);
+            assertNotNull(server);
+            assertEquals("http", server.getScheme());
+            assertEquals(RestAssured.port, server.getServerPort());
         } finally {
             context.stop();
         }
@@ -1015,6 +1024,54 @@ public class VertxPlatformHttpEngineTest {
                     .header("set-cookie", "XSRF-TOKEN=88533580000c314; Path=/")
                     .body(equalTo("replace"));
 
+        } finally {
+            context.stop();
+        }
+    }
+
+    @Test
+    public void testResponseTypeConversionErrorHandled() throws Exception {
+        final CamelContext context = createCamelContext();
+
+        try {
+            context.addRoutes(new RouteBuilder() {
+                @Override
+                public void configure() {
+                    from("platform-http:/error/response")
+                            // Set the response to something that can't be type converted
+                            .setBody().constant(Collections.EMPTY_SET);
+                }
+            });
+
+            context.start();
+
+            get("/error/response")
+                    .then()
+                    .statusCode(500);
+        } finally {
+            context.stop();
+        }
+    }
+
+    @Test
+    public void testResponseBadQueryParamErrorHandled() throws Exception {
+        final CamelContext context = createCamelContext();
+
+        try {
+            context.addRoutes(new RouteBuilder() {
+                @Override
+                public void configure() {
+                    from("platform-http:/error/response")
+                            .setBody().constant("Error");
+                }
+            });
+
+            context.start();
+
+            // Add a query param that Vert.x cannot handle
+            get("/error/response?::")
+                    .then()
+                    .statusCode(500);
         } finally {
             context.stop();
         }

@@ -16,6 +16,7 @@
  */
 package org.apache.camel.component.activemq;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.camel.Category;
@@ -23,16 +24,17 @@ import org.apache.camel.component.jms.JmsBinding;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.jms.JmsConfiguration;
 import org.apache.camel.component.jms.JmsEndpoint;
+import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 
 /**
- * Send messages to (or consume from) Apache ActiveMQ. This component extends the Camel JMS component.
+ * Send messages to (or consume from) Apache ActiveMQ 5.x. This component extends the Camel JMS component.
  */
-@UriEndpoint(firstVersion = "1.0.0", extendsScheme = "jms", scheme = "activemq", title = "ActiveMQ",
+@UriEndpoint(firstVersion = "1.0.0", extendsScheme = "jms", scheme = "activemq", title = "ActiveMQ 5.x",
              syntax = "activemq:destinationType:destinationName",
              category = { Category.MESSAGING })
-public class ActiveMQEndpoint extends JmsEndpoint {
+public class ActiveMQEndpoint extends JmsEndpoint implements EndpointServiceLocation {
 
     @UriParam(multiValue = true, prefix = "destination.", label = "consumer,advanced")
     private Map<String, String> destinationOptions;
@@ -56,6 +58,50 @@ public class ActiveMQEndpoint extends JmsEndpoint {
 
     public ActiveMQEndpoint(String endpointUri, String destinationName) {
         super(endpointUri, destinationName);
+    }
+
+    @Override
+    public String getServiceUrl() {
+        String url = null;
+        if (getConfiguration() instanceof ActiveMQConfiguration acc) {
+            url = acc.getBrokerURL();
+        }
+        if (url == null && getComponent() instanceof ActiveMQComponent amq) {
+            url = amq.getBrokerURL();
+        }
+        return url;
+    }
+
+    @Override
+    public String getServiceProtocol() {
+        return "jms";
+    }
+
+    @Override
+    public Map<String, String> getServiceMetadata() {
+        String un = null;
+        String cid = null;
+        if (getConfiguration() instanceof ActiveMQConfiguration acc) {
+            un = acc.getUsername();
+            cid = acc.getClientId();
+        }
+        if (un == null) {
+            un = getComponent().getUsername();
+        }
+        if (cid == null) {
+            cid = getClientId();
+        }
+        if (un == null && cid == null) {
+            return null;
+        }
+        Map<String, String> map = new HashMap<>();
+        if (un != null) {
+            map.put("username", un);
+        }
+        if (cid != null) {
+            map.put("clientId", cid);
+        }
+        return map;
     }
 
     public Map<String, String> getDestinationOptions() {

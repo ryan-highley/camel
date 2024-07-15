@@ -162,10 +162,11 @@ public class RecipientListProcessor extends MulticastProcessor {
                                   AggregationStrategy aggregationStrategy,
                                   boolean parallelProcessing, ExecutorService executorService, boolean shutdownExecutorService,
                                   boolean streaming, boolean stopOnException,
-                                  long timeout, Processor onPrepare, boolean shareUnitOfWork, boolean parallelAggregate) {
+                                  long timeout, Processor onPrepare, boolean shareUnitOfWork, boolean parallelAggregate,
+                                  int cacheSize) {
         super(camelContext, route, null, aggregationStrategy, parallelProcessing, executorService, shutdownExecutorService,
               streaming, stopOnException, timeout, onPrepare,
-              shareUnitOfWork, parallelAggregate);
+              shareUnitOfWork, parallelAggregate, cacheSize);
         this.expression = expression;
         this.delimiter = delimiter;
         this.producerCache = producerCache;
@@ -200,18 +201,15 @@ public class RecipientListProcessor extends MulticastProcessor {
 
         // optimize for recipient without need for using delimiter
         // (if its list/collection/array type)
-        if (recipientList instanceof List) {
-            List<?> col = (List<?>) recipientList;
+        if (recipientList instanceof List<?> col) {
             int size = col.size();
             List<ProcessorExchangePair> result = new ArrayList<>(size);
             int index = 0;
-            for (int i = 0; i < size; i++) {
-                Object recipient = col.get(i);
+            for (Object recipient : col) {
                 index = doCreateProcessorExchangePairs(exchange, recipient, result, index);
             }
             return result;
-        } else if (recipientList instanceof Collection) {
-            Collection<?> col = (Collection<?>) recipientList;
+        } else if (recipientList instanceof Collection<?> col) {
             int size = col.size();
             List<ProcessorExchangePair> result = new ArrayList<>(size);
             int index = 0;
@@ -224,8 +222,7 @@ public class RecipientListProcessor extends MulticastProcessor {
             int size = Array.getLength(recipientList);
             List<ProcessorExchangePair> result = new ArrayList<>(size);
             int index = 0;
-            for (int i = 0; i < size; i++) {
-                Object recipient = arr[i];
+            for (Object recipient : arr) {
                 index = doCreateProcessorExchangePairs(exchange, recipient, result, index);
             }
             return result;
@@ -327,41 +324,11 @@ public class RecipientListProcessor extends MulticastProcessor {
     }
 
     protected static Object prepareRecipient(Exchange exchange, Object recipient) throws NoTypeConversionAvailableException {
-        if (recipient instanceof Endpoint || recipient instanceof NormalizedEndpointUri) {
-            return recipient;
-        } else if (recipient instanceof String) {
-            // trim strings as end users might have added spaces between separators
-            recipient = ((String) recipient).trim();
-        }
-        if (recipient != null) {
-            CamelContext ecc = exchange.getContext();
-            String uri;
-            if (recipient instanceof String) {
-                uri = (String) recipient;
-            } else {
-                // convert to a string type we can work with
-                uri = ecc.getTypeConverter().mandatoryConvertTo(String.class, exchange, recipient);
-            }
-            // optimize and normalize endpoint
-            return ecc.getCamelContextExtension().normalizeUri(uri);
-        }
-        return null;
+        return ProcessorHelper.prepareRecipient(exchange, recipient);
     }
 
     protected static Endpoint getExistingEndpoint(Exchange exchange, Object recipient) {
-        if (recipient instanceof Endpoint) {
-            return (Endpoint) recipient;
-        }
-        if (recipient != null) {
-            if (recipient instanceof NormalizedEndpointUri nu) {
-                CamelContext ecc = exchange.getContext();
-                return ecc.getCamelContextExtension().hasEndpoint(nu);
-            } else {
-                String uri = recipient.toString().trim();
-                return exchange.getContext().hasEndpoint(uri);
-            }
-        }
-        return null;
+        return ProcessorHelper.getExistingEndpoint(exchange, recipient);
     }
 
     protected static Endpoint resolveEndpoint(Exchange exchange, Object recipient, boolean prototype) {

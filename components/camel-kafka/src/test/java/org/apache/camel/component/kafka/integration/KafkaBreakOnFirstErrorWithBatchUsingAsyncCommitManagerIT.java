@@ -28,7 +28,9 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.kafka.MockConsumerInterceptor;
 import org.apache.camel.component.kafka.testutil.CamelKafkaUtil;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.kafka.clients.admin.DeleteTopicsResult;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.Uuid;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * this will test basic breakOnFirstError functionality uses allowManualCommit and set Sync Commit Manager this allows
@@ -48,11 +51,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @Tags({ @Tag("breakOnFirstError") })
 @EnabledOnOs(value = { OS.LINUX, OS.MAC, OS.FREEBSD, OS.OPENBSD, OS.WINDOWS },
-             architectures = { "amd64", "aarch64", "s390x" },
-             disabledReason = "This test does not run reliably on ppc64le")
-class KafkaBreakOnFirstErrorWithBatchUsingAsyncCommitManagerIT extends BaseExclusiveKafkaTestSupport {
+             architectures = { "amd64", "aarch64", "ppc64le" },
+             disabledReason = "This test does not run reliably on some platforms")
+
+class KafkaBreakOnFirstErrorWithBatchUsingAsyncCommitManagerIT extends BaseKafkaTestSupport {
     public static final String ROUTE_ID = "breakOnFirstErrorBatchIT";
-    public static final String TOPIC = "breakOnFirstErrorBatchIT";
+    public static final String TOPIC = "breakOnFirstErrorBatchIT" + Uuid.randomUuid();
 
     private static final Logger LOG = LoggerFactory.getLogger(KafkaBreakOnFirstErrorWithBatchUsingAsyncCommitManagerIT.class);
 
@@ -76,7 +80,14 @@ class KafkaBreakOnFirstErrorWithBatchUsingAsyncCommitManagerIT extends BaseExclu
             producer.close();
         }
         // clean all test topics
-        kafkaAdminClient.deleteTopics(Collections.singletonList(TOPIC)).all();
+        DeleteTopicsResult r = kafkaAdminClient.deleteTopics(Collections.singletonList(TOPIC));
+
+        // wait added to ensure the topic is actually deleted, and avoid chance of clash in unrelated tests
+        Awaitility.await()
+                .timeout(180, TimeUnit.SECONDS)
+                .pollDelay(3, TimeUnit.SECONDS)
+                .untilAsserted(() -> assertTrue(r.all().isDone()));
+
     }
 
     /**
@@ -98,7 +109,8 @@ class KafkaBreakOnFirstErrorWithBatchUsingAsyncCommitManagerIT extends BaseExclu
         contextExtension.getContext().getRouteController().startRoute(ROUTE_ID);
 
         Awaitility.await()
-                .atMost(3, TimeUnit.SECONDS)
+                .atMost(180, TimeUnit.SECONDS) // increased to 180 sec for CAMEL-20722 due to failure on ppc64le
+                .pollDelay(5, TimeUnit.SECONDS)
                 .until(() -> errorPayloads.size() > 3);
 
         to.assertIsSatisfied();

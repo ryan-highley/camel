@@ -26,10 +26,12 @@ import org.apache.camel.spi.PropertiesFunction;
 public class DependencyDownloaderPropertiesFunctionResolver extends DefaultPropertiesFunctionResolver {
 
     private final DependencyDownloader downloader;
+    private final boolean export;
 
-    public DependencyDownloaderPropertiesFunctionResolver(CamelContext camelContext) {
+    public DependencyDownloaderPropertiesFunctionResolver(CamelContext camelContext, boolean export) {
         super();
         setCamelContext(camelContext);
+        this.export = export;
         this.downloader = getCamelContext().hasService(DependencyDownloader.class);
     }
 
@@ -49,6 +51,78 @@ public class DependencyDownloaderPropertiesFunctionResolver extends DefaultPrope
                         getCamelContext().getVersion());
             }
         }
-        return super.resolvePropertiesFunction(name);
+        if ("aws".equals(name)) {
+            if (downloader != null && !downloader.alreadyOnClasspath("org.apache.camel", "camel-aws-secrets-manager",
+                    getCamelContext().getVersion())) {
+                downloader.downloadDependency("org.apache.camel", "camel-aws-secrets-manager",
+                        getCamelContext().getVersion());
+            }
+        }
+        if ("azure".equals(name)) {
+            if (downloader != null && !downloader.alreadyOnClasspath("org.apache.camel", "camel-azure-key-vault",
+                    getCamelContext().getVersion())) {
+                downloader.downloadDependency("org.apache.camel", "camel-azure-key-vault",
+                        getCamelContext().getVersion());
+            }
+        }
+        if ("gcp".equals(name)) {
+            if (downloader != null && !downloader.alreadyOnClasspath("org.apache.camel", "camel-google-secret-manager",
+                    getCamelContext().getVersion())) {
+                downloader.downloadDependency("org.apache.camel", "camel-google-secret-manager",
+                        getCamelContext().getVersion());
+            }
+        }
+        if ("hashicorp".equals(name)) {
+            if (downloader != null && !downloader.alreadyOnClasspath("org.apache.camel", "camel-hashicorp-vault",
+                    getCamelContext().getVersion())) {
+                downloader.downloadDependency("org.apache.camel", "camel-hashicorp-vault",
+                        getCamelContext().getVersion());
+            }
+        }
+        PropertiesFunction answer = super.resolvePropertiesFunction(name);
+        if (answer != null && export) {
+            answer = new ExportPropertiesFunction(answer);
+        }
+        return answer;
+    }
+
+    private static class ExportPropertiesFunction implements PropertiesFunction {
+
+        private final PropertiesFunction delegate;
+
+        private ExportPropertiesFunction(PropertiesFunction delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public boolean lookupFirst(String remainder) {
+            try {
+                return delegate.lookupFirst(remainder);
+            } catch (Exception e) {
+                // ignore
+            }
+            return false;
+        }
+
+        @Override
+        public String apply(String remainder) {
+            try {
+                return delegate.apply(remainder);
+            } catch (Exception e) {
+                // ignore
+            }
+            return null;
+        }
+
+        @Override
+        public String getName() {
+            return delegate.getName();
+        }
+
+        @Override
+        public boolean optional(String remainder) {
+            return true;
+        }
+
     }
 }

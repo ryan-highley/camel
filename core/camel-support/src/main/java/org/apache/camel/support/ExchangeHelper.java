@@ -46,6 +46,7 @@ import org.apache.camel.NoSuchPropertyException;
 import org.apache.camel.NoTypeConversionAvailableException;
 import org.apache.camel.Route;
 import org.apache.camel.RuntimeCamelException;
+import org.apache.camel.StreamCache;
 import org.apache.camel.TypeConversionException;
 import org.apache.camel.VariableAware;
 import org.apache.camel.WrappedFile;
@@ -67,10 +68,23 @@ public final class ExchangeHelper {
             = ObjectHelper.getSystemProperty(Exchange.DEFAULT_CHARSET_PROPERTY, "UTF-8");
     private static final Charset DEFAULT_CHARSET = Charset.forName(DEFAULT_CHARSET_NAME);
 
+    private static Exchange DUMMY;
+
     /**
      * Utility classes should not have a public constructor.
      */
     private ExchangeHelper() {
+    }
+
+    /**
+     * Gets a singleton dummy exchange used for special purposes only.
+     */
+    public static Exchange getDummy(CamelContext context) {
+        // we dont worry about thread-safety
+        if (DUMMY == null) {
+            DUMMY = new DefaultExchange(context);
+        }
+        return DUMMY;
     }
 
     /**
@@ -1088,16 +1102,22 @@ public final class ExchangeHelper {
      */
     public static void setVariable(Exchange exchange, String name, Object value) {
         VariableRepository repo = null;
-        final String id = getRepositoryId(name);
+        final String id = getVariableRepositoryId(name);
         if (id != null) {
             repo = getVariableRepository(exchange, id);
-            name = resolveRepositoryName(exchange, name, id);
+            name = resolveVariableRepositoryName(exchange, name, id);
         }
         final VariableAware va = getVariableAware(exchange, repo);
         va.setVariable(name, value);
     }
 
-    private static String getRepositoryId(String name) {
+    /**
+     * Gets the variable repository id
+     *
+     * @param  name the variable name
+     * @return      the repository id if any given, or null
+     */
+    public static String getVariableRepositoryId(String name) {
         String id = StringHelper.before(name, ":");
         // header and exchange is reserved
         if (isReserved(id)) {
@@ -1106,13 +1126,24 @@ public final class ExchangeHelper {
         return id;
     }
 
-    private static String resolveRepositoryName(Exchange exchange, String name, String id) {
+    /**
+     * Resolves the variable name
+     *
+     * @param  exchange the exchange
+     * @param  name     the variable name
+     * @param  id       the repository id
+     * @return          the resolved variable name
+     */
+    public static String resolveVariableRepositoryName(Exchange exchange, String name, String id) {
         name = StringHelper.after(name, ":");
         // special for route, where we need to enrich the name with current route id if none given
         if ("route".equals(id) && !name.contains(":")) {
             String prefix = getAtRouteId(exchange);
             if (prefix != null) {
                 name = prefix + ":" + name;
+            } else {
+                // we are not currently in a given route
+                return null;
             }
         }
         return name;
@@ -1128,10 +1159,10 @@ public final class ExchangeHelper {
      */
     public static void setVariableFromMessageBodyAndHeaders(Exchange exchange, String name, Message message) {
         VariableRepository repo = null;
-        final String id = getRepositoryId(name);
+        final String id = getVariableRepositoryId(name);
         if (id != null) {
             repo = getVariableRepository(exchange, id);
-            name = resolveRepositoryName(exchange, name, id);
+            name = resolveVariableRepositoryName(exchange, name, id);
         }
         final VariableAware va = getVariableAware(exchange, repo);
 
@@ -1178,17 +1209,24 @@ public final class ExchangeHelper {
      */
     public static Object getVariable(Exchange exchange, String name) {
         VariableRepository repo = null;
-        final String id = getRepositoryId(name);
+        final String id = getVariableRepositoryId(name);
         if (id != null) {
             repo = getVariableRepository(exchange, id);
-
-            name = resolveRepositoryName(exchange, name, id);
+            name = resolveVariableRepositoryName(exchange, name, id);
         }
         final VariableAware va = getVariableAware(exchange, repo);
         return va.getVariable(name);
     }
 
-    private static VariableRepository getVariableRepository(Exchange exchange, String id) {
+    /**
+     * Gets the variable repository by the given id
+     *
+     * @param  exchange                 the exchange
+     * @param  id                       the repository id
+     * @return                          the variable repository
+     * @throws IllegalArgumentException is thrown if the repository does not eists
+     */
+    public static VariableRepository getVariableRepository(Exchange exchange, String id) {
         VariableRepositoryFactory factory
                 = exchange.getContext().getCamelContextExtension().getContextPlugin(VariableRepositoryFactory.class);
         VariableRepository repo = factory.getVariableRepository(id);
@@ -1222,6 +1260,23 @@ public final class ExchangeHelper {
             return exchange.getContext().getTypeConverter().convertTo(type, exchange, answer);
         }
         return null;
+    }
+
+    /**
+     * Returns the body as the specified type. If <a href="http://camel.apache.org/stream-caching.html">stream
+     * caching</a>. is enabled and the body is an instance of {@link StreamCache}, the stream is reset before converting
+     * and returning the body.
+     *
+     * @param  exchange the message exchange being processed
+     * @param  type     the type to convert to
+     * @return          the body of the message as the specified type, or <tt>null</tt> if body does not exist
+     */
+    public static <T> T getBodyAndResetStreamCache(Exchange exchange, Class<T> type) {
+        Object body = exchange.getMessage().getBody();
+        if (body instanceof StreamCache) {
+            ((StreamCache) body).reset();
+        }
+        return exchange.getMessage().getBody(type);
     }
 
 }

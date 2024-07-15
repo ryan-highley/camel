@@ -18,7 +18,6 @@ package org.apache.camel.impl.cluster;
 
 import java.time.Duration;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -114,7 +113,7 @@ public final class ClusteredRoutePolicy extends RoutePolicySupport implements Ca
             return;
         }
 
-        if (this.camelContext != null && this.camelContext != camelContext) {
+        if (this.camelContext != null) {
             throw new IllegalStateException(
                     "CamelContext should not be changed: current=" + this.camelContext + ", new=" + camelContext);
         }
@@ -356,7 +355,7 @@ public final class ClusteredRoutePolicy extends RoutePolicySupport implements Ca
 
     private class CamelClusterLeadershipListener implements CamelClusterEventListener.Leadership {
         @Override
-        public void leadershipChanged(CamelClusterView view, Optional<CamelClusterMember> leader) {
+        public void leadershipChanged(CamelClusterView view, CamelClusterMember leader) {
             setLeader(clusterView.getLocalMember().isLeader());
         }
     }

@@ -36,10 +36,10 @@ import org.apache.camel.util.URISupport;
 
 @ManagedResource(description = "Managed EndpointRegistry")
 public class ManagedEndpointRegistry extends ManagedService implements ManagedEndpointRegistryMBean {
-    private final EndpointRegistry<?> endpointRegistry;
+    private final EndpointRegistry endpointRegistry;
     private boolean sanitize;
 
-    public ManagedEndpointRegistry(CamelContext context, EndpointRegistry<?> endpointRegistry) {
+    public ManagedEndpointRegistry(CamelContext context, EndpointRegistry endpointRegistry) {
         super(context, endpointRegistry);
         this.endpointRegistry = endpointRegistry;
     }
@@ -47,10 +47,10 @@ public class ManagedEndpointRegistry extends ManagedService implements ManagedEn
     @Override
     public void init(ManagementStrategy strategy) {
         super.init(strategy);
-        sanitize = strategy.getManagementAgent().getMask() != null ? strategy.getManagementAgent().getMask() : false;
+        sanitize = strategy.getManagementAgent().getMask() != null ? strategy.getManagementAgent().getMask() : true;
     }
 
-    public EndpointRegistry<?> getEndpointRegistry() {
+    public EndpointRegistry getEndpointRegistry() {
         return endpointRegistry;
     }
 

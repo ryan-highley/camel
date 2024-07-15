@@ -48,14 +48,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @Tags({ @Tag("breakOnFirstError") })
 @EnabledOnOs(value = { OS.LINUX, OS.MAC, OS.FREEBSD, OS.OPENBSD, OS.WINDOWS },
-             architectures = { "amd64", "aarch64", "s390x" },
-             disabledReason = "This test does not run reliably on ppc64le")
+             architectures = { "amd64", "aarch64" },
+             disabledReason = "This test does not run reliably on some platforms")
 @DisabledIfSystemProperty(named = "ci.env.name", matches = ".*",
-                          disabledReason = "Consistently unreliable on shared environments")
+                          disabledReason = "CAMEL-20722: Too unreliable on most of the CI environments")
 class KafkaBreakOnFirstErrorReleaseResourcesIT extends BaseKafkaTestSupport {
 
-    public static final String ROUTE_ID = "breakOnFirstError-20563";
-    public static final String TOPIC = "breakOnFirstError-20563";
+    public static final String ROUTE_ID = "breakOnFirstError-20563" + Thread.currentThread().hashCode(); //CAMEL-20722 - added for similar reason as CAMEL-20686:
+    public static final String TOPIC = "breakOnFirstError-20563" + Thread.currentThread().hashCode(); //CAMEL-20722 - added for similar reason as CAMEL-20686:
 
     private static final Logger LOG = LoggerFactory.getLogger(KafkaBreakOnFirstErrorReleaseResourcesIT.class);
     private static final int CONSUMER_COUNT = 3;
@@ -109,7 +109,7 @@ class KafkaBreakOnFirstErrorReleaseResourcesIT extends BaseKafkaTestSupport {
 
         // let test run for awhile
         Awaitility.await()
-                .timeout(10, TimeUnit.SECONDS)
+                .timeout(30, TimeUnit.SECONDS)  // changed to 30 sec for CAMEL-20722
                 .pollDelay(8, TimeUnit.SECONDS)
                 .untilAsserted(() -> assertTrue(true));
 
@@ -125,8 +125,9 @@ class KafkaBreakOnFirstErrorReleaseResourcesIT extends BaseKafkaTestSupport {
         Set<Thread> threads = Thread.getAllStackTraces().keySet();
         int count = 0;
 
-        for (Thread t : threads) {
-            if (t.getName().contains("heartbeat")) {
+        for (Thread t : threads) { //CAMEL-20722: Look for more specific heartbeat thread, log the full thread name.
+            if (t.getName().contains("heartbeat") && t.getName().contains("breakOnFirstError-20563")) {
+                LOG.info(" Thread name: {}", t.getName());
                 count++;
             }
         }
