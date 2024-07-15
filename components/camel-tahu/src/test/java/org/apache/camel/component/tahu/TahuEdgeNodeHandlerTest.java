@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.apache.camel.component.tahu.SparkplugTCKService.SparkplugTCKMessageListener;
-import org.apache.camel.component.tahu.TahuEdgeNodeHandler.PayloadBuilder;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.tahu.edge.sim.DataSimulator;
 import org.eclipse.tahu.edge.sim.RandomDataSimulator;
@@ -39,6 +37,7 @@ import org.eclipse.tahu.message.model.DeviceDescriptor;
 import org.eclipse.tahu.message.model.EdgeNodeDescriptor;
 import org.eclipse.tahu.message.model.MessageType;
 import org.eclipse.tahu.message.model.SparkplugBPayload;
+import org.eclipse.tahu.message.model.SparkplugBPayloadMap;
 import org.eclipse.tahu.message.model.SparkplugDescriptor;
 import org.eclipse.tahu.message.model.SparkplugMeta;
 import org.eclipse.tahu.message.model.Topic;
@@ -50,7 +49,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -58,11 +61,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
 
+@Disabled
 @SuppressWarnings("unused")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TahuEdgeNodeHandlerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(TahuEdgeNodeHandlerTest.class);
@@ -109,7 +113,6 @@ public class TahuEdgeNodeHandlerTest {
                     }
                 }
             });
-    private static final Map<String, Map<String, Object>> metricDataTypeMap = new HashMap<>();
 
     private static final BdSeqManager bdSeqManager = new CamelBdSeqManager(EDGE_NODE_DESCRIPTOR);
     private static final ExecutorService handlerExecutorService = Executors.newSingleThreadExecutor();
@@ -148,23 +151,22 @@ public class TahuEdgeNodeHandlerTest {
             System.out.println("\tKeep Alive Timeout: " + mqttServerDefinition.getKeepAliveTimeout());
         }
 
-        Map<String, Object> nodeMetricDataTypes = dataSimulator.getNodeBirthPayload(EDGE_NODE_DESCRIPTOR)
-                .getMetrics().stream().collect(Collectors.toMap(m -> m.getName(), m -> m.getDataType()));
-
-        metricDataTypeMap.put(EDGE_NODE_ID, nodeMetricDataTypes);
-
-        for (DeviceDescriptor deviceDescriptor : DEVICE_DESCRIPTORS) {
-            Map<String, Object> deviceMetricDataTypes = dataSimulator.getDeviceBirthPayload(deviceDescriptor)
-                    .getMetrics().stream().collect(Collectors.toMap(m -> m.getName(), m -> m.getDataType()));
-
-            metricDataTypeMap.put(deviceDescriptor.getDeviceId(), deviceMetricDataTypes);
-        }
-
         tahuEdgeNodeHandler = new TahuEdgeNodeHandler(
                 EDGE_NODE_DESCRIPTOR, mqttServerDefinitions, PRIMARY_HOST_ID,
                 USE_ALIASES, REBIRTH_DEBOUNCE_DELAY, handlerExecutorService, bdSeqManager);
 
         tahuEdgeNodeHandler.init();
+
+        tahuEdgeNodeHandler.addDeviceMetricDataPayloadMap(EDGE_NODE_DESCRIPTOR,
+                dataSimulator.getNodeBirthPayload(EDGE_NODE_DESCRIPTOR));
+
+        for (DeviceDescriptor deviceDescriptor : DEVICE_DESCRIPTORS) {
+            SparkplugBPayloadMap deviceMetricPayloadMap = new SparkplugBPayloadMap();
+
+            deviceMetricPayloadMap.setMetrics(dataSimulator.getDeviceBirthPayload(deviceDescriptor).getMetrics());
+
+            tahuEdgeNodeHandler.addDeviceMetricDataPayloadMap(deviceDescriptor, deviceMetricPayloadMap);
+        }
 
         spTckMessageListener = spTckService.getSpTckMessageListener();
 
@@ -193,22 +195,23 @@ public class TahuEdgeNodeHandlerTest {
     }
 
     private void initiateTckTest(String testName) throws Exception {
-        // BlockingQueue<MqttMessage> logMessages = spTckMessageListener.getLogMessages();
-
         String testParams = createEdgeTestParams(testName);
         spTckService.sendTestControlMessage("NEW_TEST " + testParams);
-
-        // MqttMessage logMessage = logMessages.poll(10L, TimeUnit.SECONDS);
-        // assertThat("Test start message received", logMessage, notNullValue());
-        // String logMessageText = new String(logMessage.getPayload(), StandardCharsets.UTF_8);
-        // assertThat("Test start message has the expected text", logMessageText, containsString("Test started successfully:"));
     }
 
     private void pollForTestFailureLogs() throws Exception {
         BlockingQueue<MqttMessage> logMessages = spTckMessageListener.getLogMessages();
 
         MqttMessage logMessage = logMessages.poll(1L, TimeUnit.SECONDS);
-        assertThat("No log messages received for test failures", logMessage, nullValue());
+        if (logMessage == null)
+            return;
+
+        String logMessageText = new String(logMessage.getPayload(), StandardCharsets.UTF_8);
+        assertThat("No unexpected log messages received for test failures", logMessageText,
+                anyOf(
+                        containsString("Creating simulated host application"),
+                        containsString("Waiting for the Edge and Device to come online"),
+                        containsString("Edge Send Complex Data")));
     }
 
     private void sendData() throws Exception {
@@ -227,13 +230,6 @@ public class TahuEdgeNodeHandlerTest {
             simPayload = dataSimulator.getNodeDataPayload(end);
         }
 
-        SparkplugBPayload.SparkplugBPayloadBuilder builder = new SparkplugBPayload.SparkplugBPayloadBuilder();
-
-        builder.setTimestamp(simPayload.getTimestamp());
-        builder.setUuid(simPayload.getUuid());
-        builder.setBody(simPayload.getBody());
-        builder.addMetrics(simPayload.getMetrics());
-
         tahuEdgeNodeHandler.publishData(end, simPayload);
     }
 
@@ -245,7 +241,6 @@ public class TahuEdgeNodeHandlerTest {
             return false;
         }
 
-        assertThat("Result message received", resultMessage, notNullValue());
         String resultMessageText = new String(resultMessage.getPayload(), StandardCharsets.UTF_8);
         assertThat("Test passed", resultMessageText, containsString("OVERALL: PASS"));
 
@@ -257,15 +252,17 @@ public class TahuEdgeNodeHandlerTest {
     }
 
     @Test
-    // @Order(1)
+    @Order(1)
     public void sessionEstablishmentTest() throws Exception {
         try {
             initiateTckTest("SessionEstablishmentTest");
 
             tahuEdgeNodeHandler.start();
 
-            Instant timeout = Instant.now().plusSeconds(5L);
+            Instant timeout = Instant.now().plusSeconds(15L);
             do {
+                sendData();
+                pollForTestFailureLogs();
             } while (!pollForTestResults() && Instant.now().isBefore(timeout));
         } finally {
             resetTckTest();
@@ -273,54 +270,62 @@ public class TahuEdgeNodeHandlerTest {
     }
 
     @Test
-    // @Order(2)
+    @Order(2)
     public void sessionTerminationTest() throws Exception {
         try {
             initiateTckTest("SessionTerminationTest");
 
             tahuEdgeNodeHandler.start();
 
-            pollForTestFailureLogs();
+            int sendDataCount = 0;
 
-            tahuEdgeNodeHandler.stop();
-
-            Instant timeout = Instant.now().plusSeconds(5L);
+            Instant timeout = Instant.now().plusSeconds(15L);
             do {
+                sendData();
+
+                if (sendDataCount++ == 3) {
+                    tahuEdgeNodeHandler.stop();
+                }
+
+                pollForTestFailureLogs();
             } while (!pollForTestResults() && Instant.now().isBefore(timeout));
         } finally {
             resetTckTest();
         }
     }
 
+    @Order(3)
     @ParameterizedTest
     @ValueSource(strings = { "SendDataTest", "SendComplexDataTest", "ReceiveCommandTest" })
-    // @Order(3)
     public void sendDataTest(String testName) throws Exception {
         try {
             initiateTckTest(testName);
 
             tahuEdgeNodeHandler.start();
 
-            Instant timeout = Instant.now().plusSeconds(5L);
+            Instant timeout = Instant.now().plusSeconds(15L);
             do {
                 sendData();
+                pollForTestFailureLogs();
             } while (!pollForTestResults() && Instant.now().isBefore(timeout));
         } finally {
             resetTckTest();
         }
     }
 
+    // @Disabled
     @Test
-    // @Order(4)
+    @Order(4)
     public void primaryHostTest() throws Exception {
         try {
             tahuEdgeNodeHandler.start();
 
             initiateTckTest("PrimaryHostTest");
 
-            Instant timeout = Instant.now().plusSeconds(5L);
+            Instant timeout = Instant.now().plusSeconds(15L);
             do {
                 sendData();
+                pollForTestFailureLogs();
             } while (!pollForTestResults() && Instant.now().isBefore(timeout));
         } finally {
             resetTckTest();

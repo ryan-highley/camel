@@ -17,9 +17,7 @@
 package org.apache.camel.component.tahu;
 
 import java.util.HashMap;
-// import java.util.Map;
 import java.util.Optional;
-// import java.util.stream.Collectors;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
@@ -35,9 +33,9 @@ import org.eclipse.tahu.message.model.SparkplugDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TahuEdgeNodePublisherRouteBuilder extends RouteBuilder {
+public class TahuEdgeNodeProducerRouteBuilder extends RouteBuilder {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TahuEdgeNodePublisherRouteBuilder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TahuEdgeNodeProducerRouteBuilder.class);
 
     static final String NODE_DATA_URI = "direct:node-data";
     static final String DEVICE_DATA_URI = "direct:device-data";
@@ -70,29 +68,6 @@ public class TahuEdgeNodePublisherRouteBuilder extends RouteBuilder {
             }
         });
 
-        // Create the Birth payloads to capture the random metric configuration from the
-        // data simulator.
-        // This would normally be set on the Edge Node endpoint via "metrics."
-        // parameters.
-        // Map<String, Object> nodeMetricDataTypes = dataSimulator.getNodeBirthPayload(edgeNodeDescriptor)
-        //         .getMetrics().stream()
-        //         .map(m -> new Object[] {
-        //                 tahuEdgeNodeEndpoint.getEdgeNode() + TahuConstants.MAJOR_SEPARATOR + m.getName(),
-        //                 m.getDataType() })
-        //         .collect(Collectors.toMap(arr -> (String) arr[0], arr -> arr[1]));
-
-        // Map<String, Object> deviceMetricDataTypes = dataSimulator.getDeviceBirthPayload(deviceDescriptor)
-        //         .getMetrics().stream()
-        //         .map(m -> new Object[] {
-        //                 tahuDeviceEndpoint.getDeviceId() + TahuConstants.MAJOR_SEPARATOR + m.getName(),
-        //                 m.getDataType() })
-        //         .collect(Collectors.toMap(arr -> (String) arr[0], arr -> arr[1]));
-
-        // Map<String, Object> metricDataTypes = new HashMap<>();
-        // metricDataTypes.putAll(nodeMetricDataTypes);
-        // metricDataTypes.putAll(deviceMetricDataTypes);
-        // tahuEdgeNodeEndpoint.setMetricDataTypes(metricDataTypes);
-
         tahuEdgeNodeEndpoint.setMetricDataTypePayloadMap(dataSimulator.getNodeBirthPayload(edgeNodeDescriptor));
 
         SparkplugBPayloadMap deviceMetricPayloadMap = new SparkplugBPayloadMap();
@@ -112,10 +87,11 @@ public class TahuEdgeNodePublisherRouteBuilder extends RouteBuilder {
         LOG.trace("RouteBuilder.configure complete");
     }
 
-    private void processPayload(Exchange exch, String messageType, SparkplugBPayload payload) {
+    private void processPayload(Exchange exch, String messageType, SparkplugBPayload payload, EdgeNodeDescriptor edgeNodeDescriptor) {
         org.apache.camel.Message message = exch.getMessage();
 
         message.setHeader(TahuConstants.MESSAGE_TYPE, messageType);
+        message.setHeader(TahuConstants.EDGE_NODE_DESCRIPTOR, edgeNodeDescriptor);
 
         Optional.ofNullable(payload.getUuid())
                 .ifPresent(uuid -> message.setHeader(TahuConstants.MESSAGE_UUID, uuid));
@@ -124,19 +100,21 @@ public class TahuEdgeNodePublisherRouteBuilder extends RouteBuilder {
         Optional.ofNullable(payload.getSeq())
                 .ifPresent(seq -> message.setHeader(TahuConstants.MESSAGE_SEQUENCE_NUMBER, seq));
 
-        payload.getMetrics().forEach(m -> {
-            message.setHeader(TahuConstants.METRIC_HEADER_PREFIX + m.getName(), m.getValue());
-        });
+        // payload.getMetrics().forEach(m -> {
+        //     message.setHeader(TahuConstants.METRIC_HEADER_PREFIX + m.getName(), m.getValue());
+        // });
 
-        Optional.ofNullable(payload.getBody()).ifPresent(body -> message.setBody(body, byte[].class));
+        // Optional.ofNullable(payload.getBody()).ifPresent(body -> message.setBody(body, byte[].class));
+
+        message.setBody(payload);
     }
 
     private Processor getNodeDataPayload = (exch) -> {
-        processPayload(exch, "NDATA", dataSimulator.getNodeDataPayload(edgeNodeDescriptor));
+        processPayload(exch, "NDATA", dataSimulator.getNodeDataPayload(edgeNodeDescriptor), edgeNodeDescriptor);
     };
 
     private Processor getDeviceDataPayload = (exch) -> {
-        processPayload(exch, "DDATA", dataSimulator.getDeviceDataPayload(deviceDescriptor));
+        processPayload(exch, "DDATA", dataSimulator.getDeviceDataPayload(deviceDescriptor), deviceDescriptor);
     };
 
 }

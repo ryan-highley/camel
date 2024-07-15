@@ -28,6 +28,7 @@ import org.eclipse.tahu.message.model.EdgeNodeDescriptor;
 import org.eclipse.tahu.message.model.Message;
 import org.eclipse.tahu.message.model.Metric;
 import org.eclipse.tahu.message.model.SparkplugDescriptor;
+import org.eclipse.tahu.message.model.SparkplugMeta;
 import org.eclipse.tahu.model.MqttServerDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +76,7 @@ public class TahuHostAppHandler extends ServiceSupport implements HostApplicatio
         if (app == null) {
 
             this.hostApplication = app = new HostApplication(
-                    this, hostId, null, serverDefinitions, null,
+                    this, hostId, List.of(SparkplugMeta.SPARKPLUG_B_TOPIC_PREFIX + "/#"), serverDefinitions, null,
                     new SparkplugBPayloadDecoder());
             app.start();
         }

@@ -166,19 +166,13 @@ public class SparkplugTCKService implements TestService {
 
     @Override
     public void initialize() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'initialize'");
     }
 
     @Override
     public void registerProperties() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'registerProperties'");
     }
 
     @Override
     public void shutdown() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'shutdown'");
     }
 }

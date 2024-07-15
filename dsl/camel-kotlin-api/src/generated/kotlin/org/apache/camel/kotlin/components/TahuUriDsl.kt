@@ -187,6 +187,16 @@ public class TahuUriDsl(
   }
 
   /**
+   * Tahu SparkplugBPayloadMap to configure metric data types for this edge node or device NOTE:
+   * This payload is used exclusively as a Sparkplug B spec-compliant configuration for all possible
+   * edge node or device metric names, aliases, and data types. This configuration is required to
+   * publish proper Sparkplug B NBIRTH and DBIRTH payloads.
+   */
+  public fun metricDataTypePayloadMap(metricDataTypePayloadMap: String) {
+    it.property("metricDataTypePayloadMap", metricDataTypePayloadMap)
+  }
+
+  /**
    * To use a specific org.eclipse.tahu.message.BdSeqManager implementation to manage edge node
    * birth-death sequence numbers
    */
@@ -239,19 +249,6 @@ public class TahuUriDsl(
    */
   public fun useAliases(useAliases: Boolean) {
     it.property("useAliases", useAliases.toString())
-  }
-
-  /**
-   * Metric names and types for this edge node or device ID(s), as
-   * metric.edgeNode,deviceId,deviceId...)/ = NOTE: Uses only the FIRST '/' character to separate the
-   * edge node ID or device ID(s) from the metric name, allowing the '/' character to appear any number
-   * of times in the metric name. Comma characters also are only evaluated before the first '/'
-   * character, meaning commas are allowed in metric names but NOT edge node or device IDs. The edge
-   * node ID and device IDs can be intermixed in the list to support configuring the same metric name
-   * and data type across both the edge node and devices.
-   */
-  public fun metricDataTypes(metricDataTypes: String) {
-    it.property("metricDataTypes", metricDataTypes)
   }
 
   /**

@@ -17,8 +17,6 @@
 package org.apache.camel.component.tahu;
 
 import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.EndpointInject;
@@ -64,124 +62,21 @@ public class TahuHostAppConsumerTest extends TahuTestSupport {
     @EndpointInject("direct:device-data")
     DirectEndpoint deviceDataEndpoint;
 
-    @EndpointInject("log:org.apache.camel.component.tahu.TahuEdgeNodePublisherTest?showAll=true&multiline=true&level=DEBUG&skipBodyLineSeparator=false")
+    @EndpointInject("log:org.apache.camel.component.tahu.TahuHostAppConsumerTest?showAll=true&multiline=true&level=DEBUG&skipBodyLineSeparator=false")
     LogEndpoint logEndpoint;
 
-    @Test
-    public void testNodeBirth() throws Exception {
-        sparkplugTckResultEndpoint.expectedMessageCount(1);
-
-        getCamelContextExtension().getProducerTemplate().sendBody(nodeBirthEndpoint, null);
-
-        sparkplugTckResultEndpoint.assertIsSatisfied();
-    }
-
-    // @Override
-    protected RouteBuilder createRouteBuilder() {
-        return new RouteBuilder() {
-            private EdgeNodeDescriptor edgeNodeDescriptor;
-            private DeviceDescriptor deviceDescriptor;
-            private DataSimulator dataSimulator;
-
-            @Override
-            public void configure() throws Exception {
-
-                TahuEndpoint tahuHostAppEndpoint = getCamelContext().getEndpoint("tahu:IamHost", TahuEndpoint.class);
-
-                TahuEndpoint tahuEdgeNodeEndpoint = getCamelContext().getEndpoint("tahu:G2/E2?clientId=TestProducerId",
-                        TahuEndpoint.class);
-
-                TahuEndpoint tahuDeviceEndpoint = getCamelContext().getEndpoint("tahu:G2/E2/D2", TahuEndpoint.class);
-
-                edgeNodeDescriptor
-                        = new EdgeNodeDescriptor(tahuEdgeNodeEndpoint.getGroupId(), tahuEdgeNodeEndpoint.getEdgeNode());
-                deviceDescriptor = new DeviceDescriptor(edgeNodeDescriptor, tahuDeviceEndpoint.getDeviceId());
-
-                dataSimulator = new RandomDataSimulator(10, new HashMap<SparkplugDescriptor, Integer>() {
-                    {
-                        put(deviceDescriptor, 50);
-                    }
-                });
-
-                // SparkplugBPayloadMap nBirthPayload = dataSimulator.getNodeBirthPayload(edgeNodeDescriptor);
-
-                // Map<String, Object> nodeMetricDataTypes = nBirthPayload.getMetrics().stream()
-                //         .map(m -> new Object[] {
-                //                 tahuEdgeNodeEndpoint.getEdgeNode() + TahuConstants.MAJOR_SEPARATOR + m.getName(),
-                //                 m.getDataType() })
-                //         .collect(Collectors.toMap(arr -> (String) arr[0], arr -> arr[1]));
-
-                // SparkplugBPayload dBirthPayload = dataSimulator.getDeviceBirthPayload(deviceDescriptor);
-
-                // Map<String, Object> deviceMetricDataTypes = dBirthPayload.getMetrics().stream()
-                //         .map(m -> new Object[] {
-                //                 tahuDeviceEndpoint.getDeviceId() + TahuConstants.MAJOR_SEPARATOR + m.getName(),
-                //                 m.getDataType() })
-                //         .collect(Collectors.toMap(arr -> (String) arr[0], arr -> arr[1]));
-
-                // Map<String, Object> metricDataTypes = new HashMap<>();
-                // metricDataTypes.putAll(nodeMetricDataTypes);
-                // metricDataTypes.putAll(deviceMetricDataTypes);
-                // tahuEdgeNodeEndpoint.setMetricDataTypes(Map.copyOf(metricDataTypes));
-
-                tahuEdgeNodeEndpoint.setMetricDataTypePayloadMap(dataSimulator.getNodeBirthPayload(edgeNodeDescriptor));
-
-                SparkplugBPayloadMap deviceMetricPayloadMap = new SparkplugBPayloadMap();
-                deviceMetricPayloadMap.setMetrics(dataSimulator.getDeviceBirthPayload(deviceDescriptor).getMetrics());
-                tahuDeviceEndpoint.setMetricDataTypePayloadMap(deviceMetricPayloadMap);
-        
-                from(tahuHostAppEndpoint)
-                        .to(logEndpoint)
-                        .to(sparkplugTckResultEndpoint);
-
-                from(nodeDataEndpoint)
-                        .id("node-data-test-route")
-                        .process(getNodeDataPayload)
-                        .to(tahuEdgeNodeEndpoint);
-
-                from(deviceDataEndpoint)
-                        .id("device-data-test-route")
-                        .process(getDeviceDataPayload)
-                        .to(tahuDeviceEndpoint);
-
-            }
-
-            private void processPayload(Exchange exch, String messageType, SparkplugBPayload payload) {
-                Message message = exch.getMessage();
-
-                message.setHeader(TahuConstants.MESSAGE_TYPE, messageType);
-                message.setHeader(TahuConstants.MESSAGE_UUID, payload.getUuid());
-                message.setHeader(TahuConstants.MESSAGE_TIMESTAMP, payload.getTimestamp());
-                message.setHeader(TahuConstants.MESSAGE_SEQUENCE_NUMBER, payload.getSeq());
-
-                payload.getMetrics().forEach(m -> {
-                    message.setHeader(TahuConstants.METRIC_HEADER_PREFIX + m.getName(), m.getValue());
-                });
-
-                message.setBody(payload.getBody(), byte[].class);
-            }
-
-            private Processor getNodeDataPayload = (exch) -> {
-                processPayload(exch, "NDATA", dataSimulator.getNodeDataPayload(edgeNodeDescriptor));
-            };
-
-            private Processor getDeviceDataPayload = (exch) -> {
-                processPayload(exch, "DDATA", dataSimulator.getDeviceDataPayload(deviceDescriptor));
-            };
-
-        };
-    }
 
     @Override
     public void configureContext(CamelContext context) throws Exception {
-        // TODO Auto-generated method stub
-        // throw new UnsupportedOperationException("Unimplemented method 'configureContext'");
     }
 
     @Override
     public void createRouteBuilder(CamelContext context) throws Exception {
-        // TODO Auto-generated method stub
-        // throw new UnsupportedOperationException("Unimplemented method 'createRouteBuilder'");
+        LOG.trace("createRouteBuilder called");
+
+        context.addRoutes(new TahuHostAppConsumerRouteBuilder());
+
+        LOG.trace("createRouteBuilder complete");
     }
 
 }

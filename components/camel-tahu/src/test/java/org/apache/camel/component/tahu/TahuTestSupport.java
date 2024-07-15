@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.tahu;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -24,13 +23,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.apache.camel.Exchange;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.component.tahu.SparkplugTCKService.SparkplugTCKMessageListener;
-import org.apache.camel.component.tahu.TahuEdgeNodePublisherTest.TestProfile;
+import org.apache.camel.test.infra.common.services.TestService;
 import org.apache.camel.test.infra.core.CamelContextExtension;
 import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.apache.camel.test.infra.core.api.CamelTestSupportHelper;
 import org.apache.camel.test.infra.core.api.ConfigurableContext;
 import org.apache.camel.test.infra.core.api.ConfigurableRoute;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -44,7 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class TahuTestSupport
-        implements CamelTestSupportHelper, ConfigurableContext, ConfigurableRoute, BeforeEachCallback, AfterEachCallback {
+        implements TestService, ConfigurableContext, ConfigurableRoute, BeforeEachCallback, AfterEachCallback {
 
     private static final Logger LOG = LoggerFactory.getLogger(TahuTestSupport.class);
 
@@ -54,13 +51,8 @@ public abstract class TahuTestSupport
     @RegisterExtension
     public static SparkplugTCKService spTckService = new SparkplugTCKService(new TahuTestMockEndpointListener());
 
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
-    }
-
-    MockEndpoint spTckLogMockEndpoint = getMockEndpoint("mock:" + SparkplugTCKService.SPARKPLUG_TCK_LOG_TOPIC);
-    MockEndpoint spTckResultMockEndpoint = getMockEndpoint("mock:" + SparkplugTCKService.SPARKPLUG_TCK_RESULT_TOPIC);
+    MockEndpoint spTckLogMockEndpoint = camelContextExtension.getMockEndpoint("mock:" + SparkplugTCKService.SPARKPLUG_TCK_LOG_TOPIC);
+    MockEndpoint spTckResultMockEndpoint = camelContextExtension.getMockEndpoint("mock:" + SparkplugTCKService.SPARKPLUG_TCK_RESULT_TOPIC);
 
     public void initiateTckTest(TestProfile profile) throws MqttException, InterruptedException {
         LOG.trace("initiateTckTest called");
@@ -95,7 +87,7 @@ public abstract class TahuTestSupport
             extensionContext.getStore(Namespace.create(this.getClass())).put(TestProfile.class,
                     profile);
 
-            spTckService.sendTestControlMessage(profile.testConfig);
+            spTckService.sendTestControlMessage("NEW_TEST " + profile.testConfig);
         }
 
         LOG.trace("beforeEach complete");
@@ -114,50 +106,54 @@ public abstract class TahuTestSupport
         LOG.trace("afterEach complete");
     }
 
-    private static class TahuTestMockEndpointListener implements SparkplugTCKMessageListener, CamelTestSupportHelper {
+    @Override
+    public void initialize() {
+    }
+
+    @Override
+    public void registerProperties() {
+    }
+
+    @Override
+    public void shutdown() {
+    }
+
+    private static class TahuTestMockEndpointListener implements SparkplugTCKMessageListener {
 
         @Override
         public void messageArrived(String topic, MqttMessage message) throws Exception {
-
-            MockEndpoint mockEndpoint = resolveMandatoryEndpoint("mock:" + topic, MockEndpoint.class);
-
-            Exchange exch = createExchangeWithBody(new String(message.getPayload(), StandardCharsets.UTF_8));
-
-            org.apache.camel.Message camelMessage = exch.getMessage();
-
-            camelMessage.setHeader("mqttMessage.Id", message.getId());
-            camelMessage.setHeader("mqttMessage.Qos", message.getQos());
-            camelMessage.setHeader("mqttMessage.Retained", message.isRetained());
-            camelMessage.setHeader("mqttMessage.Duplicate", message.isDuplicate());
-
-            mockEndpoint.handle(exch);
+            camelContextExtension.getProducerTemplate().sendBody("mock:" + topic, message);
         }
 
         @Override
         public BlockingQueue<MqttMessage> getMessages(String topic) {
-            MockEndpoint mockEndpoint = resolveMandatoryEndpoint("mock:" + topic, MockEndpoint.class);
+            MockEndpoint mockEndpoint = camelContextExtension.getMockEndpoint("mock:" + topic, false);
 
-            List<MqttMessage> receivedMsgs = mockEndpoint.getReceivedExchanges().stream().map(exch -> {
-                MqttMessage message = new MqttMessage();
-
-                org.apache.camel.Message camelMessage = exch.getMessage();
-
-                message.setPayload(camelMessage.getBody(String.class).getBytes(StandardCharsets.UTF_8));
-
-                message.setId(camelMessage.getHeader("mqttMessage.Id", Integer.class));
-                message.setQos(camelMessage.getHeader("mqttMessage.Qos", Integer.class));
-                message.setRetained(camelMessage.getHeader("mqttMessage.Retained", Boolean.class));
-
-                return message;
-            })
-                    .collect(Collectors.toList());
+            List<MqttMessage> receivedMsgs = mockEndpoint.getReceivedExchanges().stream().map(
+                    exch -> exch.getMessage().getBody(MqttMessage.class)).collect(Collectors.toList());
 
             return new LinkedBlockingQueue<>(receivedMsgs);
         }
+    }
 
-        @Override
-        public CamelContextExtension getCamelContextExtension() {
-            return camelContextExtension;
+    enum TestProfile {
+
+        SESSION_ESTABLISHMENT_TEST("edge SessionEstablishmentTest IamHost G2 E2 D2", false, false),
+        SESSION_TERMINATION_TEST("edge SessionTerminationTest IamHost G2 E2 D2", false, true),
+        // SEND_DATA_TEST("edge SendDataTest IamHost G2 E2 D2", true, false),
+        // SEND_COMPLEX_DATA_TEST("edge SendComplexDataTest IamHost G2 E2 D2", true, false),
+        // RECEIVE_COMMAND_TEST("edge ReceiveCommandTest IamHost G2 E2 D2", false, false),
+        // PRIMARY_HOST_TEST("edge PrimaryHostTest IamHost G2 E2 D2", false, false)
+        ;
+
+        private TestProfile(String testConfig, boolean sendData, boolean disconnect) {
+            this.testConfig = testConfig;
+            this.sendData = sendData;
+            this.disconnect = disconnect;
         }
+
+        final String testConfig;
+        final boolean sendData;
+        final boolean disconnect;
     }
 }

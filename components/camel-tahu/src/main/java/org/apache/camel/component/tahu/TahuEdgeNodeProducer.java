@@ -99,7 +99,8 @@ public class TahuEdgeNodeProducer extends DefaultProducer {  // implements Camel
                     = Optional.ofNullable(endpoint.getBdSeqManager()).orElseGet(() -> new CamelBdSeqManager(end));
 
             TahuEdgeNodeHandler tenh = new TahuEdgeNodeHandler(
-                    end, serverDefinitions, primaryHostId, useAliases, rebirthDebounceDelay, clientExecutorService, bdSeqManager);
+                    end, serverDefinitions, primaryHostId, useAliases, rebirthDebounceDelay, clientExecutorService,
+                    bdSeqManager);
 
             ServiceHelper.initService(tenh);
 
@@ -151,9 +152,12 @@ public class TahuEdgeNodeProducer extends DefaultProducer {  // implements Camel
         try {
             Message message = exchange.getMessage();
 
+            // SparkplugBPayload dataPayload
+            //         = camelContext.getTypeConverter().convertTo(SparkplugBPayload.class, exchange, message.getBody());
+
             SparkplugBPayload dataPayload = message.getMandatoryBody(SparkplugBPayload.class);
 
-            tahuEdgeNodeHandler.publishData(dataPayload);
+            tahuEdgeNodeHandler.publishData(edgeNodeDescriptor, dataPayload);
 
         } catch (Exception e) {
             exchange.setException(e);

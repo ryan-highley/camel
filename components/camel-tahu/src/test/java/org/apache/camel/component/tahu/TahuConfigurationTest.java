@@ -17,10 +17,8 @@
 package org.apache.camel.component.tahu;
 
 import java.util.List;
-import java.util.Map;
 
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.eclipse.tahu.message.model.MetricDataType;
 import org.eclipse.tahu.model.MqttServerDefinition;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -28,7 +26,6 @@ import org.slf4j.LoggerFactory;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;

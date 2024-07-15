@@ -27,44 +27,24 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.test.infra.core.annotations.ContextFixture;
 import org.apache.camel.test.infra.core.annotations.RouteFixture;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Disabled
-public class TahuEdgeNodePublisherTest extends TahuTestSupport {
+// @Disabled
+public class TahuEdgeNodeProducerTest extends TahuTestSupport {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TahuEdgeNodePublisherTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TahuEdgeNodeProducerTest.class);
 
-    enum TestProfile {
+    @ParameterizedTest
+    @EnumSource
+    public void tckSessionTest(TahuTestSupport.TestProfile profile) throws Exception {
+        CamelContext context = camelContextExtension.getContext();
 
-        SESSION_ESTABLISHMENT_TEST("edge SessionEstablishmentTest IamHost G2 E2 D2", false, false),
-        SESSION_TERMINATION_TEST("edge SessionTerminationTest IamHost G2 E2 D2", false, true),
-        // SEND_DATA_TEST("edge SendDataTest IamHost G2 E2 D2", true, false),
-        // SEND_COMPLEX_DATA_TEST("edge SendComplexDataTest IamHost G2 E2 D2", true, false),
-        // RECEIVE_COMMAND_TEST("edge ReceiveCommandTest IamHost G2 E2 D2", false, false),
-        // PRIMARY_HOST_TEST("edge PrimaryHostTest IamHost G2 E2 D2", false, false)
-        ;
-
-        private TestProfile(String testConfig, boolean sendData, boolean disconnect) {
-            this.testConfig = testConfig;
-            this.sendData = sendData;
-            this.disconnect = disconnect;
-        }
-
-        final String testConfig;
-        final boolean sendData;
-        final boolean disconnect;
-    }
-
-    // @ParameterizedTest
-    // @EnumSource
-    public void tckSessionTest(TestProfile profile) throws Exception {
-        CamelContext context = getCamelContextExtension().getContext();
-
-        ProducerTemplate template = getCamelContextExtension().getProducerTemplate();
+        ProducerTemplate template = camelContextExtension.getProducerTemplate();
 
         spTckResultMockEndpoint.expectedBodyReceived().body(String.class).contains("OVERALL: PASS");
 
@@ -78,8 +58,8 @@ public class TahuEdgeNodePublisherTest extends TahuTestSupport {
             Instant timeout = Instant.now().plus(5L, ChronoUnit.SECONDS);
 
             do {
-                template.sendBody("direct:node-data", null);
-                template.sendBody("direct:device-data", null);
+                template.sendBody(TahuEdgeNodeProducerRouteBuilder.NODE_DATA_URI, null);
+                template.sendBody(TahuEdgeNodeProducerRouteBuilder.DEVICE_DATA_URI, null);
             } while (Instant.now().isBefore(timeout)
                     && !spTckResultMockEndpoint.await(1L, TimeUnit.SECONDS));
 
@@ -126,7 +106,7 @@ public class TahuEdgeNodePublisherTest extends TahuTestSupport {
     public void createRouteBuilder(CamelContext context) throws Exception {
         LOG.trace("createRouteBuilder called");
 
-        context.addRoutes(new TahuEdgeNodePublisherRouteBuilder());
+        context.addRoutes(new TahuEdgeNodeProducerRouteBuilder());
 
         LOG.trace("createRouteBuilder complete");
     }
