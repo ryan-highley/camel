@@ -1,0 +1,1413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<specification xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xalan="http://xml.apache.org/xslt" xmlns:exslt="http://exslt.org/common" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://jboss.com/products/weld/tck/audit" xsi:schemaLocation="http://jboss.com/products/weld/tck/audit" name="Sparkplug 3.0.0" version="3.0.0" id="sparkplug" generateSectionIds="true">
+    <section id="introduction" title="Introduction" level="1" xmlns="">
+        <!-- 1 - INTRODUCTION -->
+    </section>
+    <section id="introduction_rationale_and_use_case" title="Rationale and Use Case" level="2" xmlns="">
+        <!-- 1.1 - INTRODUCTION_RATIONALE_AND_USE_CASE -->
+    </section>
+    <section id="introduction_define_an_mqtt_topic_namespace" title="Define an MQTT Topic Namespace" level="3" xmlns="">
+        <!-- 1.1.1 - INTRODUCTION_DEFINE_AN_MQTT_TOPIC_NAMESPACE -->
+    </section>
+    <section id="introduction_define_mqtt_state_management" title="Define MQTT State Management" level="3" xmlns="">
+        <!-- 1.1.2 - INTRODUCTION_DEFINE_MQTT_STATE_MANAGEMENT -->
+    </section>
+    <section id="introduction_define_the_mqtt_payload" title="Define the MQTT Payload" level="3" xmlns="">
+        <!-- 1.1.3 - INTRODUCTION_DEFINE_THE_MQTT_PAYLOAD -->
+    </section>
+    <section id="introduction_background" title="Background" level="3" xmlns="">
+        <!-- 1.1.4 - INTRODUCTION_BACKGROUND -->
+    </section>
+    <section id="introduction_intellectual_property_rights" title="Intellectual Property Rights" level="2" xmlns="">
+        <!-- 1.2 - INTRODUCTION_INTELLECTUAL_PROPERTY_RIGHTS -->
+    </section>
+    <section id="introduction_eclipse_foundation_specification_license" title="Eclipse Foundation Specification License" level="3" xmlns="">
+        <!-- 1.2.1 - INTRODUCTION_ECLIPSE_FOUNDATION_SPECIFICATION_LICENSE -->
+    </section>
+    <section id="introduction_disclaimers" title="Disclaimers" level="3" xmlns="">
+        <!-- 1.2.2 - INTRODUCTION_DISCLAIMERS -->
+    </section>
+    <section id="introduction_organization_of_the_sparkplug_specification" title="Organization of the Sparkplug Specification" level="2" xmlns="">
+        <!-- 1.3 - INTRODUCTION_ORGANIZATION_OF_THE_SPARKPLUG_SPECIFICATION -->
+    </section>
+    <section id="introduction_terminology" title="Terminology" level="2" xmlns="">
+        <!-- 1.4 - INTRODUCTION_TERMINOLOGY -->
+    </section>
+    <section id="introduction_infrastructure_components" title="Infrastructure Components" level="3" xmlns="">
+        <!-- 1.4.1 - INTRODUCTION_INFRASTRUCTURE_COMPONENTS -->
+    </section>
+    <section id="introduction_mqtt_servers" title="MQTT Server(s)" level="4" xmlns="">
+        <!-- 1.4.1.1 - INTRODUCTION_MQTT_SERVERS -->
+    </section>
+    <section id="introduction_sparkplug_group" title="Sparkplug Group" level="4" xmlns="">
+        <!-- 1.4.1.2 - INTRODUCTION_SPARKPLUG_GROUP -->
+    </section>
+    <section id="introduction_sparkplug_edge_node" title="Sparkplug Edge Node" level="4" xmlns="">
+        <!-- 1.4.1.3 - INTRODUCTION_SPARKPLUG_EDGE_NODE -->
+    </section>
+    <section id="introduction_sparkplug_device" title="Sparkplug Device" level="4" xmlns="">
+        <!-- 1.4.1.4 - INTRODUCTION_SPARKPLUG_DEVICE -->
+    </section>
+    <section id="introduction_mqtt_sparkplug_enabled_device" title="MQTT/Sparkplug Enabled Device" level="4" xmlns="">
+        <!-- 1.4.1.5 - INTRODUCTION_MQTT_SPARKPLUG_ENABLED_DEVICE -->
+    </section>
+    <section id="introduction_host_applications" title="Host Applications" level="4" xmlns="">
+        <!-- 1.4.1.6 - INTRODUCTION_HOST_APPLICATIONS -->
+        <assertion id="intro-sparkplug-host-state">
+            <text>[tck-id-intro-sparkplug-host-state] Sparkplug Host Applications MUST publish STATE messages denoting their online and offline status.</text>
+        </assertion>
+    </section>
+    <section id="introduction_primary_host_application" title="Primary Host Application" level="4" xmlns="">
+        <!-- 1.4.1.7 - INTRODUCTION_PRIMARY_HOST_APPLICATION -->
+    </section>
+    <section id="introduction_sparkplug_ids" title="Sparkplug Identifiers" level="4" xmlns="">
+        <!-- 1.4.1.8 - INTRODUCTION_SPARKPLUG_IDS -->
+        <assertion id="intro-group-id-string">
+            <text>[tck-id-intro-group-id-string] The Group ID MUST be a UTF-8 string and used as part of the Sparkplug topics as defined in the Topics Section.</text>
+        </assertion>
+        <assertion id="intro-group-id-chars">
+            <text>[tck-id-intro-group-id-chars] Because the Group ID is used in MQTT topic strings the Group ID MUST only contain characters allowed for MQTT topics per the MQTT Specification.</text>
+        </assertion>
+        <assertion id="intro-edge-node-id-string">
+            <text>[tck-id-intro-edge-node-id-string] The Edge Node ID MUST be a UTF-8 string and used as part of the Sparkplug topics as defined in the Topics Section.</text>
+        </assertion>
+        <assertion id="intro-edge-node-id-chars">
+            <text>[tck-id-intro-edge-node-id-chars] Because the Edge Node ID is used in MQTT topic strings the Edge Node ID MUST only contain characters allowed for MQTT topics per the MQTT Specification.</text>
+        </assertion>
+        <assertion id="intro-device-id-string">
+            <text>[tck-id-intro-device-id-string] The Device ID MUST be a UTF-8 string and used as part of the Sparkplug topics as defined in the Topics Section.</text>
+        </assertion>
+        <assertion id="intro-device-id-chars">
+            <text>[tck-id-intro-device-id-chars] Because the Device ID is used in MQTT topic strings the Device ID MUST only contain characters allowed for MQTT topics per the MQTT Specification.</text>
+        </assertion>
+        <assertion id="intro-edge-node-id-uniqueness">
+            <text>[tck-id-intro-edge-node-id-uniqueness] The Edge Node Descriptor MUST be unique within the context of all of other Edge Nodes within the Sparkplug infrastructure.</text>
+        </assertion>
+    </section>
+    <section id="introduction_sparkplug_metrics" title="Sparkplug Metric" level="4" xmlns="">
+        <!-- 1.4.1.9 - INTRODUCTION_SPARKPLUG_METRICS -->
+    </section>
+    <section id="introduction_datatypes" title="Data Types" level="4" xmlns="">
+        <!-- 1.4.1.10 - INTRODUCTION_DATATYPES -->
+    </section>
+    <section id="introduction_normative_references" title="Normative References" level="2" xmlns="">
+        <!-- 1.5 - INTRODUCTION_NORMATIVE_REFERENCES -->
+    </section>
+    <section id="introduction_list_normative_statements" title="Consolidated List of Normative Statements" level="2" xmlns="">
+        <!-- 1.6 - INTRODUCTION_LIST_NORMATIVE_STATEMENTS -->
+    </section>
+    <section id="introduction_security" title="Security" level="2" xmlns="">
+        <!-- 1.7 - INTRODUCTION_SECURITY -->
+    </section>
+    <section id="introduction_authentication" title="Authentication" level="3" xmlns="">
+        <!-- 1.7.1 - INTRODUCTION_AUTHENTICATION -->
+    </section>
+    <section id="introduction_autorization" title="Authorization" level="3" xmlns="">
+        <!-- 1.7.2 - INTRODUCTION_AUTORIZATION -->
+    </section>
+    <section id="introduction_encryption" title="Encryption" level="3" xmlns="">
+        <!-- 1.7.3 - INTRODUCTION_ENCRYPTION -->
+    </section>
+    <section id="introduction_editing_convention" title="Normative Keywords" level="2" xmlns="">
+        <!-- 1.8 - INTRODUCTION_EDITING_CONVENTION -->
+    </section>
+    <section id="introduction_leveragint_standards_and_open_source" title="Leveraging Standards and Open Source" level="2" xmlns="">
+        <!-- 1.9 - INTRODUCTION_LEVERAGINT_STANDARDS_AND_OPEN_SOURCE -->
+    </section>
+    <section id="principles" title="Principles" level="1" xmlns="">
+        <!-- 2 - PRINCIPLES -->
+    </section>
+    <section id="principles_pub_sub" title="Pub/Sub" level="2" xmlns="">
+        <!-- 2.1 - PRINCIPLES_PUB_SUB -->
+    </section>
+    <section id="principles_report_by_exception" title="Report by Exception" level="2" xmlns="">
+        <!-- 2.2 - PRINCIPLES_REPORT_BY_EXCEPTION -->
+        <assertion id="principles-rbe-recommended">
+            <text>[tck-id-principles-rbe-recommended] Because of the stateful nature of Sparkplug sessions, data SHOULD NOT be published from Edge Nodes on a periodic basis and instead SHOULD be published using a RBE based approach.</text>
+        </assertion>
+    </section>
+    <section id="principles_continuous_session_awareness" title="Continuous Session Awareness" level="2" xmlns="">
+        <!-- 2.3 - PRINCIPLES_CONTINUOUS_SESSION_AWARENESS -->
+    </section>
+    <section id="principles_birth_and_death_certificates" title="Birth and Death Certificates" level="2" xmlns="">
+        <!-- 2.4 - PRINCIPLES_BIRTH_AND_DEATH_CERTIFICATES -->
+        <assertion id="principles-birth-certificates-order">
+            <text>[tck-id-principles-birth-certificates-order] Birth Certificates MUST be the first MQTT messages published by any Edge Node or any Host Application.</text>
+        </assertion>
+    </section>
+    <section id="principles_persistent_vs_non_persistent_connections" title="Persistent vs Non-Persistent Connections for Edge Nodes" level="2" xmlns="">
+        <!-- 2.5 - PRINCIPLES_PERSISTENT_VS_NON_PERSISTENT_CONNECTIONS -->
+        <assertion id="principles-persistence-clean-session-311">
+            <text>[tck-id-principles-persistence-clean-session-311] If the MQTT client is using MQTT v3.1.1, the Edge Node's MQTT CONNECT packet MUST set the 'Clean Session' flag to true.</text>
+        </assertion>
+        <assertion id="principles-persistence-clean-session-50">
+            <text>[tck-id-principles-persistence-clean-session-50] If the MQTT client is using MQTT v5.0, the Edge Node's MQTT CONNECT packet MUST set the 'Clean Start' flag to true and the 'Session Expiry Interval' to 0.</text>
+        </assertion>
+    </section>
+    <section id="components" title="Sparkplug Architecture and Infrastructure Components" level="1" xmlns="">
+        <!-- 3 - COMPONENTS -->
+    </section>
+    <section id="components_mqtt_servers" title="MQTT Server(s)" level="2" xmlns="">
+        <!-- 3.1 - COMPONENTS_MQTT_SERVERS -->
+    </section>
+    <section id="components_mqtt_edge_node" title="MQTT Edge Node" level="2" xmlns="">
+        <!-- 3.2 - COMPONENTS_MQTT_EDGE_NODE -->
+    </section>
+    <section id="components_device_sensor" title="Device/Sensor" level="2" xmlns="">
+        <!-- 3.3 - COMPONENTS_DEVICE_SENSOR -->
+    </section>
+    <section id="components_mqtt_enabled_device" title="MQTT Enabled Device (Sparkplug)" level="2" xmlns="">
+        <!-- 3.4 - COMPONENTS_MQTT_ENABLED_DEVICE -->
+    </section>
+    <section id="components_primary_host_application" title="Primary Host Application" level="2" xmlns="">
+        <!-- 3.5 - COMPONENTS_PRIMARY_HOST_APPLICATION -->
+    </section>
+    <section id="components_sparkplug_host_application" title="Sparkplug Host Application" level="2" xmlns="">
+        <!-- 3.6 - COMPONENTS_SPARKPLUG_HOST_APPLICATION -->
+        <assertion id="components-ph-state">
+            <text>[tck-id-components-ph-state] A Sparkplug Host Application MUST utilize the STATE messages to denote whether it is online or offline at any given point in time.</text>
+        </assertion>
+    </section>
+    <section id="topics" title="Topics and Messages" level="1" xmlns="">
+        <!-- 4 - TOPICS -->
+    </section>
+    <section id="topics_sparkplug_topic_namespace_elements" title="Topic Namespace Elements" level="2" xmlns="">
+        <!-- 4.1 - TOPICS_SPARKPLUG_TOPIC_NAMESPACE_ELEMENTS -->
+        <assertion id="topic-structure">
+            <text>[tck-id-topic-structure] All MQTT clients using the Sparkplug specification MUST use the following topic namespace structure</text>
+        </assertion>
+    </section>
+    <section id="topics_namespace_element" title="namespace Element" level="3" xmlns="">
+        <!-- 4.1.1 - TOPICS_NAMESPACE_ELEMENT -->
+        <assertion id="topic-structure-namespace-a">
+            <text>[tck-id-topic-structure-namespace-a] For the Sparkplug B version of the payload definition, the UTF-8 string constant for the namespace element MUST be</text>
+        </assertion>
+    </section>
+    <section id="topics_group_id_element" title="group_id Element" level="3" xmlns="">
+        <!-- 4.1.2 - TOPICS_GROUP_ID_ELEMENT -->
+        <assertion id="topic-structure-namespace-valid-group-id">
+            <text>[tck-id-topic-structure-namespace-valid-group-id] The format of the Group ID MUST be a valid UTF-8 string with the exception of the reserved characters of + (plus), / (forward slash), and # (number sign).</text>
+        </assertion>
+    </section>
+    <section id="topics_message_type_element" title="message_type Element" level="3" xmlns="">
+        <!-- 4.1.3 - TOPICS_MESSAGE_TYPE_ELEMENT -->
+    </section>
+    <section id="topics_edge_node_id_element" title="edge_node_id Element" level="3" xmlns="">
+        <!-- 4.1.4 - TOPICS_EDGE_NODE_ID_ELEMENT -->
+        <assertion id="topic-structure-namespace-unique-edge-node-descriptor">
+            <text>[tck-id-topic-structure-namespace-unique-edge-node-descriptor] The group_id combined with the edge_node_id element MUST be unique from any other group_id/edge_node_id assigned in the MQTT infrastructure.</text>
+        </assertion>
+        <assertion id="topic-structure-namespace-valid-edge-node-id">
+            <text>[tck-id-topic-structure-namespace-valid-edge-node-id] The format of the edge_node_id MUST be a valid UTF-8 string with the exception of the reserved characters of + (plus), / (forward slash), and # (number sign).</text>
+        </assertion>
+    </section>
+    <section id="topics_device_id_element" title="device_id Element" level="3" xmlns="">
+        <!-- 4.1.5 - TOPICS_DEVICE_ID_ELEMENT -->
+        <assertion id="topic-structure-namespace-valid-device-id">
+            <text>[tck-id-topic-structure-namespace-valid-device-id] The format of the device_id MUST be a valid UTF-8 string except for the reserved characters of + (plus), / (forward slash), and # (number sign).</text>
+        </assertion>
+        <assertion id="topic-structure-namespace-unique-device-id">
+            <text>[tck-id-topic-structure-namespace-unique-device-id] The device_id MUST be unique from other devices being reported on by the same Edge Node.</text>
+        </assertion>
+        <assertion id="topic-structure-namespace-duplicate-device-id-across-edge-node">
+            <text>[tck-id-topic-structure-namespace-duplicate-device-id-across-edge-node] The device_id MAY be duplicated from Edge Node to other Edge Nodes.</text>
+        </assertion>
+        <assertion id="topic-structure-namespace-device-id-associated-message-types">
+            <text>[tck-id-topic-structure-namespace-device-id-associated-message-types] The device_id MUST be included with message_type elements DBIRTH, DDEATH, DDATA, and DCMD based topics.</text>
+        </assertion>
+        <assertion id="topic-structure-namespace-device-id-non-associated-message-types">
+            <text>[tck-id-topic-structure-namespace-device-id-non-associated-message-types] The device_id MUST NOT be included with message_type elements NBIRTH, NDEATH, NDATA, NCMD, and STATE based topics</text>
+        </assertion>
+    </section>
+    <section id="topics_message_type_overview" title="Message Types and Contents" level="2" xmlns="">
+        <!-- 4.2 - TOPICS_MESSAGE_TYPE_OVERVIEW -->
+    </section>
+    <section id="topics_edge_node" title="Edge Node" level="3" xmlns="">
+        <!-- 4.2.1 - TOPICS_EDGE_NODE -->
+    </section>
+    <section id="birth_message_nbirth" title="Birth Message (NBIRTH)" level="4" xmlns="">
+        <!-- 4.2.1.1 - BIRTH_MESSAGE_NBIRTH -->
+    </section>
+    <section id="topics_birth_message_nbirth" title="Topic (NBIRTH)" level="5" xmlns="">
+        <!-- 4.2.1.1.1 - TOPICS_BIRTH_MESSAGE_NBIRTH -->
+        <assertion id="topics-nbirth-topic">
+            <text>[tck-id-topics-nbirth-topic] The Birth Certificate topic for a Sparkplug Edge Node MUST be of the form 'namespace/group_id/NBIRTH/edge_node_id' where the namespace is replaced with the specific namespace for this version of Sparkplug and the group_id and edge_node_id are replaced with the Group and Edge Node ID for this specific Edge Node.</text>
+        </assertion>
+    </section>
+    <section id="payloads_desc_nbirth" title="Payload (NBIRTH)" level="5" xmlns="">
+        <!-- 4.2.1.1.2 - PAYLOADS_DESC_NBIRTH -->
+        <assertion id="topics-nbirth-mqtt">
+            <text>[tck-id-topics-nbirth-mqtt] NBIRTH messages MUST be published with MQTT QoS equal to 0 and retain equal to false.</text>
+        </assertion>
+        <assertion id="topics-nbirth-seq-num">
+            <text>[tck-id-topics-nbirth-seq-num] The NBIRTH MUST include a sequence number in the payload and it MUST have a value of 0.</text>
+        </assertion>
+        <assertion id="topics-nbirth-timestamp">
+            <text>[tck-id-topics-nbirth-timestamp] The NBIRTH MUST include a timestamp denoting the date and time the message was sent from the Edge Node.</text>
+        </assertion>
+        <assertion id="topics-nbirth-metric-reqs">
+            <text>[tck-id-topics-nbirth-metric-reqs] The NBIRTH MUST include every metric the Edge Node will ever report on.</text>
+        </assertion>
+        <assertion id="topics-nbirth-metrics">
+            <text>[tck-id-topics-nbirth-metrics] At a minimum each metric MUST include the metric name, datatype, and current value.</text>
+        </assertion>
+        <assertion id="topics-nbirth-templates">
+            <text>[tck-id-topics-nbirth-templates] If Template instances will be published by this Edge Node or any devices, all Template definitions MUST be published in the NBIRTH.</text>
+        </assertion>
+        <assertion id="topics-nbirth-bdseq-included">
+            <text>[tck-id-topics-nbirth-bdseq-included] A bdSeq number as a metric MUST be included in the payload.</text>
+        </assertion>
+        <assertion id="topics-nbirth-bdseq-matching">
+            <text>[tck-id-topics-nbirth-bdseq-matching] This MUST match the bdSeq number provided in the MQTT CONNECT packet's Will Message payload.</text>
+        </assertion>
+        <assertion id="topics-nbirth-bdseq-increment">
+            <text>[tck-id-topics-nbirth-bdseq-increment] The bdSeq number MUST start at zero and increment by one on every new MQTT CONNECT packet.</text>
+        </assertion>
+        <assertion id="topics-nbirth-rebirth-metric">
+            <text>[tck-id-topics-nbirth-rebirth-metric] The NBIRTH message MUST include a metric with the name 'Node Control/Rebirth'. It MUST be of datatype boolean and have a value of false.</text>
+        </assertion>
+    </section>
+    <section id="data_message_ndata" title="Data Message (NDATA)" level="4" xmlns="">
+        <!-- 4.2.1.2 - DATA_MESSAGE_NDATA -->
+    </section>
+    <section id="topics_data_message_ndata" title="Topic (NDATA)" level="5" xmlns="">
+        <!-- 4.2.1.2.1 - TOPICS_DATA_MESSAGE_NDATA -->
+        <assertion id="topics-ndata-topic">
+            <text>[tck-id-topics-ndata-topic] The Edge Node data topic for a Sparkplug Edge Node MUST be of the form 'namespace/group_id/NDATA/edge_node_id' where the namespace is replaced with the specific namespace for this version of Sparkplug and the group_id and edge_node_id are replaced with the Group and Edge Node ID for this specific Edge Node.</text>
+        </assertion>
+    </section>
+    <section id="payloads_desc_ndata" title="Payload (NDATA)" level="5" xmlns="">
+        <!-- 4.2.1.2.2 - PAYLOADS_DESC_NDATA -->
+        <assertion id="topics-ndata-mqtt">
+            <text>[tck-id-topics-ndata-mqtt] NDATA messages MUST be published with MQTT QoS equal to 0 and retain equal to false.</text>
+        </assertion>
+        <assertion id="topics-ndata-seq-num">
+            <text>[tck-id-topics-ndata-seq-num] The NDATA MUST include a sequence number in the payload and it MUST have a value of one greater than the previous MQTT message from the Edge Node contained unless the previous MQTT message contained a value of 255. In this case the sequence number MUST be 0.</text>
+        </assertion>
+        <assertion id="topics-ndata-timestamp">
+            <text>[tck-id-topics-ndata-timestamp] The NDATA MUST include a timestamp denoting the date and time the message was sent from the Edge Node.</text>
+        </assertion>
+        <assertion id="topics-ndata-payload">
+            <text>[tck-id-topics-ndata-payload] The NDATA MUST include the Edge Node's metrics that have changed since the last NBIRTH or NDATA message.</text>
+        </assertion>
+    </section>
+    <section id="death_message_ndeath" title="Death Message (NDEATH)" level="4" xmlns="">
+        <!-- 4.2.1.3 - DEATH_MESSAGE_NDEATH -->
+    </section>
+    <section id="topics_death_message_ndeath" title="Topic (NDEATH)" level="5" xmlns="">
+        <!-- 4.2.1.3.1 - TOPICS_DEATH_MESSAGE_NDEATH -->
+        <assertion id="topics-ndeath-topic">
+            <text>[tck-id-topics-ndeath-topic] The Edge Node Death Certificate topic for a Sparkplug Edge Node MUST be of the form 'namespace/group_id/NDEATH/edge_node_id' where the namespace is replaced with the specific namespace for this version of Sparkplug and the group_id and edge_node_id are replaced with the Group and Edge Node ID for this specific Edge Node.</text>
+        </assertion>
+    </section>
+    <section id="payloads_desc_ndeath" title="Payload (NDEATH)" level="5" xmlns="">
+        <!-- 4.2.1.3.2 - PAYLOADS_DESC_NDEATH -->
+        <assertion id="topics-ndeath-payload">
+            <text>[tck-id-topics-ndeath-payload] The NDEATH message contains a very simple payload that MUST only include a single metric, the bdSeq number, so that the NDEATH event can be associated with the NBIRTH.</text>
+        </assertion>
+        <assertion id="topics-ndeath-seq">
+            <text>[tck-id-topics-ndeath-seq] The NDEATH message MUST NOT include a sequence number.</text>
+        </assertion>
+    </section>
+    <section id="command_ncmd" title="Command (NCMD)" level="4" xmlns="">
+        <!-- 4.2.1.4 - COMMAND_NCMD -->
+    </section>
+    <section id="topics_command_ncmd" title="Topic (NCMD)" level="5" xmlns="">
+        <!-- 4.2.1.4.1 - TOPICS_COMMAND_NCMD -->
+        <assertion id="topics-ncmd-topic">
+            <text>[tck-id-topics-ncmd-topic] The Edge Node command topic for a Sparkplug Edge Node MUST be of the form 'namespace/group_id/NCMD/edge_node_id' where the namespace is replaced with the specific namespace for this version of Sparkplug and the group_id and edge_node_id are replaced with the Group and Edge Node ID for this specific Edge Node.</text>
+        </assertion>
+    </section>
+    <section id="payloads_desc_ncmd" title="Payload (NCMD)" level="5" xmlns="">
+        <!-- 4.2.1.4.2 - PAYLOADS_DESC_NCMD -->
+        <assertion id="topics-ncmd-mqtt">
+            <text>[tck-id-topics-ncmd-mqtt] NCMD messages MUST be published with MQTT QoS equal to 0 and retain equal to false.</text>
+        </assertion>
+        <assertion id="topics-ncmd-timestamp">
+            <text>[tck-id-topics-ncmd-timestamp] The NCMD MUST include a timestamp denoting the date and time the message was sent from the Host Application's MQTT client.</text>
+        </assertion>
+        <assertion id="topics-ncmd-payload">
+            <text>[tck-id-topics-ncmd-payload] The NCMD MUST include the metrics that need to be written to on the Edge Node.</text>
+        </assertion>
+    </section>
+    <section id="topics_device_sensor" title="Device/Sensor" level="3" xmlns="">
+        <!-- 4.2.2 - TOPICS_DEVICE_SENSOR -->
+    </section>
+    <section id="birth_message_dbirth" title="Birth Message (DBIRTH)" level="4" xmlns="">
+        <!-- 4.2.2.1 - BIRTH_MESSAGE_DBIRTH -->
+    </section>
+    <section id="topics_birth_message_dbirth" title="Topic (DBIRTH)" level="5" xmlns="">
+        <!-- 4.2.2.1.1 - TOPICS_BIRTH_MESSAGE_DBIRTH -->
+        <assertion id="topics-dbirth-topic">
+            <text>[tck-id-topics-dbirth-topic] The Device Birth topic for a Sparkplug Device MUST be of the form 'namespace/group_id/DBIRTH/edge_node_id/device_id' where the namespace is replaced with the specific namespace for this version of Sparkplug and the group_id, edge_node_id, and device_id are replaced with the Group, Edge Node, and Device ID for this specific Device.</text>
+        </assertion>
+    </section>
+    <section id="payloads_desc_dbirth" title="Payload (DBIRTH)" level="5" xmlns="">
+        <!-- 4.2.2.1.2 - PAYLOADS_DESC_DBIRTH -->
+        <assertion id="topics-dbirth-mqtt">
+            <text>[tck-id-topics-dbirth-mqtt] DBIRTH messages MUST be published with MQTT QoS equal to 0 and retain equal to false.</text>
+        </assertion>
+        <assertion id="topics-dbirth-seq">
+            <text>[tck-id-topics-dbirth-seq] The DBIRTH MUST include a sequence number in the payload and it MUST have a value of one greater than the previous MQTT message from the Edge Node contained unless the previous MQTT message contained a value of 255. In this case the sequence number MUST be 0.</text>
+        </assertion>
+        <assertion id="topics-dbirth-timestamp">
+            <text>[tck-id-topics-dbirth-timestamp] The DBIRTH MUST include a timestamp denoting the date and time the message was sent from the Edge Node.</text>
+        </assertion>
+        <assertion id="topics-dbirth-metric-reqs">
+            <text>[tck-id-topics-dbirth-metric-reqs] The DBIRTH MUST include every metric the Edge Node will ever report on.</text>
+        </assertion>
+        <assertion id="topics-dbirth-metrics">
+            <text>[tck-id-topics-dbirth-metrics] At a minimum each metric MUST include the metric name, metric datatype, and current value.</text>
+        </assertion>
+    </section>
+    <section id="data_message_ddata" title="Data Message (DDATA)" level="4" xmlns="">
+        <!-- 4.2.2.2 - DATA_MESSAGE_DDATA -->
+    </section>
+    <section id="topics_data_message_ddata" title="Topic (DDATA)" level="5" xmlns="">
+        <!-- 4.2.2.2.1 - TOPICS_DATA_MESSAGE_DDATA -->
+        <assertion id="topics-ddata-topic">
+            <text>[tck-id-topics-ddata-topic] The Device command topic for a Sparkplug Device MUST be of the form 'namespace/group_id/DDATA/edge_node_id/device_id' where the namespace is replaced with the specific namespace for this version of Sparkplug and the group_id, edge_node_id, and device_id are replaced with the Group, Edge Node, and Device ID for this specific Device.</text>
+        </assertion>
+    </section>
+    <section id="payloads_desc_ddata" title="Payload (DDATA)" level="5" xmlns="">
+        <!-- 4.2.2.2.2 - PAYLOADS_DESC_DDATA -->
+        <assertion id="topics-ddata-mqtt">
+            <text>[tck-id-topics-ddata-mqtt] DDATA messages MUST be published with MQTT QoS equal to 0 and retain equal to false.</text>
+        </assertion>
+        <assertion id="topics-ddata-seq-num">
+            <text>[tck-id-topics-ddata-seq-num] The DDATA MUST include a sequence number in the payload and it MUST have a value of one greater than the previous MQTT message from the Edge Node contained unless the previous MQTT message contained a value of 255. In this case the sequence number MUST be 0.</text>
+        </assertion>
+        <assertion id="topics-ddata-timestamp">
+            <text>[tck-id-topics-ddata-timestamp] The DDATA MUST include a timestamp denoting the date and time the message was sent from the Edge Node.</text>
+        </assertion>
+        <assertion id="topics-ddata-payload">
+            <text>[tck-id-topics-ddata-payload] The DDATA MUST include the Device's metrics that have changed since the last DBIRTH or DDATA message.</text>
+        </assertion>
+    </section>
+    <section id="death_message_ddeath" title="Death Message (DDEATH)" level="4" xmlns="">
+        <!-- 4.2.2.3 - DEATH_MESSAGE_DDEATH -->
+    </section>
+    <section id="topics_death_message_ddeath" title="Topic (DDEATH)" level="5" xmlns="">
+        <!-- 4.2.2.3.1 - TOPICS_DEATH_MESSAGE_DDEATH -->
+        <assertion id="topics-ddeath-topic">
+            <text>[tck-id-topics-ddeath-topic] The Device Death Certificate topic for a Sparkplug Device MUST be of the form 'namespace/group_id/DDEATH/edge_node_id/device_id' where the namespace is replaced with the specific namespace for this version of Sparkplug and the group_id, edge_node_id, and device_id are replaced with the Group, Edge Node, and Device ID for this specific Device.</text>
+        </assertion>
+    </section>
+    <section id="payloads_desc_ddeath" title="Payload (DDEATH)" level="5" xmlns="">
+        <!-- 4.2.2.3.2 - PAYLOADS_DESC_DDEATH -->
+        <assertion id="topics-ddeath-mqtt">
+            <text>[tck-id-topics-ddeath-mqtt] DDEATH messages MUST be published with MQTT QoS equal to 0 and retain equal to false.</text>
+        </assertion>
+        <assertion id="topics-ddeath-seq-num">
+            <text>[tck-id-topics-ddeath-seq-num] The DDEATH MUST include a sequence number in the payload and it MUST have a value of one greater than the previous MQTT message from the Edge Node contained unless the previous MQTT message contained a value of 255. In this case the sequence number MUST be 0.</text>
+        </assertion>
+    </section>
+    <section id="command_dcmd" title="Command (DCMD)" level="4" xmlns="">
+        <!-- 4.2.2.4 - COMMAND_DCMD -->
+    </section>
+    <section id="topics_command_dcmd" title="Topic DCMD)" level="5" xmlns="">
+        <!-- 4.2.2.4.1 - TOPICS_COMMAND_DCMD -->
+        <assertion id="topics-dcmd-topic">
+            <text>[tck-id-topics-dcmd-topic] The Device command topic for a Sparkplug Device MUST be of the form 'namespace/group_id/DCMD/edge_node_id/device_id' where the namespace is replaced with the specific namespace for this version of Sparkplug and the group_id, edge_node_id, and device_id are replaced with the Group, Edge Node, and Device ID for this specific Device.</text>
+        </assertion>
+    </section>
+    <section id="payloads_desc_dcmd" title="Payload (DCMD)" level="5" xmlns="">
+        <!-- 4.2.2.4.2 - PAYLOADS_DESC_DCMD -->
+        <assertion id="topics-dcmd-mqtt">
+            <text>[tck-id-topics-dcmd-mqtt] DCMD messages MUST be published with MQTT QoS equal to 0 and retain equal to false.</text>
+        </assertion>
+        <assertion id="topics-dcmd-timestamp">
+            <text>[tck-id-topics-dcmd-timestamp] The DCMD MUST include a timestamp denoting the date and time the message was sent from the Host Application's MQTT client.</text>
+        </assertion>
+        <assertion id="topics-dcmd-payload">
+            <text>[tck-id-topics-dcmd-payload] The DCMD MUST include the metrics that need to be written to on the Device.</text>
+        </assertion>
+    </section>
+    <section id="topics_sparkplug_host_application" title="Sparkplug Host Application" level="3" xmlns="">
+        <!-- 4.2.3 - TOPICS_SPARKPLUG_HOST_APPLICATION -->
+    </section>
+    <section id="birth_message_state" title="Birth Certificate Message (STATE)" level="4" xmlns="">
+        <!-- 4.2.3.1 - BIRTH_MESSAGE_STATE -->
+        <assertion id="host-topic-phid-birth-message">
+            <text>[tck-id-host-topic-phid-birth-message] The first MQTT message a Host Application MUST publish is a Birth Certificate.</text>
+        </assertion>
+        <assertion id="host-topic-phid-birth-qos">
+            <text>[tck-id-host-topic-phid-birth-qos] The MQTT Quality of Service (QoS) MUST be set to 1</text>
+        </assertion>
+        <assertion id="host-topic-phid-birth-retain">
+            <text>[tck-id-host-topic-phid-birth-retain] The MQTT retain flag for the Birth Certificate MUST be set to TRUE</text>
+        </assertion>
+    </section>
+    <section id="topics_birth_message_state" title="Birth Certificate Topic (STATE)" level="5" xmlns="">
+        <!-- 4.2.3.1.1 - TOPICS_BIRTH_MESSAGE_STATE -->
+        <assertion id="host-topic-phid-birth-topic">
+            <text>[tck-id-host-topic-phid-birth-topic] The Sparkplug Host Application Birth topic MUST be of the form spBv1.0/STATE/sparkplug_host_id where the sparkplug_host_id must be replaced with the specific Spakrplug Host ID of this Sparkplug Host Application.</text>
+        </assertion>
+        <assertion id="host-topic-phid-birth-sub-required">
+            <text>[tck-id-host-topic-phid-birth-sub-required] The Sparkplug Host Application MUST subscribe to its own spBv1.0/STATE/sparkplug_host_id and the appropriate spBv1.0 topic(s) immediately after successfully connecting to the MQTT Server.</text>
+        </assertion>
+        <assertion id="host-topic-phid-birth-required">
+            <text>[tck-id-host-topic-phid-birth-required] The Sparkplug Host Application MUST publish a Sparkplug Host Application BIRTH message to the MQTT Server immediately after successfully subscribing its own spBv1.0/STATE/sparkplug_host_id topic.</text>
+        </assertion>
+    </section>
+    <section id="payloads_desc_state_birth" title="Birth Certificate Payload (STATE)" level="5" xmlns="">
+        <!-- 4.2.3.1.2 - PAYLOADS_DESC_STATE_BIRTH -->
+        <assertion id="host-topic-phid-birth-payload">
+            <text>[tck-id-host-topic-phid-birth-payload] The Birth Certificate Payload MUST be JSON UTF-8 data. It MUST include two key/value pairs where the one key MUST be 'online' and it's value is a boolean 'true'. The other key MUST be 'timestamp' and the value MUST be a numeric value representing the current UTC time in milliseconds since Epoch.</text>
+        </assertion>
+        <assertion id="host-topic-phid-birth-payload-timestamp">
+            <text>[tck-id-host-topic-phid-birth-payload-timestamp] The timestamp metric value MUST be the same timestamp value set in the immediately prior MQTT CONNECT packet's Will Message payload.</text>
+        </assertion>
+    </section>
+    <section id="death_message_state" title="Death Certificate Message (STATE)" level="4" xmlns="">
+        <!-- 4.2.3.2 - DEATH_MESSAGE_STATE -->
+        <assertion id="host-topic-phid-death-qos">
+            <text>[tck-id-host-topic-phid-death-qos] The MQTT Quality of Service (QoS) MUST be set to 1</text>
+        </assertion>
+        <assertion id="host-topic-phid-death-retain">
+            <text>[tck-id-host-topic-phid-death-retain] The MQTT retain flag for the Birth Certificate MUST be set to TRUE</text>
+        </assertion>
+    </section>
+    <section id="topics_death_message_state" title="Death Certificate Topic (STATE)" level="5" xmlns="">
+        <!-- 4.2.3.2.1 - TOPICS_DEATH_MESSAGE_STATE -->
+        <assertion id="host-topic-phid-death-topic">
+            <text>[tck-id-host-topic-phid-death-topic] The Sparkplug Host Application Death topic MUST be of the form spBv1.0/STATE/sparkplug_host_id where the sparkplug_host_id must be replaced with the specific Sparkplug Host ID of this Sparkplug Host Application.</text>
+        </assertion>
+        <assertion id="host-topic-phid-death-required">
+            <text>[tck-id-host-topic-phid-death-required] The Sparkplug Host Application MUST provide a Will message in the MQTT CONNECT packet</text>
+        </assertion>
+    </section>
+    <section id="payloads_desc_state_death" title="Death Certificate Payload (STATE)" level="5" xmlns="">
+        <!-- 4.2.3.2.2 - PAYLOADS_DESC_STATE_DEATH -->
+        <assertion id="host-topic-phid-death-payload">
+            <text>[tck-id-host-topic-phid-death-payload] The STATE Death Certificate Payload MUST be JSON UTF-8 data. It MUST include two key/value pairs where one key MUST be 'online' and it's value is a boolean 'false'. The other key MUST be 'timestamp' and the value MUST be a numeric value representing the current UTC time in milliseconds since Epoch.</text>
+        </assertion>
+        <assertion id="host-topic-phid-death-payload-timestamp-connect">
+            <text>[tck-id-host-topic-phid-death-payload-connect] The Death Certificate's used in the MQTT CONNECT packet Will message MUST use a timestamp value that represents the current UTC time at the time of the CONNECT packet is sent to the MQTT Server.</text>
+        </assertion>
+        <assertion id="host-topic-phid-death-payload-timestamp-disconnect-clean">
+            <text>[tck-id-host-topic-phid-death-payload-disconnect-clean] If a Host Application is disconnecting cleanly using MQTT DISCONNECT packet, the Host Application MUST publish a Death Certificate payload before sending the MQTT DISCONNECT packet with the timestamp set to the current UTC time the disconnect is occurring.</text>
+        </assertion>
+        <assertion id="host-topic-phid-death-payload-timestamp-disconnect-with-no-disconnect-packet">
+            <text>[tck-id-host-topic-phid-death-payload-disconnect-with-no-disconnect-packet] If a Host Application is disconnecting and not using an MQTT DISCONNECT packet, the Host Application MUST publish a Death Certificate payload before terminating the MQTT connection with the timestamp set to the current UTC time the disconnect is occurring.</text>
+        </assertion>
+    </section>
+    <section id="operational_behavior" title="Operational Behavior" level="1" xmlns="">
+        <!-- 5 - OPERATIONAL_BEHAVIOR -->
+    </section>
+    <section id="operational_behavior_timestamps" title="Timestamps in Sparkplug" level="2" xmlns="">
+        <!-- 5.1 - OPERATIONAL_BEHAVIOR_TIMESTAMPS -->
+    </section>
+    <section id="operational_behavior_case_sensitivity" title="Case Sensitivity in Sparkplug" level="2" xmlns="">
+        <!-- 5.2 - OPERATIONAL_BEHAVIOR_CASE_SENSITIVITY -->
+        <assertion id="case-sensitivity-sparkplug-ids">
+            <text>[tck-id-case-sensitivity-sparkplug-ids] Edge Nodes in a Sparkplug environment SHOULD NOT have Sparkplug IDs (Group, Edge Node, or Device IDs) that when converted to lower case match</text>
+        </assertion>
+        <assertion id="case-sensitivity-metric-names">
+            <text>[tck-id-case-sensitivity-metric-names] An Edge Node SHOULD NOT publish metric names that when converted to all lower case match.</text>
+        </assertion>
+    </section>
+    <section id="operational_behavior_primary_host_application_session_establishment" title="Host Application Session Establishment" level="2" xmlns="">
+        <!-- 5.3 - OPERATIONAL_BEHAVIOR_PRIMARY_HOST_APPLICATION_SESSION_ESTABLISHMENT -->
+        <assertion id="message-flow-phid-sparkplug-clean-session-311">
+            <text>[tck-id-message-flow-phid-sparkplug-clean-session-311] The CONNECT Control Packet for all Sparkplug Host Applications when using MQTT 3.1.1 MUST set the MQTT 'Clean Session' flag to true.</text>
+        </assertion>
+        <assertion id="message-flow-phid-sparkplug-clean-session-50">
+            <text>[tck-id-message-flow-phid-sparkplug-clean-session-50] The CONNECT Control Packet for all Sparkplug Host Applications when using MQTT 5.0 MUST set the the MQTT 'Clean Start' flag to true and the 'Session Expiry Interval' to 0.</text>
+        </assertion>
+        <assertion id="message-flow-phid-sparkplug-subscription">
+            <text>[tck-id-message-flow-phid-sparkplug-subscription] The subscription on the Sparkplug Topic Namespace and the STATE topic MUST be done immediately after successfully establishing the MQTT session and before publishing its own STATE message.</text>
+        </assertion>
+        <assertion id="message-flow-phid-sparkplug-state-publish">
+            <text>[tck-id-message-flow-phid-sparkplug-state-publish] Once an MQTT Session has been established, the Sparkplug Host Application subscriptions on the Sparkplug Topic Namespace have been established and the STATE topic subscription has been established, the Sparkplug Host Application MUST publish a new STATE message.</text>
+        </assertion>
+        <assertion id="message-flow-phid-sparkplug-state-publish-payload">
+            <text>[tck-id-message-flow-phid-sparkplug-state-publish-payload] The Host Application Birth Certificate Payload MUST be JSON UTF-8 data. It MUST include two key/value pairs where one key MUST be 'online' and its value is a boolean 'true'. The other key MUST be 'timestamp' and the value MUST be the same value set in the immediately prior MQTT CONNECT packet's Will Message payload.</text>
+        </assertion>
+        <assertion id="message-flow-phid-sparkplug-state-publish-payload-timestamp">
+            <text>[tck-id-message-flow-phid-sparkplug-state-publish-payload-timestamp] The timestamp value in the Host Application Birth Certificate payload MUST be the same value set in the immediately prior MQTT CONNECT packet's Will Message payload.</text>
+        </assertion>
+        <assertion id="g" testable="false">
+            <text>All metric data associated with any Sparkplug Edge Node that was connected to that MQTT Server and known by the Host Application MUST be updated to a STALE data quality if the Host Application loses connection to the MQTT Server.</text>
+        </assertion>
+        <assertion id="message-flow-hid-sparkplug-state-message-delivered">
+            <text>[tck-id-message-flow-hid-sparkplug-state-message-delivered] After publishing its own Host Application STATE message, if at any point the Host Application is delivered a STATE message on its own Host Application ID with a 'online' value of false, it MUST immediately republish its STATE message to the same MQTT Server with a 'online' value of true and the 'timestamp' set to the same value that was used for the timestamp in its own prior MQTT CONNECT packet Will Message payload.</text>
+        </assertion>
+    </section>
+    <section id="operational_behavior_edge_node_session_establishment" title="Edge Node Session Establishment" level="2" xmlns="">
+        <!-- 5.4 - OPERATIONAL_BEHAVIOR_EDGE_NODE_SESSION_ESTABLISHMENT -->
+        <assertion id="message-flow-edge-node-ncmd-subscribe">
+            <text>[tck-id-message-flow-edge-node-ncmd-subscribe] The MQTT client associated with the Edge Node MUST subscribe to a topic of the form 'spBv1.0/group_id/NCMD/edge_node_id' where group_id is the Sparkplug Group ID and the edge_node_id is the Sparkplug Edge Node ID for this Edge Node. It MUST subscribe on this topic with a QoS of 1.</text>
+        </assertion>
+        <assertion id="message-flow-edge-node-birth-publish-connect">
+            <text>[tck-id-message-flow-edge-node-birth-publish-connect] Any Edge Node in the MQTT infrastructure MUST establish an MQTT Session prior to publishing NBIRTH and DBIRTH messages.</text>
+        </assertion>
+        <assertion id="message-flow-edge-node-birth-publish-will-message">
+            <text>[tck-id-message-flow-edge-node-birth-publish-will-message] When a Sparkplug Edge Node sends its MQTT CONNECT packet, it MUST include a Will Message.</text>
+        </assertion>
+        <assertion id="message-flow-edge-node-birth-publish-will-message-topic">
+            <text>[tck-id-message-flow-edge-node-birth-publish-will-message-topic] The Edge Node's MQTT Will Message's topic MUST be of the form 'spBv1.0/group_id/NDEATH/edge_node_id' where group_id is the Sparkplug Group ID and the edge_node_id is the Sparkplug Edge Node ID for this Edge Node</text>
+        </assertion>
+        <assertion id="message-flow-edge-node-birth-publish-will-message-payload">
+            <text>[tck-id-message-flow-edge-node-birth-publish-will-message-payload] The Edge Node's MQTT Will Message's payload MUST be a Sparkplug Google Protobuf encoded payload.</text>
+        </assertion>
+        <assertion id="message-flow-edge-node-birth-publish-will-message-payload-bdSeq">
+            <text>[tck-id-message-flow-edge-node-birth-publish-will-message-payload-bdSeq] The Edge Node's MQTT Will Message's payload MUST include a metric with the name of 'bdSeq', the datatype of INT64, and the value MUST be incremented by one from the value in the previous MQTT CONNECT packet unless the value would be greater than 255. If in the previous NBIRTH a value of 255 was sent, the next MQTT Connect packet Will Message payload bdSeq number value MUST have a value of 0.</text>
+        </assertion>
+        <assertion id="message-flow-edge-node-birth-publish-will-message-qos">
+            <text>[tck-id-message-flow-edge-node-birth-publish-will-message-qos] The Edge Node's MQTT Will Message's MQTT QoS MUST be 1.</text>
+        </assertion>
+        <assertion id="message-flow-edge-node-birth-publish-will-message-will-retained">
+            <text>[tck-id-message-flow-edge-node-birth-publish-will-message-will-retained] The Edge Node's MQTT Will Message's retained flag MUST be set to false.</text>
+        </assertion>
+        <assertion id="message-flow-edge-node-birth-publish-phid-wait">
+            <text>[tck-id-message-flow-edge-node-birth-publish-phid-wait] If the Edge Node is configured to wait for a Primary Host Application it MUST verify the Primary Host Application is online via the STATE topic before publishing NBIRTH and DBIRTH messages.</text>
+        </assertion>
+        <assertion id="message-flow-edge-node-birth-publish-phid-wait-id">
+            <text>[tck-id-message-flow-edge-node-birth-publish-phid-wait-id] If the Edge Node is configured to wait for a Primary Host Application it MUST validate the Host Application ID as the last token in the STATE message topic string matches the configured Primary Host Application ID for this Edge Node.</text>
+        </assertion>
+        <assertion id="message-flow-edge-node-birth-publish-phid-wait-online">
+            <text>[tck-id-message-flow-edge-node-birth-publish-phid-wait-online] If the Edge Node is configured to wait for a Primary Host Application it MUST validate the 'online' boolean flag is true in the STATE message payload before considering the Primary Host Application to be online and active.</text>
+        </assertion>
+        <assertion id="message-flow-edge-node-birth-publish-phid-wait-timestamp">
+            <text>[tck-id-message-flow-edge-node-birth-publish-phid-wait-timestamp] If the Edge Node is configured to wait for a Primary Host Application it MUST validate the timestamp value is greater than or equal to the previous STATE message timestamp value in the STATE message payload before considering the Primary Host Application to be online and active. If no previous STATE message timestamp value has been received by this Edge Node it MUST consider the incoming STATE message to be the latest/valid.</text>
+        </assertion>
+        <assertion id="message-flow-edge-node-birth-publish-nbirth-topic">
+            <text>[tck-id-message-flow-edge-node-birth-publish-nbirth-topic] The Edge Node's NBIRTH MQTT topic MUST be of the form 'spBv1.0/group_id/NBIRTH/edge_node_id' where group_id is the Sparkplug Group ID and the edge_node_id is the Sparkplug Edge Node ID for this Edge Node</text>
+        </assertion>
+        <assertion id="message-flow-edge-node-birth-publish-nbirth-payload">
+            <text>[tck-id-message-flow-edge-node-birth-publish-nbirth-payload] The Edge Node's NBIRTH payload MUST be a Sparkplug Google Protobuf encoded payload.</text>
+        </assertion>
+        <assertion id="message-flow-edge-node-birth-publish-nbirth-payload-bdSeq">
+            <text>[tck-id-message-flow-edge-node-birth-publish-nbirth-payload-bdSeq] The Edge Node's NBIRTH payload MUST include a metric with the name of 'bdSeq' the datatype of INT64 and the value MUST be the same as the previous MQTT CONNECT packet.</text>
+        </assertion>
+        <assertion id="message-flow-edge-node-birth-publish-nbirth-qos">
+            <text>[tck-id-message-flow-edge-node-birth-publish-nbirth-qos] The Edge Node's NBIRTH MQTT QoS MUST be 0.</text>
+        </assertion>
+        <assertion id="message-flow-edge-node-birth-publish-nbirth-retained">
+            <text>[tck-id-message-flow-edge-node-birth-publish-nbirth-retained] The Edge Node's NBIRTH retained flag MUST be set to false.</text>
+        </assertion>
+        <assertion id="message-flow-edge-node-birth-publish-nbirth-payload-seq">
+            <text>[tck-id-message-flow-edge-node-birth-publish-nbirth-payload-seq] The Edge Node's NBIRTH payload MUST include a 'seq' number that is between 0 and 255 (inclusive).</text>
+        </assertion>
+        <assertion id="message-flow-edge-node-birth-publish-phid-offline">
+            <text>[tck-id-message-flow-edge-node-birth-publish-phid-offline] If the Edge Node is configured to wait for a Primary Host Application, it is connected to the MQTT Server, and receives a STATE message on its configured Primary Host, the timestamp value in the payload is greater than or equal to the timestamp value included in the prior 'online' STATE message, and the 'online' value is false, it MUST immediately publish an NDEATH message and disconnect from the MQTT Server and start the connection establishment process over.</text>
+        </assertion>
+    </section>
+    <section id="operational_behavior_edge_node_session_termination" title="Edge Node Session Termination" level="2" xmlns="">
+        <!-- 5.5 - OPERATIONAL_BEHAVIOR_EDGE_NODE_SESSION_TERMINATION -->
+        <assertion id="operational-behavior-edge-node-intentional-disconnect-ndeath">
+            <text>[tck-id-operational-behavior-edge-node-intentional-disconnect-ndeath] When an Edge Node disconnects intentionally, it MUST publish an NDEATH before terminating the connection.</text>
+        </assertion>
+        <assertion id="operational-behavior-edge-node-intentional-disconnect-packet">
+            <text>[tck-id-operational-behavior-edge-node-intentional-disconnect-packet] Immediately following the NDEATH publish, a DISCONNECT packet MAY be sent to the MQTT Server.</text>
+        </assertion>
+        <assertion id="operational-behavior-edge-node-termination-host-action-ndeath-node-offline">
+            <text>[tck-id-operational-behavior-edge-node-termination-host-action-ndeath-node-offline] Immediately after receiving an NDEATH from an Edge Node, Host Applications MUST mark the Edge Node as offline using the current Host Application's system UTC time</text>
+        </assertion>
+        <assertion id="operational-behavior-edge-node-termination-host-action-ndeath-node-tags-stale">
+            <text>[tck-id-operational-behavior-edge-node-termination-host-action-ndeath-node-tags-stale] Immediately after receiving an NDEATH from an Edge Node, Host Applications MUST mark all metrics that were included in the previous NBIRTH as STALE using the current Host Application's system UTC time</text>
+        </assertion>
+        <assertion id="operational-behavior-edge-node-termination-host-action-ndeath-devices-offline">
+            <text>[tck-id-operational-behavior-edge-node-termination-host-action-ndeath-devices-offline] Immediately after receiving an NDEATH from an Edge Node, Host Applications MUST mark all Sparkplug Devices associated with the Edge Node as offline using the current Host Application's system UTC time</text>
+        </assertion>
+        <assertion id="operational-behavior-edge-node-termination-host-action-ndeath-devices-tags-stale">
+            <text>[tck-id-operational-behavior-edge-node-termination-host-action-ndeath-devices-tags-stale] Immediately after receiving an NDEATH from an Edge Node, Host Applications MUST mark all of the metrics that were included with associated Sparkplug Device DBIRTH messages as STALEusing the current Host Application's system UTC time</text>
+        </assertion>
+        <assertion id="operational-behavior-edge-node-termination-host-offline">
+            <text>[tck-id-operational-behavior-edge-node-termination-host-offline] If the Edge Node is configured to use a Primary Host Application, it MUST disconnect from the current MQTT Server if the online JSON value is false and the timestamp value is greater than or equal to the previous online STATE message timestamp value.</text>
+        </assertion>
+        <assertion id="operational-behavior-edge-node-termination-host-offline-reconnect">
+            <text>[tck-id-operational-behavior-edge-node-termination-host-offline-reconnect] If the Edge Node disconnects after being in a Sparkplug session due to a valid 'offline STATE message', it MUST attempt to connect to the next MQTT Server in its connection list to start the session establishment procedure over again.</text>
+        </assertion>
+        <assertion id="operational-behavior-edge-node-termination-host-offline-timestamp">
+            <text>[tck-id-operational-behavior-edge-node-termination-host-offline-timestamp] Consider an Edge Node that is configured to use a Primary Host Application and the Edge Node is connected and publishing. Then it receives an offline STATE message. It MUST NOT disconnect if the timestamp value is less than the value from the previous online STATE message.</text>
+        </assertion>
+    </section>
+    <section id="operational_behavior_device_session_establishment" title="Device Session Establishment" level="2" xmlns="">
+        <!-- 5.6 - OPERATIONAL_BEHAVIOR_DEVICE_SESSION_ESTABLISHMENT -->
+        <assertion id="message-flow-device-dcmd-subscribe">
+            <text>[tck-id-message-flow-device-dcmd-subscribe] If the Device supports writing to outputs, the MQTT client associated with the Device MUST subscribe to a topic of the form 'spBv1.0/group_id/DCMD/edge_node_id/device_id' where group_id is the Sparkplug Group ID the edge_node_id is the Sparkplug Edge Node ID and the device_id is the Sparkplug Device ID for this Device. It MUST subscribe on this topic with a QoS of 1.</text>
+        </assertion>
+        <assertion id="message-flow-device-birth-publish-nbirth-wait">
+            <text>[tck-id-message-flow-device-birth-publish-nbirth-wait] The NBIRTH message MUST have been sent within the current MQTT session prior to a DBIRTH being published.</text>
+        </assertion>
+        <assertion id="message-flow-device-birth-publish-dbirth-topic">
+            <text>[tck-id-message-flow-device-birth-publish-dbirth-topic] The Device's DBIRTH MQTT topic MUST be of the form 'spBv1.0/group_id/DBIRTH/edge_node_id/device_id' where group_id is the Sparkplug Group ID the edge_node_id is the Sparkplug Edge Node ID and the device_id is the Sparkplug Device ID for this Device.</text>
+        </assertion>
+        <assertion id="message-flow-device-birth-publish-dbirth-match-edge-node-topic">
+            <text>[tck-id-message-flow-device-birth-publish-dbirth-match-edge-node-topic] The Device's DBIRTH MQTT topic group_id and edge_node_id MUST match the group_id and edge_node_id that were sent in the prior NBIRTH message for the Edge Node this Device is associated with.</text>
+        </assertion>
+        <assertion id="message-flow-device-birth-publish-dbirth-payload">
+            <text>[tck-id-message-flow-device-birth-publish-dbirth-payload] The Device's DBIRTH payload MUST be a Sparkplug Google Protobuf encoded payload.</text>
+        </assertion>
+        <assertion id="message-flow-device-birth-publish-dbirth-qos">
+            <text>[tck-id-message-flow-device-birth-publish-dbirth-qos] The Device's DBIRTH MQTT QoS MUST be 0.</text>
+        </assertion>
+        <assertion id="message-flow-device-birth-publish-dbirth-retained">
+            <text>[tck-id-message-flow-device-birth-publish-dbirth-retained] The Device's DBIRTH retained flag MUST be set to false.</text>
+        </assertion>
+        <assertion id="message-flow-device-birth-publish-dbirth-payload-seq">
+            <text>[tck-id-message-flow-device-birth-publish-dbirth-payload-seq] The Device's DBIRTH payload MUST include a 'seq' number that is between 0 and 255 (inclusive) and be one more than was included in the prior Sparkplug message sent from the Edge Node associated with this Device.</text>
+        </assertion>
+    </section>
+    <section id="operational_behavior_device_session_termination" title="Device Session Termination" level="2" xmlns="">
+        <!-- 5.7 - OPERATIONAL_BEHAVIOR_DEVICE_SESSION_TERMINATION -->
+        <assertion id="operational-behavior-device-ddeath">
+            <text>[tck-id-operational-behavior-device-ddeath] If a Sparkplug Edge Node loses connection with an attached Sparkplug Device, it MUST publish a DDEATH message on behalf of the device.</text>
+        </assertion>
+        <assertion id="operational-behavior-edge-node-termination-host-action-ddeath-devices-offline">
+            <text>[tck-id-operational-behavior-edge-node-termination-host-action-ddeath-devices-offline] Immediately after receiving an DDEATH from an Edge Node, Host Applications MUST mark the Sparkplug Device associated with the Edge Node as offline using the timestamp in the DDEATH payload</text>
+        </assertion>
+        <assertion id="operational-behavior-edge-node-termination-host-action-ddeath-devices-tags-stale">
+            <text>[tck-id-operational-behavior-edge-node-termination-host-action-ddeath-devices-tags-stale] Immediately after receiving an DDEATH from an Edge Node, Host Applications MUST mark all of the metrics that were included with the associated Sparkplug Device DBIRTH messages as STALE using the timestamp in the DDEATH payload</text>
+        </assertion>
+    </section>
+    <section id="operational_behavior_sparkplug_host_applications" title="Sparkplug Host Applications" level="2" xmlns="">
+        <!-- 5.8 - OPERATIONAL_BEHAVIOR_SPARKPLUG_HOST_APPLICATIONS -->
+    </section>
+    <section id="operational_behavior_host_application_message_ordering" title="Sparkplug Host Application Message Ordering" level="2" xmlns="">
+        <!-- 5.9 - OPERATIONAL_BEHAVIOR_HOST_APPLICATION_MESSAGE_ORDERING -->
+        <assertion id="operational-behavior-host-reordering-param">
+            <text>[tck-id-operational-behavior-host-reordering-param] Sparkplug Host Applications SHOULD provide a configurable 'Reorder Timeout' parameter</text>
+        </assertion>
+        <assertion id="operational-behavior-host-reordering-start">
+            <text>[tck-id-operational-behavior-host-reordering-start] If a Sparkplug Host Application is configured with a 'reordering timeout' parameter and a message arrives with an out of order sequence number, the Host Application MUST start a timer denoting the start of the Reorder Timeout window</text>
+        </assertion>
+        <assertion id="operational-behavior-host-reordering-rebirth">
+            <text>[tck-id-operational-behavior-host-reordering-rebirth] If a Sparkplug Host Application is configured with a 'reordering timeout' parameter and the Reorder Timeout elapses and the missing message(s) have not been received, the Sparkplug Host Application MUST send an NCMD to the Edge Node with a 'Node Control/Rebirth' request</text>
+        </assertion>
+        <assertion id="operational-behavior-host-reordering-success">
+            <text>[tck-id-operational-behavior-host-reordering-success] If the missing message(s) that triggered the start of the Reorder Timeout timer arrive before the reordering timer elapses, the timer MUST be terminated and normal operation in the Host Application MUST continue until another out of order message arrives.</text>
+        </assertion>
+    </section>
+    <section id="operational_behavior_primary_application_state_in_multiple_mqtt_server_topologies" title="Primary Host Application STATE in Multiple MQTT Server Topologies" level="2" xmlns="">
+        <!-- 5.10 - OPERATIONAL_BEHAVIOR_PRIMARY_APPLICATION_STATE_IN_MULTIPLE_MQTT_SERVER_TOPOLOGIES -->
+        <assertion id="operational-behavior-primary-application-state-with-multiple-servers-state-subs">
+            <text>[tck-id-operational-behavior-primary-application-state-with-multiple-servers-state-subs] When using multiple MQTT Servers and Edge Nodes are configured with a Primary Host Application, the Primary Host Application instance MUST be configured to publish a STATE Birth Certificate and all Edge Nodes configured with a Primary Host Application MUST subscribe to this STATE message.</text>
+        </assertion>
+        <assertion id="operational-behavior-primary-application-state-with-multiple-servers-state">
+            <text>[tck-id-operational-behavior-primary-application-state-with-multiple-servers-state] Regardless of the number of MQTT Servers in a Sparkplug Infrastructure, every time a Primary Host Application establishes a new MQTT Session with an MQTT Server, the STATE Birth Certificate defined in the STATE description section MUST be the first message that is published after a successful MQTT Session is established with each MQTT Server.</text>
+        </assertion>
+        <assertion id="operational-behavior-primary-application-state-with-multiple-servers-single-server">
+            <text>[tck-id-operational-behavior-primary-application-state-with-multiple-servers-single-server] The Edge Nodes MUST not connected to more than one server at any point in time.</text>
+        </assertion>
+        <assertion id="operational-behavior-primary-application-state-with-multiple-servers-walk">
+            <text>[tck-id-operational-behavior-primary-application-state-with-multiple-servers-walk] If the Primary Host Application is offline as denoted via the STATE MQTT Message, the Edge Node MUST terminate its session with this MQTT Server and move to the next available MQTT Server that is available.</text>
+        </assertion>
+        <assertion id="operational-behavior-edge-node-birth-sequence-wait">
+            <text>[tck-id-operational-behavior-edge-node-birth-sequence-wait] The Edge Node MUST also wait to publish its BIRTH sequence until an online=true STATE message is received by the Edge Node.</text>
+        </assertion>
+    </section>
+    <section id="operational_behavior_edge_node_ndata_and_ncmd_messages" title="Edge Node NDATA and NCMD Messages" level="2" xmlns="">
+        <!-- 5.11 - OPERATIONAL_BEHAVIOR_EDGE_NODE_NDATA_AND_NCMD_MESSAGES -->
+    </section>
+    <section id="operational_behavior_mqtt_enabled_device_session_establishment" title="MQTT Enabled Device Session Establishment" level="2" xmlns="">
+        <!-- 5.12 - OPERATIONAL_BEHAVIOR_MQTT_ENABLED_DEVICE_SESSION_ESTABLISHMENT -->
+    </section>
+    <section id="operational_behavior_sparkplug_host_application_session_establishment" title="Sparkplug Host Application Session Establishment" level="2" xmlns="">
+        <!-- 5.13 - OPERATIONAL_BEHAVIOR_SPARKPLUG_HOST_APPLICATION_SESSION_ESTABLISHMENT -->
+        <assertion id="operational-behavior-host-application-host-id">
+            <text>[tck-id-operational-behavior-host-application-host-id] The sparkplug_host_id MUST be unique to all other Sparkplug Host IDs in the infrastructure.</text>
+        </assertion>
+        <assertion id="operational-behavior-host-application-connect-will">
+            <text>[tck-id-operational-behavior-host-application-connect-will] When a Sparkplug Host Application sends its MQTT CONNECT packet, it MUST include a Will Message.</text>
+        </assertion>
+        <assertion id="operational-behavior-host-application-connect-will-topic">
+            <text>[tck-id-operational-behavior-host-application-connect-will-topic] The MQTT Will Message's topic MUST be of the form 'spBv1.0/STATE/sparkplug_host_id' where host_id is the unique identifier of the Sparkplug Host Application</text>
+        </assertion>
+        <assertion id="operational-behavior-host-application-connect-will-payload">
+            <text>[tck-id-operational-behavior-host-application-connect-will-payload] The Death Certificate Payload MUST be JSON UTF-8 data. It MUST include two key/value pairs where one key MUST be 'online' and it's value is a boolean 'false'. The other key MUST be 'timestamp' and the value MUST be the same value that was used for the timestamp in its own prior MQTT CONNECT packet Will Message payload.</text>
+        </assertion>
+        <assertion id="operational-behavior-host-application-connect-will-qos">
+            <text>[tck-id-operational-behavior-host-application-connect-will-qos] The MQTT Will Message's MQTT QoS MUST be 1 (at least once).</text>
+        </assertion>
+        <assertion id="operational-behavior-host-application-connect-will-retained">
+            <text>[tck-id-operational-behavior-host-application-connect-will-retained] The MQTT Will Message's retained flag MUST be set to true.</text>
+        </assertion>
+        <assertion id="operational-behavior-host-application-connect-birth">
+            <text>[tck-id-operational-behavior-host-application-connect-birth] The MQTT Client associated with the Sparkplug Host Application MUST send a birth message immediately after successfully connecting to the MQTT Server.</text>
+        </assertion>
+        <assertion id="operational-behavior-host-application-connect-birth-topic">
+            <text>[tck-id-operational-behavior-host-application-connect-birth-topic] The Host Application's Birth topic MUST be of the form 'spBv1.0/STATE/sparkplug_host_id' where host_id is the unique identifier of the Sparkplug Host Application</text>
+        </assertion>
+        <assertion id="operational-behavior-host-application-connect-birth-payload">
+            <text>[tck-id-operational-behavior-host-application-connect-birth-payload] The Birth Certificate Payload MUST be JSON UTF-8 data. It MUST include two key/value pairs where one key MUST be 'online' and it's value is a boolean 'true'. The other key MUST be 'timestamp' and the value MUST match the timestamp value that was used in the immediately prior MQTT CONNECT packet Will Message payload.</text>
+        </assertion>
+        <assertion id="operational-behavior-host-application-connect-birth-qos">
+            <text>[tck-id-operational-behavior-host-application-connect-birth-qos] The Host Application's Birth MQTT QoS MUST be 1 (at least once).</text>
+        </assertion>
+        <assertion id="operational-behavior-host-application-connect-birth-retained">
+            <text>[tck-id-operational-behavior-host-application-connect-birth-retained] The Host Application's Birth retained flag MUST be set to true.</text>
+        </assertion>
+        <assertion id="operational-behavior-host-application-multi-server-timestamp">
+            <text>[tck-id-operational-behavior-host-application-multi-server-timestamp] The Host Application MUST maintain a STATE Message timestamp value on a per MQTT Server basis.</text>
+        </assertion>
+    </section>
+    <section id="operational_behavior_sparkplug_host_application_session_termination" title="Sparkplug Host Application Session Termination" level="2" xmlns="">
+        <!-- 5.14 - OPERATIONAL_BEHAVIOR_SPARKPLUG_HOST_APPLICATION_SESSION_TERMINATION -->
+        <assertion id="operational-behavior-host-application-termination">
+            <text>[tck-id-operational-behavior-host-application-termination] If the Sparkplug Host Application ever disconnects intentionally, it MUST publish a Death message with the following characteristics.</text>
+        </assertion>
+        <assertion id="operational-behavior-host-application-death-topic">
+            <text>[tck-id-operational-behavior-host-application-death-topic] The Sparkplug Host Application's Death topic MUST be of the form 'spBv1.0/STATE/sparkplug_host_id' where host_id is the unique identifier of the Sparkplug Host Application.</text>
+        </assertion>
+        <assertion id="operational-behavior-host-application-death-payload">
+            <text>[tck-id-operational-behavior-host-application-death-payload] The Death Certificate Payload registered as the MQTT Will Message in the MQTT CONNECT packet MUST be JSON UTF-8 data. It MUST include two key/value pairs where one key MUST be 'online' and it's value is a boolean 'false'. The other key MUST be 'timestamp' and the value MUST be a numeric value representing the current UTC time in milliseconds since Epoch.</text>
+        </assertion>
+        <assertion id="operational-behavior-host-application-death-qos">
+            <text>[tck-id-operational-behavior-host-application-death-qos] The Sparkplug Host Application's Death MQTT QoS MUST be 1 (at least once).</text>
+        </assertion>
+        <assertion id="operational-behavior-host-application-death-retained">
+            <text>[tck-id-operational-behavior-host-application-death-retained] The Sparkplug Host Application's Death retained flag MUST be set to true.</text>
+        </assertion>
+        <assertion id="operational-behavior-host-application-disconnect-intentional">
+            <text>[tck-id-operational-behavior-host-application-disconnect-intentional] In the case of intentionally disconnecting, an MQTT DISCONNECT packet MAY be sent immediately after the Death message is published.</text>
+        </assertion>
+    </section>
+    <section id="operational_behavior_sparkplug_host_application_receive_data" title="Sparkplug Host Application Receive Data" level="2" xmlns="">
+        <!-- 5.15 - OPERATIONAL_BEHAVIOR_SPARKPLUG_HOST_APPLICATION_RECEIVE_DATA -->
+    </section>
+    <section id="operational_behavior_data_publish" title="Data Publish" level="2" xmlns="">
+        <!-- 5.16 - OPERATIONAL_BEHAVIOR_DATA_PUBLISH -->
+        <assertion id="operational-behavior-data-publish-nbirth">
+            <text>[tck-id-operational-behavior-data-publish-nbirth] NBIRTH messages MUST include all metrics for the specified Edge Node that will ever be published for that Edge Node within the established Sparkplug session.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-publish-nbirth-values">
+            <text>[tck-id-operational-behavior-data-publish-nbirth-values] For each metric in the NBIRTH, the value MUST be set to the current value or if the current value is null, the is_null flag MUST be set to true and MUST NOT have a value specified.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-publish-nbirth-change">
+            <text>[tck-id-operational-behavior-data-publish-nbirth-change] NDATA messages SHOULD only be published when Edge Node level metrics change.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-publish-nbirth-order">
+            <text>[tck-id-operational-behavior-data-publish-nbirth-order] For all metrics where is_historical=false, NBIRTH and NDATA messages MUST keep metric values in chronological order in the list of metrics in the payload.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-publish-dbirth">
+            <text>[tck-id-operational-behavior-data-publish-dbirth] DBIRTH messages MUST include all metrics for the specified Device that will ever be published for that Device within the established Sparkplug session.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-publish-dbirth-values">
+            <text>[tck-id-operational-behavior-data-publish-dbirth-values] For each metric in the DBIRTH, the value MUST be set to the current value or if the current value is null, the is_null flag MUST be set to true and MUST NOT have a value specified.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-publish-dbirth-change">
+            <text>[tck-id-operational-behavior-data-publish-dbirth-change] DDATA messages SHOULD only be published when Device level metrics change.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-publish-dbirth-order">
+            <text>[tck-id-operational-behavior-data-publish-dbirth-order] For all metrics where is_historical=false, DBIRTH and DDATA messages MUST keep metric values in chronological order in the list of metrics in the payload.</text>
+        </assertion>
+    </section>
+    <section id="operational_behavior_commands" title="Commands" level="2" xmlns="">
+        <!-- 5.17 - OPERATIONAL_BEHAVIOR_COMMANDS -->
+        <assertion id="operational-behavior-data-commands-rebirth-name">
+            <text>[tck-id-operational-behavior-data-commands-rebirth-name] An NBIRTH message MUST include a metric with a name of 'Node Control/Rebirth'.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-commands-rebirth-name-aliases">
+            <text>[tck-id-operational-behavior-data-commands-rebirth-name-aliases] When aliases are being used by an Edge Node an NBIRTH message MUST NOT include an alias for the 'Node Control/Rebirth' metric.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-commands-rebirth-datatype">
+            <text>[tck-id-operational-behavior-data-commands-rebirth-datatype] The 'Node Control/Rebirth' metric in the NBIRTH message MUST have a datatype of 'Boolean'.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-commands-rebirth-value">
+            <text>[tck-id-operational-behavior-data-commands-rebirth-value] The 'Node Control/Rebirth' metric value in the NBIRTH message MUST have a value of false.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-commands-ncmd-rebirth-verb">
+            <text>[tck-id-operational-behavior-data-commands-ncmd-rebirth-verb] A Rebirth Request MUST use the NCMD Sparkplug verb.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-commands-ncmd-rebirth-name">
+            <text>[tck-id-operational-behavior-data-commands-ncmd-rebirth-name] A Rebirth Request MUST include a metric with a name of 'Node Control/Rebirth'.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-commands-ncmd-rebirth-value">
+            <text>[tck-id-operational-behavior-data-commands-ncmd-rebirth-value] A Rebirth Request MUST include a metric value of true.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-commands-rebirth-action-1">
+            <text>[tck-id-operational-behavior-data-commands-rebirth-action-1] When an Edge Node receives a Rebirth Request, it MUST immediately stop sending DATA messages.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-commands-rebirth-action-2">
+            <text>[tck-id-operational-behavior-data-commands-rebirth-action-2] After an Edge Node stops sending DATA messages, it MUST send a complete BIRTH sequence including the NBIRTH and DBIRTH(s) if applicable.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-commands-rebirth-action-3">
+            <text>[tck-id-operational-behavior-data-commands-rebirth-action-3] The NBIRTH MUST include the same bdSeq metric with the same value it had included in the Will Message of the previous MQTT CONNECT packet.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-commands-ncmd-verb">
+            <text>[tck-id-operational-behavior-data-commands-ncmd-verb] An Edge Node level command MUST use the NCMD Sparkplug verb.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-commands-ncmd-metric-name">
+            <text>[tck-id-operational-behavior-data-commands-ncmd-metric-name] An NCMD message SHOULD include a metric name that was included in the associated NBIRTH message for the Edge Node.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-commands-ncmd-metric-value">
+            <text>[tck-id-operational-behavior-data-commands-ncmd-metric-value] An NCMD message MUST include a compatible metric value for the metric name that it is writing to.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-commands-dcmd-verb">
+            <text>[tck-id-operational-behavior-data-commands-dcmd-verb] A Device level command MUST use the DCMD Sparkplug verb.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-commands-dcmd-metric-name">
+            <text>[tck-id-operational-behavior-data-commands-dcmd-metric-name] A DCMD message SHOULD include a metric name that was included in the associated DBIRTH message for the Device.</text>
+        </assertion>
+        <assertion id="operational-behavior-data-commands-dcmd-metric-value">
+            <text>[tck-id-operational-behavior-data-commands-dcmd-metric-value] A DCMD message MUST include a compatible metric value for the metric name that it is writing to.</text>
+        </assertion>
+    </section>
+    <section id="payloads" title="Payloads" level="1" xmlns="">
+        <!-- 6 - PAYLOADS -->
+    </section>
+    <section id="payloads_overview" title="Overview" level="2" xmlns="">
+        <!-- 6.1 - PAYLOADS_OVERVIEW -->
+    </section>
+    <section id="payloads_google_protocol_buffers" title="Google Protocol Buffers" level="2" xmlns="">
+        <!-- 6.2 - PAYLOADS_GOOGLE_PROTOCOL_BUFFERS -->
+    </section>
+    <section id="payloads_sparkplug_a_mqtt_payload_definition" title="Sparkplug A MQTT Payload Definition" level="2" xmlns="">
+        <!-- 6.3 - PAYLOADS_SPARKPLUG_A_MQTT_PAYLOAD_DEFINITION -->
+    </section>
+    <section id="payloads_sparkplug_b_mqtt_payload_definition" title="Sparkplug B MQTT Payload Definition" level="2" xmlns="">
+        <!-- 6.4 - PAYLOADS_SPARKPLUG_B_MQTT_PAYLOAD_DEFINITION -->
+    </section>
+    <section id="payloads_b_google_protocol_buffer_schema" title="Google Protocol Buffer Schema" level="3" xmlns="">
+        <!-- 6.4.1 - PAYLOADS_B_GOOGLE_PROTOCOL_BUFFER_SCHEMA -->
+    </section>
+    <section id="payloads_b_payload_metric_naming_convention" title="Payload Metric Naming Convention" level="3" xmlns="">
+        <!-- 6.4.2 - PAYLOADS_B_PAYLOAD_METRIC_NAMING_CONVENTION -->
+    </section>
+    <section id="payloads_b_sparkplug_bv1_0_payload_components" title="Sparkplug B v1.0 Payload Components" level="3" xmlns="">
+        <!-- 6.4.3 - PAYLOADS_B_SPARKPLUG_BV1_0_PAYLOAD_COMPONENTS -->
+    </section>
+    <section id="payloads_b_payload_component_definitions" title="Payload Component Definitions" level="3" xmlns="">
+        <!-- 6.4.4 - PAYLOADS_B_PAYLOAD_COMPONENT_DEFINITIONS -->
+    </section>
+    <section id="payloads_b_payload" title="Payload" level="3" xmlns="">
+        <!-- 6.4.5 - PAYLOADS_B_PAYLOAD -->
+        <assertion id="payloads-timestamp-in-UTC">
+            <text>[tck-id-payloads-timestamp-in-UTC] This timestamp MUST be in UTC.</text>
+        </assertion>
+        <assertion id="payloads-sequence-num-always-included">
+            <text>[tck-id-payloads-sequence-num-always-included] A sequence number MUST be included in the payload of every Sparkplug MQTT message from an Edge Node except NDEATH messages.</text>
+        </assertion>
+        <assertion id="payloads-sequence-num-req-nbirth">
+            <text>[tck-id-payloads-sequence-num-zero-nbirth] A NBIRTH message from an Edge Node MUST always contain a sequence number between 0 and 255 (inclusive).</text>
+        </assertion>
+        <assertion id="payloads-sequence-num-incrementing">
+            <text>[tck-id-payloads-sequence-num-incrementing] All subsequent messages after an NBIRTH from an Edge Node MUST contain a sequence number that is continually increasing by one in each message from that Edge Node until a value of 255 is reached. At that point, the sequence number of the following message MUST be zero.</text>
+        </assertion>
+    </section>
+    <section id="payloads_b_metric" title="Metric" level="3" xmlns="">
+        <!-- 6.4.6 - PAYLOADS_B_METRIC -->
+        <assertion id="payloads-name-requirement">
+            <text>[tck-id-payloads-name-requirement] The name MUST be included with every metric unless aliases are being used.</text>
+        </assertion>
+        <assertion id="payloads-alias-uniqueness">
+            <text>[tck-id-payloads-alias-uniqueness] If supplied in an NBIRTH or DBIRTH it MUST be a unique number across this Edge Node's entire set of metrics.</text>
+        </assertion>
+        <assertion id="payloads-alias-birth-requirement">
+            <text>[tck-id-payloads-alias-birth-requirement] NBIRTH and DBIRTH messages MUST include both a metric name and alias.</text>
+        </assertion>
+        <assertion id="payloads-alias-data-cmd-requirement">
+            <text>[tck-id-payloads-alias-data-cmd-requirement] NDATA, DDATA, NCMD, and DCMD messages MUST only include an alias and the metric name MUST be excluded.</text>
+        </assertion>
+        <assertion id="payloads-name-birth-data-requirement">
+            <text>[tck-id-payloads-name-birth-data-requirement] The timestamp MUST be included with every metric in all NBIRTH, DBIRTH, NDATA, and DDATA messages.</text>
+        </assertion>
+        <assertion id="payloads-name-cmd-requirement">
+            <text>[tck-id-payloads-name-cmd-requirement] The timestamp MAY be included with metrics in NCMD and DCMD messages.</text>
+        </assertion>
+        <assertion id="payloads-metric-timestamp-in-UTC">
+            <text>[tck-id-payloads-metric-timestamp-in-UTC] The timestamp MUST be in UTC.</text>
+        </assertion>
+        <assertion id="payloads-metric-datatype-value-type">
+            <text>[tck-id-payloads-metric-datatype-value-type] The datatype MUST be an unsigned 32-bit integer representing the datatype.</text>
+        </assertion>
+        <assertion id="payloads-metric-datatype-value">
+            <text>[tck-id-payloads-metric-datatype-value] The datatype MUST be one of the enumerated values as shown in the valid Sparkplug Data Types.</text>
+        </assertion>
+        <assertion id="payloads-metric-datatype-req">
+            <text>[tck-id-payloads-metric-datatype-req] The datatype MUST be included with each metric definition in NBIRTH and DBIRTH messages.</text>
+        </assertion>
+        <assertion id="payloads-metric-datatype-not-req">
+            <text>[tck-id-payloads-metric-datatype-not-req] The datatype SHOULD NOT be included with metric definitions in NDATA, NCMD, DDATA, and DCMD messages.</text>
+        </assertion>
+    </section>
+    <section id="payloads_b_metadata" title="MetaData" level="3" xmlns="">
+        <!-- 6.4.7 - PAYLOADS_B_METADATA -->
+    </section>
+    <section id="payloads_b_propertyset" title="PropertySet" level="3" xmlns="">
+        <!-- 6.4.8 - PAYLOADS_B_PROPERTYSET -->
+        <assertion id="payloads-propertyset-keys-array-size">
+            <text>[tck-id-payloads-propertyset-keys-array-size] The array of keys in a PropertySet MUST contain the same number of values included in the array of PropertyValue objects.</text>
+        </assertion>
+        <assertion id="payloads-propertyset-values-array-size">
+            <text>[tck-id-payloads-propertyset-values-array-size] The array of values in a PropertySet MUST contain the same number of items that are in the keys array.</text>
+        </assertion>
+    </section>
+    <section id="payloads_b_propertyvalue" title="PropertyValue" level="3" xmlns="">
+        <!-- 6.4.9 - PAYLOADS_B_PROPERTYVALUE -->
+        <assertion id="payloads-metric-propertyvalue-type-type">
+            <text>[tck-id-payloads-metric-propertyvalue-type-type] This MUST be an unsigned 32-bit integer representing the datatype.</text>
+        </assertion>
+        <assertion id="payloads-metric-propertyvalue-type-value">
+            <text>[tck-id-payloads-metric-propertyvalue-type-value] This value MUST be one of the enumerated values as shown in the Sparkplug Basic Data Types or the Sparkplug Property Value Data Types.</text>
+        </assertion>
+        <assertion id="payloads-metric-propertyvalue-type-req">
+            <text>[tck-id-payloads-metric-propertyvalue-type-req] This MUST be included in Property Value Definitions in NBIRTH and DBIRTH messages.</text>
+        </assertion>
+    </section>
+    <section id="payloads_b_quality_codes" title="Quality Codes" level="4" xmlns="">
+        <!-- 6.4.9.1 - PAYLOADS_B_QUALITY_CODES -->
+        <assertion id="payloads-propertyset-quality-value-type">
+            <text>[tck-id-payloads-propertyset-quality-value-type] The 'type' of the Property Value MUST be a value of 3 which represents a Signed 32-bit Integer.</text>
+        </assertion>
+        <assertion id="payloads-propertyset-quality-value-value">
+            <text>[tck-id-payloads-propertyset-quality-value-value] The 'value' of the Property Value MUST be an int_value and be one of the valid quality codes of 0, 192, or 500.</text>
+        </assertion>
+    </section>
+    <section id="payloads_b_propertysetlist" title="PropertySetList" level="3" xmlns="">
+        <!-- 6.4.10 - PAYLOADS_B_PROPERTYSETLIST -->
+    </section>
+    <section id="payloads_b_dataset" title="DataSet" level="3" xmlns="">
+        <!-- 6.4.11 - PAYLOADS_B_DATASET -->
+        <assertion id="payloads-dataset-column-size">
+            <text>[tck-id-payloads-dataset-column-size] This MUST be an unsigned 64-bit integer representing the number of columns in this DataSet.</text>
+        </assertion>
+        <assertion id="payloads-dataset-column-num-headers">
+            <text>[tck-id-payloads-dataset-column-num-headers] The size of the array MUST have the same number of elements that the types array contains.</text>
+        </assertion>
+        <assertion id="payloads-dataset-types-def">
+            <text>[tck-id-payloads-dataset-types-def] This MUST be an array of unsigned 32 bit integers representing the datatypes of the columns.</text>
+        </assertion>
+        <assertion id="payloads-dataset-types-num">
+            <text>[tck-id-payloads-dataset-types-num] The array of types MUST have the same number of elements that the columns array contains.</text>
+        </assertion>
+        <assertion id="payloads-dataset-types-type">
+            <text>[tck-id-payloads-dataset-types-type] The values in the types array MUST be a unsigned 32-bit integer representing the datatype.</text>
+        </assertion>
+        <assertion id="payloads-dataset-types-value">
+            <text>[tck-id-payloads-dataset-types-value] This values in the types array MUST be one of the enumerated values as shown in the Sparkplug Basic Data Types.</text>
+        </assertion>
+        <assertion id="payloads-dataset-parameter-type-req">
+            <text>[tck-id-payloads-dataset-parameter-type-req] The types array MUST be included in all DataSets.</text>
+        </assertion>
+    </section>
+    <section id="payloads_b_dataset_row" title="DataSet.Row" level="3" xmlns="">
+        <!-- 6.4.12 - PAYLOADS_B_DATASET_ROW -->
+    </section>
+    <section id="payloads_b_dataset_datasetvalue" title="DataSet.DataSetValue" level="3" xmlns="">
+        <!-- 6.4.13 - PAYLOADS_B_DATASET_DATASETVALUE -->
+        <assertion id="payloads-template-dataset-value">
+            <text>[tck-id-payloads-template-dataset-value] The value supplied MUST be one of the following Google Protobuf types: uint32, uint64, float, double, bool, or string.</text>
+        </assertion>
+    </section>
+    <section id="payloads_b_template" title="Template" level="3" xmlns="">
+        <!-- 6.4.14 - PAYLOADS_B_TEMPLATE -->
+        <assertion id="payloads-template-definition-nbirth-only">
+            <text>[tck-id-payloads-template-definition-nbirth-only] Template Definitions MUST only be included in NBIRTH messages.</text>
+        </assertion>
+        <assertion id="payloads-template-definition-is-definition">
+            <text>[tck-id-payloads-template-definition-is-definition] A Template Definition MUST have is_definition set to true.</text>
+        </assertion>
+        <assertion id="payloads-template-definition-ref">
+            <text>[tck-id-payloads-template-definition-ref] A Template Definition MUST omit the template_ref field.</text>
+        </assertion>
+        <assertion id="payloads-template-definition-members">
+            <text>[tck-id-payloads-template-definition-members] A Template Definition MUST include all member metrics that will ever be included in corresponding template instances.</text>
+        </assertion>
+        <assertion id="payloads-template-definition-nbirth">
+            <text>[tck-id-payloads-template-definition-nbirth] A Template Definition MUST be included in the NBIRTH for all Template Instances that are included in the NBIRTH and DBIRTH messages.</text>
+        </assertion>
+        <assertion id="payloads-template-definition-parameters">
+            <text>[tck-id-payloads-template-definition-parameters] A Template Definition MUST include all parameters that will be included in the corresponding Template Instances.</text>
+        </assertion>
+        <assertion id="payloads-template-definition-parameters-default">
+            <text>[tck-id-payloads-template-definition-parameters-default] A Template Definition MAY include values for parameters in the Template Definition parameters.</text>
+        </assertion>
+        <assertion id="payloads-template-instance-is-definition">
+            <text>[tck-id-payloads-template-instance-is-definition] A Template Instance MUST have is_definition set to false.</text>
+        </assertion>
+        <assertion id="payloads-template-instance-ref">
+            <text>[tck-id-payloads-template-instance-ref] A Template Instance MUST have template_ref set to the type of template definition it is.</text>
+        </assertion>
+        <assertion id="payloads-template-instance-members">
+            <text>[tck-id-payloads-template-instance-members] A Template Instance MUST include only members that were included in the corresponding template definition.</text>
+        </assertion>
+        <assertion id="payloads-template-instance-members-birth">
+            <text>[tck-id-payloads-template-instance-members-birth] A Template Instance in a NBIRTH or DBIRTH message MUST include all members that were included in the corresponding Template Definition.</text>
+        </assertion>
+        <assertion id="payloads-template-instance-members-data">
+            <text>[tck-id-payloads-template-instance-members-data] A Template Instance in a NDATA or DDATA message MAY include only a subset of the members that were included in the corresponding template definition.</text>
+        </assertion>
+        <assertion id="payloads-template-instance-parameters">
+            <text>[tck-id-payloads-template-instance-parameters] A Template Instance MAY include parameter values for any parameters that were included in the corresponding Template Definition.</text>
+        </assertion>
+        <assertion id="payloads-template-version">
+            <text>[tck-id-payloads-template-version] If included, the version MUST be a UTF-8 string representing the version of the Template.</text>
+        </assertion>
+        <assertion id="payloads-template-ref-definition">
+            <text>[tck-id-payloads-template-ref-definition] This MUST be omitted if this is a Template Definition.</text>
+        </assertion>
+        <assertion id="payloads-template-ref-instance">
+            <text>[tck-id-payloads-template-ref-instance] This MUST be a UTF-8 string representing a reference to a Template Definition name if this is a Template Instance.</text>
+        </assertion>
+        <assertion id="payloads-template-is-definition">
+            <text>[tck-id-payloads-template-is-definition] This MUST be included in every Template Definition and Template Instance.</text>
+        </assertion>
+        <assertion id="payloads-template-is-definition-definition">
+            <text>[tck-id-payloads-template-is-definition-definition] This MUST be set to true if this is a Template Definition.</text>
+        </assertion>
+        <assertion id="payloads-template-is-definition-instance">
+            <text>[tck-id-payloads-template-is-definition-instance] This MUST be set to false if this is a Template Instance.</text>
+        </assertion>
+    </section>
+    <section id="payloads_b_template_parameter" title="Template.Parameter" level="3" xmlns="">
+        <!-- 6.4.15 - PAYLOADS_B_TEMPLATE_PARAMETER -->
+        <assertion id="payloads-template-parameter-name-required">
+            <text>[tck-id-payloads-template-parameter-name-required] This MUST be included in every Template Parameter definition.</text>
+        </assertion>
+        <assertion id="payloads-template-parameter-name-type">
+            <text>[tck-id-payloads-template-parameter-name-type] This MUST be a UTF-8 string representing the name of the Template parameter.</text>
+        </assertion>
+        <assertion id="payloads-template-parameter-value-type">
+            <text>[tck-id-payloads-template-parameter-value-type] This MUST be an unsigned 32-bit integer representing the datatype.</text>
+        </assertion>
+        <assertion id="payloads-template-parameter-type-value">
+            <text>[tck-id-payloads-template-parameter-type-value] This value MUST be one of the enumerated values as shown in the Sparkplug Basic Data Types.</text>
+        </assertion>
+        <assertion id="payloads-template-parameter-type-req">
+            <text>[tck-id-payloads-template-parameter-type-req] This MUST be included in Template Parameter Definitions in NBIRTH and DBIRTH messages.</text>
+        </assertion>
+        <assertion id="payloads-template-parameter-value">
+            <text>[tck-id-payloads-template-parameter-value] The value supplied MUST be one of the following Google Protocol Buffer types: uint32, uint64, float, double, bool, or string.</text>
+        </assertion>
+    </section>
+    <section id="payloads_b_datatypes" title="Data Types" level="3" xmlns="">
+        <!-- 6.4.16 - PAYLOADS_B_DATATYPES -->
+    </section>
+    <section id="payloads_b_datatype_details" title="Datatype Details" level="3" xmlns="">
+        <!-- 6.4.17 - PAYLOADS_B_DATATYPE_DETAILS -->
+    </section>
+    <section id="payloads_payload_representation_on_host_applications" title="Payload Representation on Host Applications" level="3" xmlns="">
+        <!-- 6.4.18 - PAYLOADS_PAYLOAD_REPRESENTATION_ON_HOST_APPLICATIONS -->
+    </section>
+    <section id="payloads_b_nbirth" title="NBIRTH" level="3" xmlns="">
+        <!-- 6.4.19 - PAYLOADS_B_NBIRTH -->
+        <assertion id="payloads-nbirth-timestamp">
+            <text>[tck-id-payloads-nbirth-timestamp] NBIRTH messages MUST include a payload timestamp that denotes the time at which the message was published.</text>
+        </assertion>
+        <assertion id="payloads-nbirth-edge-node-descriptor">
+            <text>[tck-id-payloads-nbirth-edge-node-descriptor] Every Edge Node Descriptor in any Sparkplug infrastructure MUST be unique in the system.</text>
+        </assertion>
+        <assertion id="payloads-nbirth-seq">
+            <text>[tck-id-payloads-nbirth-seq] Every NBIRTH message MUST include a sequence number and it MUST have a value between 0 and 255 (inclusive).</text>
+        </assertion>
+        <assertion id="payloads-nbirth-bdseq">
+            <text>[tck-id-payloads-nbirth-bdseq] Every NBIRTH message MUST include a bdSeq number metric.</text>
+        </assertion>
+        <assertion id="payloads-nbirth-bdseq-repeat">
+            <text>[tck-id-payloads-nbirth-bdseq-repeat] The bdSeq number value MUST match the bdSeq number value that was sent in the prior MQTT CONNECT packet WILL Message.</text>
+        </assertion>
+        <assertion id="payloads-nbirth-rebirth-req">
+            <text>[tck-id-payloads-nbirth-rebirth-req] Every NBIRTH MUST include a metric with the name 'Node Control/Rebirth' and have a boolean value of false.</text>
+        </assertion>
+        <assertion id="payloads-nbirth-qos">
+            <text>[tck-id-payloads-nbirth-qos] NBIRTH messages MUST be published with the MQTT QoS set to 0.</text>
+        </assertion>
+        <assertion id="payloads-nbirth-retain">
+            <text>[tck-id-payloads-nbirth-retain] NBIRTH messages MUST be published with the MQTT retain flag set to false.</text>
+        </assertion>
+    </section>
+    <section id="payloads_b_dbirth" title="DBIRTH" level="3" xmlns="">
+        <!-- 6.4.20 - PAYLOADS_B_DBIRTH -->
+        <assertion id="payloads-dbirth-timestamp">
+            <text>[tck-id-payloads-dbirth-timestamp] DBIRTH messages MUST include a payload timestamp that denotes the time at which the message was published.</text>
+        </assertion>
+        <assertion id="payloads-dbirth-seq">
+            <text>[tck-id-payloads-dbirth-seq] Every DBIRTH message MUST include a sequence number.</text>
+        </assertion>
+        <assertion id="payloads-dbirth-seq-inc">
+            <text>[tck-id-payloads-dbirth-seq-inc] Every DBIRTH message MUST include a sequence number value that is one greater than the previous sequence number sent by the Edge Node. This value MUST never exceed 255. If in the previous sequence number sent by the Edge Node was 255, the next sequence number sent MUST have a value of 0.</text>
+        </assertion>
+        <assertion id="payloads-dbirth-order">
+            <text>[tck-id-payloads-dbirth-order] All DBIRTH messages sent by an Edge Node MUST be sent immediately after the NBIRTH and before any NDATA or DDATA messages are published by the Edge Node.</text>
+        </assertion>
+        <assertion id="payloads-dbirth-qos">
+            <text>[tck-id-payloads-dbirth-qos] DBIRTH messages MUST be published with the MQTT QoS set to 0.</text>
+        </assertion>
+        <assertion id="payloads-dbirth-retain">
+            <text>[tck-id-payloads-dbirth-retain] DBIRTH messages MUST be published with the MQTT retain flag set to false.</text>
+        </assertion>
+    </section>
+    <section id="payloads_b_ndata" title="NDATA" level="3" xmlns="">
+        <!-- 6.4.21 - PAYLOADS_B_NDATA -->
+        <assertion id="payloads-ndata-timestamp">
+            <text>[tck-id-payloads-ndata-timestamp] NDATA messages MUST include a payload timestamp that denotes the time at which the message was published.</text>
+        </assertion>
+        <assertion id="payloads-ndata-seq">
+            <text>[tck-id-payloads-ndata-seq] Every NDATA message MUST include a sequence number.</text>
+        </assertion>
+        <assertion id="payloads-ndata-seq-inc">
+            <text>[tck-id-payloads-ndata-seq-inc] Every NDATA message MUST include a sequence number value that is one greater than the previous sequence number sent by the Edge Node. This value MUST never exceed 255. If in the previous sequence number sent by the Edge Node was 255, the next sequence number sent MUST have a value of 0.</text>
+        </assertion>
+        <assertion id="payloads-ndata-order">
+            <text>[tck-id-payloads-ndata-order] All NDATA messages sent by an Edge Node MUST NOT be sent until all the NBIRTH and all DBIRTH messages have been published by the Edge Node.</text>
+        </assertion>
+        <assertion id="payloads-ndata-qos">
+            <text>[tck-id-payloads-ndata-qos] NDATA messages MUST be published with the MQTT QoS set to 0.</text>
+        </assertion>
+        <assertion id="payloads-ndata-retain">
+            <text>[tck-id-payloads-ndata-retain] NDATA messages MUST be published with the MQTT retain flag set to false.</text>
+        </assertion>
+    </section>
+    <section id="payloads_b_ddata" title="DDATA" level="3" xmlns="">
+        <!-- 6.4.22 - PAYLOADS_B_DDATA -->
+        <assertion id="payloads-ddata-timestamp">
+            <text>[tck-id-payloads-ddata-timestamp] DDATA messages MUST include a payload timestamp that denotes the time at which the message was published.</text>
+        </assertion>
+        <assertion id="payloads-ddata-seq">
+            <text>[tck-id-payloads-ddata-seq] Every DDATA message MUST include a sequence number.</text>
+        </assertion>
+        <assertion id="payloads-ddata-seq-inc">
+            <text>[tck-id-payloads-ddata-seq-inc] Every DDATA message MUST include a sequence number value that is one greater than the previous sequence number sent by the Edge Node. This value MUST never exceed 255. If in the previous sequence number sent by the Edge Node was 255, the next sequence number sent MUST have a value of 0.</text>
+        </assertion>
+        <assertion id="payloads-ddata-order">
+            <text>[tck-id-payloads-ddata-order] All DDATA messages sent by an Edge Node MUST NOT be sent until all the NBIRTH and all DBIRTH messages have been published by the Edge Node.</text>
+        </assertion>
+        <assertion id="payloads-ddata-qos">
+            <text>[tck-id-payloads-ddata-qos] DDATA messages MUST be published with the MQTT QoS set to 0.</text>
+        </assertion>
+        <assertion id="payloads-ddata-retain">
+            <text>[tck-id-payloads-ddata-retain] DDATA messages MUST be published with the MQTT retain flag set to false.</text>
+        </assertion>
+    </section>
+    <section id="payloads_b_ncmd" title="NCMD" level="3" xmlns="">
+        <!-- 6.4.23 - PAYLOADS_B_NCMD -->
+        <assertion id="payloads-ncmd-timestamp">
+            <text>[tck-id-payloads-ncmd-timestamp] NCMD messages MUST include a payload timestamp that denotes the time at which the message was published.</text>
+        </assertion>
+        <assertion id="payloads-ncmd-seq">
+            <text>[tck-id-payloads-ncmd-seq] Every NCMD message MUST NOT include a sequence number.</text>
+        </assertion>
+        <assertion id="payloads-ncmd-qos">
+            <text>[tck-id-payloads-ncmd-qos] NCMD messages MUST be published with the MQTT QoS set to 0.</text>
+        </assertion>
+        <assertion id="payloads-ncmd-retain">
+            <text>[tck-id-payloads-ncmd-retain] NCMD messages MUST be published with the MQTT retain flag set to false.</text>
+        </assertion>
+    </section>
+    <section id="payloads_b_dcmd" title="DCMD" level="3" xmlns="">
+        <!-- 6.4.24 - PAYLOADS_B_DCMD -->
+        <assertion id="payloads-dcmd-timestamp">
+            <text>[tck-id-payloads-dcmd-timestamp] DCMD messages MUST include a payload timestamp that denotes the time at which the message was published.</text>
+        </assertion>
+        <assertion id="payloads-dcmd-seq">
+            <text>[tck-id-payloads-dcmd-seq] Every DCMD message MUST NOT include a sequence number.</text>
+        </assertion>
+        <assertion id="payloads-dcmd-qos">
+            <text>[tck-id-payloads-dcmd-qos] DCMD messages MUST be published with the MQTT QoS set to 0.</text>
+        </assertion>
+        <assertion id="payloads-dcmd-retain">
+            <text>[tck-id-payloads-dcmd-retain] DCMD messages MUST be published with the MQTT retain flag set to false.</text>
+        </assertion>
+    </section>
+    <section id="payloads_b_ndeath" title="NDEATH" level="3" xmlns="">
+        <!-- 6.4.25 - PAYLOADS_B_NDEATH -->
+        <assertion id="payloads-ndeath-seq">
+            <text>[tck-id-payloads-ndeath-seq] Every NDEATH message MUST NOT include a sequence number.</text>
+        </assertion>
+        <assertion id="payloads-ndeath-will-message">
+            <text>[tck-id-payloads-ndeath-will-message] An NDEATH message MUST be registered as a Will Message in the MQTT CONNECT packet.</text>
+        </assertion>
+        <assertion id="payloads-ndeath-will-message-qos">
+            <text>[tck-id-payloads-ndeath-will-message-qos] The NDEATH message MUST set the MQTT Will QoS to 1 in the MQTT CONNECT packet.</text>
+        </assertion>
+        <assertion id="payloads-ndeath-will-message-retain">
+            <text>[tck-id-payloads-ndeath-will-message-retain] The NDEATH message MUST set the MQTT Will Retained flag to false in the MQTT CONNECT packet.</text>
+        </assertion>
+        <assertion id="payloads-ndeath-bdseq">
+            <text>[tck-id-payloads-ndeath-bdseq] The NDEATH message MUST include the same bdSeq number value that will be used in the associated NBIRTH message.</text>
+        </assertion>
+        <assertion id="payloads-ndeath-will-message-publisher">
+            <text>[tck-id-payloads-ndeath-will-message-publisher] An NDEATH message SHOULD be published by the Edge Node before it intentionally disconnects from the MQTT Server.</text>
+        </assertion>
+        <assertion id="payloads-ndeath-will-message-publisher-disconnect-mqtt311">
+            <text>[tck-id-payloads-ndeath-will-message-publisher-disconnect-mqtt311] If the Edge Node is using MQTT 3.1.1 and it sends an MQTT DISCONNECT packet, the Edge Node MUST publish an NDEATH message to the MQTT Server before it sends the MQTT DISCONNECT packet.</text>
+        </assertion>
+        <assertion id="payloads-ndeath-will-message-publisher-disconnect-mqtt50">
+            <text>[tck-id-payloads-ndeath-will-message-publisher-disconnect-mqtt50] If the Edge Node is using MQTT 5.0 and it sends an MQTT DISCONNECT packet, the MQTT v5.0 'Disconnect with Will Message' reason code MUST be set in the DISCONNECT packet.</text>
+        </assertion>
+    </section>
+    <section id="payloads_b_ddeath" title="DDEATH" level="3" xmlns="">
+        <!-- 6.4.26 - PAYLOADS_B_DDEATH -->
+        <assertion id="payloads-ddeath-timestamp">
+            <text>[tck-id-payloads-ddeath-timestamp] DDEATH messages MUST include a payload timestamp that denotes the time at which the message was published.</text>
+        </assertion>
+        <assertion id="payloads-ddeath-seq">
+            <text>[tck-id-payloads-ddeath-seq] Every DDEATH message MUST include a sequence number.</text>
+        </assertion>
+        <assertion id="payloads-ddeath-seq-inc">
+            <text>[tck-id-payloads-ddeath-seq-inc] Every DDEATH message MUST include a sequence number value that is one greater than the previous sequence number sent by the Edge Node. This value MUST never exceed 255. If in the previous sequence number sent by the Edge Node was 255, the next sequence number sent MUST have a value of 0.</text>
+        </assertion>
+        <assertion id="payloads-ddeath-seq-number">
+            <text>[tck-id-payloads-ddeath-seq-number] A sequence number MUST be included with the DDEATH messages so the Host Application can ensure order of messages and maintain the state of the data.</text>
+        </assertion>
+    </section>
+    <section id="payloads_b_state" title="STATE" level="3" xmlns="">
+        <!-- 6.4.27 - PAYLOADS_B_STATE -->
+        <assertion id="payloads-state-will-message">
+            <text>[tck-id-payloads-state-will-message] Sparkplug Host Applications MUST register a Will Message in the MQTT CONNECT packet on the topic 'spBv1.0/STATE/[sparkplug_host_id]'.</text>
+        </assertion>
+        <assertion id="payloads-state-will-message-qos">
+            <text>[tck-id-payloads-state-will-message-qos] The Sparkplug Host Application MUST set the the MQTT Will QoS to 1 in the MQTT CONNECT packet.</text>
+        </assertion>
+        <assertion id="payloads-state-will-message-retain">
+            <text>[tck-id-payloads-state-will-message-retain] The Sparkplug Host Application MUST set the Will Retained flag to true in the MQTT CONNECT packet.</text>
+        </assertion>
+        <assertion id="payloads-state-will-message-payload">
+            <text>[tck-id-payloads-state-will-message-payload] The Death Certificate Payload MUST be JSON UTF-8 data. It MUST include two key/value pairs where one key MUST be 'online' and it's value is a boolean 'false'. The other key MUST be 'timestamp' and the value MUST be a numeric value representing the current UTC time in milliseconds since Epoch.</text>
+        </assertion>
+        <assertion id="payloads-state-subscribe">
+            <text>[tck-id-payloads-state-subscribe] After establishing an MQTT connection, the Sparkplug Host Application MUST subscribe on it's own 'spBv1.0/STATE/[sparkplug_host_id]' topic.</text>
+        </assertion>
+        <assertion id="payloads-state-birth">
+            <text>[tck-id-payloads-state-birth] After subscribing on it's own spBv1.0/STATE/[sparkplug_host_id] topic, the Sparkplug Host Application MUST publish an MQTT message on the topic 'spBv1.0/STATE/[sparkplug_host_id]' with a QoS of 1, and the retain flag set to true.</text>
+        </assertion>
+        <assertion id="payloads-state-birth-payload">
+            <text>[tck-id-payloads-state-birth-payload] The Birth Certificate Payload MUST be JSON UTF-8 data. It MUST include two key/value pairs where one key MUST be 'online' and it's value is a boolean 'true'. The other key MUST be 'timestamp' and the value MUST match the timestamp value that was used in the immediately prior MQTT CONNECT packet Will Message payload.</text>
+        </assertion>
+    </section>
+    <section id="security" title="Security" level="1" xmlns="">
+        <!-- 7 - SECURITY -->
+    </section>
+    <section id="security_tls" title="TLS" level="2" xmlns="">
+        <!-- 7.1 - SECURITY_TLS -->
+    </section>
+    <section id="security_authentication" title="Authentication" level="2" xmlns="">
+        <!-- 7.2 - SECURITY_AUTHENTICATION -->
+    </section>
+    <section id="security_authorization" title="Authorization" level="2" xmlns="">
+        <!-- 7.3 - SECURITY_AUTHORIZATION -->
+    </section>
+    <section id="security_implementation_notes" title="Implementation Notes" level="2" xmlns="">
+        <!-- 7.4 - SECURITY_IMPLEMENTATION_NOTES -->
+    </section>
+    <section id="security_implementation_notes_mqtt" title="Underlying MQTT Security" level="3" xmlns="">
+        <!-- 7.4.1 - SECURITY_IMPLEMENTATION_NOTES_MQTT -->
+    </section>
+    <section id="security_implementation_notes_encryption" title="Encrypted Sockets" level="3" xmlns="">
+        <!-- 7.4.2 - SECURITY_IMPLEMENTATION_NOTES_ENCRYPTION -->
+    </section>
+    <section id="security_implementation_notes_acls" title="Access Control Lists" level="3" xmlns="">
+        <!-- 7.4.3 - SECURITY_IMPLEMENTATION_NOTES_ACLS -->
+    </section>
+    <section id="high_availability" title="High Availability" level="1" xmlns="">
+        <!-- 8 - HIGH_AVAILABILITY -->
+    </section>
+    <section id="high_availability_for_mqtt_servers" title="High Availability for MQTT Servers" level="2" xmlns="">
+        <!-- 8.1 - HIGH_AVAILABILITY_FOR_MQTT_SERVERS -->
+    </section>
+    <section id="high_availability_ha_clusters" title="MQTT Server HA Clustering (non-normative)" level="3" xmlns="">
+        <!-- 8.1.1 - HIGH_AVAILABILITY_HA_CLUSTERS -->
+    </section>
+    <section id="high_availability_cluster" title="High Availability Cluster" level="3" xmlns="">
+        <!-- 8.1.2 - HIGH_AVAILABILITY_CLUSTER -->
+    </section>
+    <section id="high_availability_cluster_with_load_balancer" title="High Availability Cluster with Load Balancer" level="3" xmlns="">
+        <!-- 8.1.3 - HIGH_AVAILABILITY_CLUSTER_WITH_LOAD_BALANCER -->
+    </section>
+    <section id="high_availability_multiple_mqtt_server_topology" title="Multiple Isolated MQTT Servers (non-normative)" level="2" xmlns="">
+        <!-- 8.2 - HIGH_AVAILABILITY_MULTIPLE_MQTT_SERVER_TOPOLOGY -->
+    </section>
+    <section id="acknowledgements" title="Acknowledgements" level="1" xmlns="">
+        <!-- 9 - ACKNOWLEDGEMENTS -->
+    </section>
+    <section id="conformance" title="Conformance" level="1" xmlns="">
+        <!-- 10 - CONFORMANCE -->
+    </section>
+    <section id="conformance_profiles" title="Conformance Profiles" level="2" xmlns="">
+        <!-- 10.1 - CONFORMANCE_PROFILES -->
+    </section>
+    <section id="conformance_sparkplug_edge_node" title="Sparkplug Edge Node" level="3" xmlns="">
+        <!-- 10.1.1 - CONFORMANCE_SPARKPLUG_EDGE_NODE -->
+    </section>
+    <section id="conformance_sparkplug_host_application" title="Sparkplug Host Application" level="3" xmlns="">
+        <!-- 10.1.2 - CONFORMANCE_SPARKPLUG_HOST_APPLICATION -->
+        <assertion id="conformance-primary-host">
+            <text>[tck-id-conformance-primary-host] Sparkplug Host Applications MUST publish 'STATE' messages that represent its Birth and Death Certificates.</text>
+        </assertion>
+    </section>
+    <section id="conformance_mqtt_server" title="Sparkplug Compliant MQTT Server" level="3" xmlns="">
+        <!-- 10.1.3 - CONFORMANCE_MQTT_SERVER -->
+        <assertion id="conformance-mqtt-qos0">
+            <text>[tck-id-conformance-mqtt-qos0] A Sparkplug conformant MQTT Server MUST support publish and subscribe on QoS 0</text>
+        </assertion>
+        <assertion id="conformance-mqtt-qos1">
+            <text>[tck-id-conformance-mqtt-qos1] A Sparkplug conformant MQTT Server MUST support publish and subscribe on QoS 1</text>
+        </assertion>
+        <assertion id="conformance-mqtt-will-messages">
+            <text>[tck-id-conformance-mqtt-will-messages] A Sparkplug conformant MQTT Server MUST support all aspects of Will Messages including use of the 'retain flag' and QoS 1</text>
+        </assertion>
+        <assertion id="conformance-mqtt-retained">
+            <text>[tck-id-conformance-mqtt-retained] A Sparkplug conformant MQTT Server MUST support all aspects of the 'retain flag'</text>
+        </assertion>
+    </section>
+    <section id="conformance_sparkplug_aware_mqtt_server" title="Sparkplug Aware MQTT Server" level="3" xmlns="">
+        <!-- 10.1.4 - CONFORMANCE_SPARKPLUG_AWARE_MQTT_SERVER -->
+        <assertion id="conformance-mqtt-aware-basic">
+            <text>[tck-id-conformance-mqtt-aware-basic] A Sparkplug Aware MQTT Server MUST support all aspects of a Sparkplug Compliant MQTT Server</text>
+        </assertion>
+        <assertion id="conformance-mqtt-aware-store">
+            <text>[tck-id-conformance-mqtt-aware-store] A Sparkplug Aware MQTT Server MUST store NBIRTH and DBIRTH messages as they pass through the MQTT Server</text>
+        </assertion>
+        <assertion id="conformance-mqtt-aware-nbirth-mqtt-topic">
+            <text>[tck-id-conformance-mqtt-aware-nbirth-mqtt-topic] A Sparkplug Aware MQTT Server MUST make NBIRTH messages available on a topic of the form: $sparkplug/certificates/namespace/group_id/NBIRTH/edge_node_id</text>
+        </assertion>
+        <assertion id="conformance-mqtt-aware-nbirth-mqtt-retain">
+            <text>[tck-id-conformance-mqtt-aware-nbirth-mqtt-retain] A Sparkplug Aware MQTT Server MUST make NBIRTH messages available on the topic: $sparkplug/certificates/namespace/group_id/NBIRTH/edge_node_id with the MQTT retain flag set to true</text>
+        </assertion>
+        <assertion id="conformance-mqtt-aware-dbirth-mqtt-topic">
+            <text>[tck-id-conformance-mqtt-aware-dbirth-mqtt-topic] A Sparkplug Aware MQTT Server MUST make DBIRTH messages available on a topic of the form: $sparkplug/certificates/namespace/group_id/DBIRTH/edge_node_id/device_id</text>
+        </assertion>
+        <assertion id="conformance-mqtt-aware-dbirth-mqtt-retain">
+            <text>[tck-id-conformance-mqtt-aware-dbirth-mqtt-retain] A Sparkplug Aware MQTT Server MUST make DBIRTH messages available on the topic: $sparkplug/certificates/namespace/group_id/DBIRTH/edge_node_id/device_id with the MQTT retain flag set to true</text>
+        </assertion>
+        <assertion id="conformance-mqtt-aware-ndeath-timestamp">
+            <text>[tck-id-conformance-mqtt-aware-ndeath-timestamp] A Sparkplug Aware MQTT Server MAY replace the timestmap of NDEATH messages. If it does, it MUST set the timestamp to the UTC time at which it attempts to deliver the NDEATH to subscribed clients</text>
+        </assertion>
+    </section>
+    <section id="appendix_a" title="Appendix A: Open Source Software (non-normative)" level="1" xmlns="">
+        <!-- 11 - APPENDIX_A -->
+    </section>
+    <section id="introduction_oasis_mqtt_specification" title="OASIS MQTT Specifications" level="2" xmlns="">
+        <!-- 11.1 - INTRODUCTION_OASIS_MQTT_SPECIFICATION -->
+    </section>
+    <section id="introduction_eclipse_foundation_iot_resources" title="Eclipse Foundation IoT Resources" level="2" xmlns="">
+        <!-- 11.2 - INTRODUCTION_ECLIPSE_FOUNDATION_IOT_RESOURCES -->
+    </section>
+    <section id="introduction_eclipse_paho" title="Eclipse Paho" level="2" xmlns="">
+        <!-- 11.3 - INTRODUCTION_ECLIPSE_PAHO -->
+    </section>
+    <section id="introduction_google_protocol_buffers" title="Google Protocol Buffers" level="2" xmlns="">
+        <!-- 11.4 - INTRODUCTION_GOOGLE_PROTOCOL_BUFFERS -->
+    </section>
+    <section id="introduction_eclipse_kura_schema" title="Eclipse Kura Google Protocol Buffer Schema" level="2" xmlns="">
+        <!-- 11.5 - INTRODUCTION_ECLIPSE_KURA_SCHEMA -->
+    </section>
+    <section id="introduction_raspberry_pi" title="Raspberry Pi Hardware" level="2" xmlns="">
+        <!-- 11.6 - INTRODUCTION_RASPBERRY_PI -->
+    </section>
+    <section id="appendix_b" title="Appendix B: List of Normative Statements (non-normative)" level="1" xmlns="">
+        <!-- 12 - APPENDIX_B -->
+    </section>
+</specification>
