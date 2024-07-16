@@ -14170,6 +14170,66 @@ public class StaticEndpointBuilders {
         return StubEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
+     * Tahu (camel-tahu)
+     * Sparkplug B Edge Node and Host Application support over MQTT using
+     * Eclipse Tahu
+     * 
+     * Category: messaging,iot,monitoring
+     * Since: 4.0
+     * Maven coordinates: org.apache.camel:camel-tahu
+     * 
+     * Syntax: <code>tahu:groupId/edgeNode/deviceId</code>
+     * 
+     * Path parameter: groupId (required)
+     * ID of the group
+     * 
+     * Path parameter: edgeNode (required)
+     * ID of the edge node
+     * 
+     * Path parameter: deviceId (required)
+     * ID of this edge node device
+     * 
+     * Path parameter: hostId (required)
+     * ID for the host application
+     * 
+     * @param path groupId/edgeNode/deviceId
+     * @return the dsl builder
+     */
+    public static TahuEndpointBuilderFactory.TahuEndpointBuilder tahu(String path) {
+        return tahu("tahu", path);
+    }
+    /**
+     * Tahu (camel-tahu)
+     * Sparkplug B Edge Node and Host Application support over MQTT using
+     * Eclipse Tahu
+     * 
+     * Category: messaging,iot,monitoring
+     * Since: 4.0
+     * Maven coordinates: org.apache.camel:camel-tahu
+     * 
+     * Syntax: <code>tahu:groupId/edgeNode/deviceId</code>
+     * 
+     * Path parameter: groupId (required)
+     * ID of the group
+     * 
+     * Path parameter: edgeNode (required)
+     * ID of the edge node
+     * 
+     * Path parameter: deviceId (required)
+     * ID of this edge node device
+     * 
+     * Path parameter: hostId (required)
+     * ID for the host application
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path groupId/edgeNode/deviceId
+     * @return the dsl builder
+     */
+    public static TahuEndpointBuilderFactory.TahuEndpointBuilder tahu(String componentName, String path) {
+        return TahuEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
      * Telegram (camel-telegram)
      * Send and receive messages using the Telegram Bot API.
      * 

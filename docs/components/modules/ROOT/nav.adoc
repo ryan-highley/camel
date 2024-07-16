@@ -317,6 +317,7 @@
 ** xref:stream-component.adoc[Stream]
 ** xref:string-template-component.adoc[String Template]
 ** xref:stub-component.adoc[Stub]
+** xref:tahu-component.adoc[Tahu]
 ** xref:telegram-component.adoc[Telegram]
 ** xref:thrift-component.adoc[Thrift]
 ** xref:thymeleaf-component.adoc[Thymeleaf]
