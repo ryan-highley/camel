@@ -47,6 +47,7 @@ class ExportQuarkus extends Export {
 
     public ExportQuarkus(CamelJBangMain main) {
         super(main);
+        pomTemplateName = "quarkus-pom.tmpl";
     }
 
     @Override
@@ -351,7 +352,7 @@ class ExportQuarkus extends Export {
     private void createMavenPom(File settings, File pom, Set<String> deps) throws Exception {
         String[] ids = gav.split(":");
 
-        InputStream is = ExportQuarkus.class.getClassLoader().getResourceAsStream("templates/quarkus-pom.tmpl");
+        InputStream is = ExportQuarkus.class.getClassLoader().getResourceAsStream("templates/" + pomTemplateName);
         String context = IOHelper.loadText(is);
         IOHelper.close(is);
 
@@ -374,10 +375,11 @@ class ExportQuarkus extends Export {
         context = context.replaceFirst("\\{\\{ \\.JavaVersion }}", javaVersion);
         context = context.replaceFirst("\\{\\{ \\.CamelVersion }}", camelVersion);
 
-        if (additionalProperties != null) {
+        if (additionalProperties != null && !additionalProperties.isEmpty()) {
             String properties = Arrays.stream(additionalProperties.split(","))
-                    .map(property -> {
-                        String[] keyValueProperty = property.split("=");
+                    .filter(item -> !item.isEmpty())
+                    .map(item -> {
+                        String[] keyValueProperty = item.split("=");
                         return String.format("        <%s>%s</%s>", keyValueProperty[0], keyValueProperty[1],
                                 keyValueProperty[0]);
                     })

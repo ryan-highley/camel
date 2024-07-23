@@ -275,6 +275,7 @@
         <module>camel-snakeyaml</module>
         <module>camel-snmp</module>
         <module>camel-soap</module>
+        <module>camel-solr</module>        
         <module>camel-splunk</module>
         <module>camel-splunk-hec</module>
         <module>camel-spring-batch</module>
@@ -297,6 +298,7 @@
         <module>camel-opensearch</module>
         <module>camel-optaplanner</module>
         <module>camel-syslog</module>
+        <module>camel-tahu</module>
         <module>camel-tarfile</module>
         <module>camel-telegram</module>
         <module>camel-threadpoolfactory-vertx</module>

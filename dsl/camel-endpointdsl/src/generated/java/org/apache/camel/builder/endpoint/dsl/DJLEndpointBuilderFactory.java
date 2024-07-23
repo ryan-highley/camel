@@ -74,6 +74,38 @@ public interface DJLEndpointBuilderFactory {
             return this;
         }
         /**
+         * Show progress while loading zoo models. This parameter takes effect
+         * only with zoo models.
+         * 
+         * The option is a: <code>boolean</code> type.
+         * 
+         * Default: false
+         * Group: producer
+         * 
+         * @param showProgress the value to set
+         * @return the dsl builder
+         */
+        default DJLEndpointBuilder showProgress(boolean showProgress) {
+            doSetProperty("showProgress", showProgress);
+            return this;
+        }
+        /**
+         * Show progress while loading zoo models. This parameter takes effect
+         * only with zoo models.
+         * 
+         * The option will be converted to a <code>boolean</code> type.
+         * 
+         * Default: false
+         * Group: producer
+         * 
+         * @param showProgress the value to set
+         * @return the dsl builder
+         */
+        default DJLEndpointBuilder showProgress(String showProgress) {
+            doSetProperty("showProgress", showProgress);
+            return this;
+        }
+        /**
          * Translator.
          * 
          * The option is a: <code>java.lang.String</code> type.
@@ -227,6 +259,19 @@ public interface DJLEndpointBuilderFactory {
          */
         public String djlInput() {
             return "CamelDjlInput";
+        }
+        /**
+         * The file type of the message body data. It is used when the body is
+         * converted to bytes.
+         * 
+         * The option is a: {@code } type.
+         * 
+         * Group: producer
+         * 
+         * @return the name of the header {@code DjlFileType}.
+         */
+        public String djlFileType() {
+            return "CamelDjlFileType";
         }
     }
     static DJLEndpointBuilder endpointBuilder(String componentName, String path) {

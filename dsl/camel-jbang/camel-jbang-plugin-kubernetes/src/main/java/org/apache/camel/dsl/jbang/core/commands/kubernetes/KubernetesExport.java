@@ -20,98 +20,100 @@ package org.apache.camel.dsl.jbang.core.commands.kubernetes;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.camel.catalog.CamelCatalog;
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
 import org.apache.camel.dsl.jbang.core.commands.Export;
+import org.apache.camel.dsl.jbang.core.commands.ExportBaseCommand;
 import org.apache.camel.dsl.jbang.core.commands.kubernetes.traits.ContainerTrait;
 import org.apache.camel.dsl.jbang.core.commands.kubernetes.traits.TraitCatalog;
 import org.apache.camel.dsl.jbang.core.commands.kubernetes.traits.TraitContext;
 import org.apache.camel.dsl.jbang.core.commands.kubernetes.traits.TraitHelper;
 import org.apache.camel.dsl.jbang.core.commands.kubernetes.traits.TraitProfile;
 import org.apache.camel.dsl.jbang.core.common.RuntimeType;
+import org.apache.camel.dsl.jbang.core.common.Source;
+import org.apache.camel.dsl.jbang.core.common.SourceHelper;
 import org.apache.camel.util.StringHelper;
 import org.apache.camel.v1.integrationspec.Traits;
+import org.apache.camel.v1.integrationspec.traits.Container;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
 @Command(name = "export", description = "Export as Maven/Gradle project that contains a Kubernetes deployment manifest",
          sortOptions = false)
-class KubernetesExport extends Export {
+public class KubernetesExport extends Export {
 
     @CommandLine.Option(names = { "--trait-profile" }, description = "The trait profile to use for the deployment.")
-    String traitProfile;
+    protected String traitProfile;
+
+    @CommandLine.Option(names = { "--service-account" }, description = "The service account used to run the application.")
+    protected String serviceAccount;
 
     @CommandLine.Option(names = { "--property" },
                         description = "Add a runtime property or properties file from a path, a config map or a secret (syntax: [my-key=my-value|file:/path/to/my-conf.properties|[configmap|secret]:name]).")
-    String[] properties;
+    protected String[] properties;
 
     @CommandLine.Option(names = { "--config" },
                         description = "Add a runtime configuration from a ConfigMap or a Secret (syntax: [configmap|secret]:name[/key], where name represents the configmap/secret name and key optionally represents the configmap/secret key to be filtered).")
-    String[] configs;
+    protected String[] configs;
 
     @CommandLine.Option(names = { "--resource" },
                         description = "Add a runtime resource from a Configmap or a Secret (syntax: [configmap|secret]:name[/key][@path], where name represents the configmap/secret name, key optionally represents the configmap/secret key to be filtered and path represents the destination path).")
-    String[] resources;
+    protected String[] resources;
 
     @CommandLine.Option(names = { "--open-api-spec" }, description = "Add an OpenAPI spec (syntax: [configmap|file]:name).")
-    String[] openApis;
+    protected String[] openApis;
 
     @CommandLine.Option(names = { "--env" },
                         description = "Set an environment variable in the integration container, for instance \"-e MY_VAR=my-value\".")
-    String[] envVars;
+    protected String[] envVars;
 
     @CommandLine.Option(names = { "--volume" },
                         description = "Mount a volume into the integration container, for instance \"-v pvcname:/container/path\".")
-    String[] volumes;
+    protected String[] volumes;
 
     @CommandLine.Option(names = { "--connect" },
                         description = "A Service that the integration should bind to, specified as [[apigroup/]version:]kind:[namespace/]name.")
-    String[] connects;
+    protected String[] connects;
 
     @CommandLine.Option(names = { "--annotation" },
                         description = "Add an annotation to the integration. Use name values pairs like \"--annotation my.company=hello\".")
-    String[] annotations;
+    protected String[] annotations;
 
     @CommandLine.Option(names = { "--label" },
                         description = "Add a label to the integration. Use name values pairs like \"--label my.company=hello\".")
-    String[] labels;
+    protected String[] labels;
 
     @CommandLine.Option(names = { "--trait" },
                         description = "Add a trait configuration to the integration. Use name values pairs like \"--trait trait.name.config=hello\".")
-    String[] traits;
+    protected String[] traits;
 
     @CommandLine.Option(names = { "--image" },
                         description = "The image name to be built.")
-    String image;
+    protected String image;
 
     @CommandLine.Option(names = { "--image-registry" },
-                        defaultValue = "quay.io",
                         description = "The image registry to hold the app container image.")
-    String imageRegistry = "quay.io";
+    protected String imageRegistry;
 
     @CommandLine.Option(names = { "--image-group" },
                         description = "The image registry group used to push images to.")
-    String imageGroup;
+    protected String imageGroup;
 
     public KubernetesExport(CamelJBangMain main) {
         super(main);
     }
 
-    public KubernetesExport(CamelJBangMain main, RuntimeType runtime, String[] files, String exportDir, boolean quiet) {
+    public KubernetesExport(CamelJBangMain main, String[] files) {
         super(main);
 
-        this.runtime = runtime;
         this.files = Arrays.asList(files);
-        this.exportDir = exportDir;
-        this.quiet = quiet;
     }
 
     public KubernetesExport(CamelJBangMain main, ExportConfigurer configurer) {
@@ -137,60 +139,73 @@ class KubernetesExport extends Export {
             runtime = RuntimeType.quarkus;
         }
 
-        List<String> exportDependencies = new ArrayList<>();
-        if (dependencies != null) {
-            String[] deps = dependencies.split(",");
-            exportDependencies.addAll(Arrays.asList(deps));
-
-        }
-        exportDependencies.add("camel:cli-connector");
-        exportDependencies.add("io.quarkus:quarkus-kubernetes");
-
-        // Mutually exclusive image build plugins - use Jib by default
-        if (!exportDependencies.contains("io.quarkus:quarkus-container-image-docker")) {
-            exportDependencies.add("io.quarkus:quarkus-container-image-jib");
-        }
-
-        // TODO: remove when fixed kubernetes-client version is part of the Quarkus platform
-        // pin kubernetes-client to this version because of https://github.com/fabric8io/kubernetes-client/issues/6059
-        exportDependencies.add("io.fabric8:kubernetes-client:6.13.1");
-
-        dependencies = String.join(",", exportDependencies);
-
-        additionalProperties = Optional.ofNullable(additionalProperties).orElse("");
-
         Map<String, String> exportProps = new HashMap<>();
-
         String resolvedImageRegistry = resolveImageRegistry();
-        if (resolvedImageRegistry != null) {
-            exportProps.put("quarkus.container-image.registry", resolvedImageRegistry);
-
-            if (resolvedImageRegistry.startsWith("localhost")) {
-                exportProps.put("quarkus.container-image.insecure", "true");
-            }
-        }
 
         String resolvedImageGroup = null;
         if (image != null) {
             resolvedImageGroup = extractImageGroup(image);
         } else if (imageGroup != null) {
             resolvedImageGroup = imageGroup;
+        } else if (gav != null) {
+            var groupId = parseMavenGav(gav).getGroupId();
+            var dotToks = groupId.split("\\.");
+            resolvedImageGroup = dotToks[dotToks.length - 1];
+        }
+
+        if (runtime == RuntimeType.quarkus) {
+
+            // Quarkus specific dependencies
+            addDependencies("io.quarkus:quarkus-kubernetes", "camel:cli-connector");
+
+            // TODO: remove when fixed kubernetes-client version is part of the Quarkus platform
+            // pin kubernetes-client to this version because of https://github.com/fabric8io/kubernetes-client/issues/6059
+            addDependencies("io.fabric8:kubernetes-client:6.13.1");
+
+            // Mutually exclusive image build plugins - use Jib by default
+            if (!getDependenciesList().contains("io.quarkus:quarkus-container-image-docker")) {
+                addDependencies("io.quarkus:quarkus-container-image-jib");
+            }
+
+            // Quarkus specific properties
+            exportProps.put("quarkus.container-image.build", "true");
+        }
+
+        String propPrefix;
+        if (runtime == RuntimeType.springBoot) {
+            propPrefix = "camel.springboot";
+        } else {
+            propPrefix = runtime.runtime();
         }
 
         if (resolvedImageGroup != null) {
-            exportProps.put("quarkus.container-image.group", resolvedImageGroup);
+            exportProps.put("%s.container-image.group".formatted(propPrefix), resolvedImageGroup);
         }
 
-        if (additionalProperties.isEmpty()) {
-            additionalProperties = exportProps.entrySet().stream()
-                    .map(entry -> "%s=%s".formatted(entry.getKey(), entry.getValue())).collect(Collectors.joining(","));
-        } else {
-            additionalProperties += "," + exportProps.entrySet().stream()
-                    .map(entry -> "%s=%s".formatted(entry.getKey(), entry.getValue())).collect(Collectors.joining(","));
+        if (resolvedImageRegistry != null) {
+            var allowInsecure = resolvedImageRegistry.startsWith("localhost");
+            exportProps.put("%s.container-image.registry".formatted(propPrefix), resolvedImageRegistry);
+            exportProps.put("%s.container-image.insecure".formatted(propPrefix), "%b".formatted(allowInsecure));
         }
+
+        additionalProperties = Optional.ofNullable(additionalProperties).map(str -> str + ",").orElse("");
+        additionalProperties += exportProps.entrySet().stream()
+                .map(entry -> "%s=%s".formatted(entry.getKey(), entry.getValue())).collect(Collectors.joining(","));
 
         String projectName = getProjectName();
-        TraitContext context = new TraitContext(projectName, getVersion());
+        CamelCatalog catalog = CatalogHelper.loadCatalog(runtime, runtime.version());
+
+        List<Source> sources;
+        try {
+            sources = SourceHelper.resolveSources(files);
+        } catch (Exception e) {
+            if (!quiet) {
+                printer().printf("Project export failed - %s%n", e.getMessage());
+            }
+            return 1;
+        }
+
+        TraitContext context = new TraitContext(projectName, getVersion(), printer(), catalog, sources);
         if (annotations != null) {
             context.addAnnotations(Arrays.stream(annotations)
                     .map(item -> item.split("="))
@@ -198,48 +213,50 @@ class KubernetesExport extends Export {
                     .collect(Collectors.toMap(parts -> parts[0], parts -> parts[1])));
         }
 
-        if (labels != null) {
-            context.addLabels(Arrays.stream(labels)
-                    .map(item -> item.split("="))
-                    .filter(parts -> parts.length == 2)
-                    .collect(Collectors.toMap(parts -> parts[0], parts -> parts[1])));
-        }
+        labels = Optional.ofNullable(labels).orElse(new String[0]);
+        context.addLabels(Arrays.stream(labels)
+                .map(item -> item.split("="))
+                .filter(parts -> parts.length == 2)
+                .collect(Collectors.toMap(parts -> parts[0], parts -> parts[1])));
 
         if (traitProfile != null) {
             context.setProfile(TraitProfile.valueOf(traitProfile));
         }
 
-        Traits traitsSpec;
-        if (traits != null && traits.length > 0) {
-            traitsSpec = TraitHelper.parseTraits(traits);
-        } else {
-            traitsSpec = new Traits();
+        if (serviceAccount != null) {
+            context.setServiceAccount(serviceAccount);
         }
+
+        Traits traitsSpec = getTraitSpec();
 
         TraitHelper.configureMountTrait(traitsSpec, configs, resources, volumes);
         TraitHelper.configureOpenApiSpec(traitsSpec, openApis);
         TraitHelper.configureProperties(traitsSpec, properties);
-        TraitHelper.configureContainerImage(traitsSpec, image, resolvedImageRegistry, resolvedImageGroup, projectName,
-                getVersion());
+        TraitHelper.configureContainerImage(traitsSpec, image,
+                resolvedImageRegistry, resolvedImageGroup, projectName, getVersion());
         TraitHelper.configureEnvVars(traitsSpec, envVars);
         TraitHelper.configureConnects(traitsSpec, connects);
 
+        Container container = traitsSpec.getContainer();
+
         // Need to set quarkus.container properties, otherwise these settings get overwritten by Quarkus
-        if (RuntimeType.quarkus == runtime && traitsSpec.getContainer() != null) {
-            if (traitsSpec.getContainer().getName() != null && !traitsSpec.getContainer().getName().equals(projectName)) {
-                additionalProperties += ",quarkus.kubernetes.container-name=%s".formatted(traitsSpec.getContainer().getName());
+        if (container.getName() != null && !container.getName().equals(projectName)) {
+            additionalProperties += ",%s.kubernetes.container-name=%s".formatted(propPrefix, container.getName());
+        }
+        if (container.getImage() != null) {
+            additionalProperties += ",%s.kubernetes.image-name=%s".formatted(propPrefix, container.getImage());
+        }
+        if (container.getPort() != null) {
+            additionalProperties += "%s.kubernetes.ports.%s.container-port=%s".formatted(propPrefix,
+                    Optional.ofNullable(container.getPortName()).orElse(ContainerTrait.DEFAULT_CONTAINER_PORT_NAME),
+                    container.getPort());
+        }
+        if (container.getImagePullPolicy() != null) {
+            var imagePullPolicy = container.getImagePullPolicy().getValue();
+            if (runtime == RuntimeType.quarkus) {
+                imagePullPolicy = StringHelper.camelCaseToDash(imagePullPolicy);
             }
-
-            if (traitsSpec.getContainer().getPort() != null) {
-                additionalProperties += ",quarkus.kubernetes.ports.%s.container-port=%s"
-                        .formatted(Optional.ofNullable(traitsSpec.getContainer().getPortName())
-                                .orElse(ContainerTrait.DEFAULT_CONTAINER_PORT_NAME), traitsSpec.getContainer().getPort());
-            }
-
-            if (traitsSpec.getContainer().getImagePullPolicy() != null) {
-                additionalProperties += ",quarkus.kubernetes.image-pull-policy=%s"
-                        .formatted(StringHelper.camelCaseToDash(traitsSpec.getContainer().getImagePullPolicy().getValue()));
-            }
+            additionalProperties += ",%s.kubernetes.image-pull-policy=%s".formatted(propPrefix, imagePullPolicy);
         }
 
         // run export
@@ -255,19 +272,7 @@ class KubernetesExport extends Export {
             printer().println("Building Kubernetes manifest ...");
         }
 
-        if (traitProfile != null) {
-            new TraitCatalog().traitsForProfile(TraitProfile.valueOf(traitProfile.toUpperCase(Locale.US))).forEach(t -> {
-                if (t.configure(traitsSpec, context)) {
-                    t.apply(traitsSpec, context);
-                }
-            });
-        } else {
-            new TraitCatalog().allTraits().forEach(t -> {
-                if (t.configure(traitsSpec, context)) {
-                    t.apply(traitsSpec, context);
-                }
-            });
-        }
+        new TraitCatalog().apply(traitsSpec, context, traitProfile);
 
         String yaml = context.buildItems().stream().map(KubernetesHelper::dumpYaml).collect(Collectors.joining("---\n"));
         safeCopy(new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)),
@@ -278,6 +283,26 @@ class KubernetesExport extends Export {
         }
 
         return 0;
+    }
+
+    protected Integer export(ExportBaseCommand cmd) throws Exception {
+        if (runtime == RuntimeType.springBoot) {
+            cmd.pomTemplateName = "spring-boot-kubernetes-pom.tmpl";
+        }
+        return super.export(cmd);
+    }
+
+    protected Traits getTraitSpec() {
+        Traits traitsSpec;
+        if (traits != null && traits.length > 0) {
+            traitsSpec = TraitHelper.parseTraits(traits, annotations);
+        } else if (annotations != null && annotations.length > 0) {
+            traitsSpec = TraitHelper.parseTraits(new String[0], annotations);
+        } else {
+            traitsSpec = new Traits();
+        }
+
+        return traitsSpec;
     }
 
     private String resolveImageRegistry() {
@@ -335,7 +360,7 @@ class KubernetesExport extends Export {
     /**
      * Configurer used to customize internal options for the Export command.
      */
-    record ExportConfigurer(RuntimeType runtime,
+    public record ExportConfigurer(RuntimeType runtime,
             String quarkusVersion,
             boolean symbolicLink,
             boolean mavenWrapper,

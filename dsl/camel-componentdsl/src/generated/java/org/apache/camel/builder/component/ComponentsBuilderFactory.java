@@ -3941,6 +3941,45 @@ public interface ComponentsBuilderFactory {
         return SnmpComponentBuilderFactory.snmp();
     }
     /**
+     * Solr (camel-solr)
+     * Perform operations against Apache Lucene Solr.
+     * 
+     * Category: monitoring,search
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-solr
+     * 
+     * @return the dsl builder
+     */
+    static SolrComponentBuilderFactory.SolrComponentBuilder solr() {
+        return SolrComponentBuilderFactory.solr();
+    }
+    /**
+     * Solr (camel-solr)
+     * Perform operations against Apache Lucene Solr.
+     * 
+     * Category: monitoring,search
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-solr
+     * 
+     * @return the dsl builder
+     */
+    static SolrcloudComponentBuilderFactory.SolrcloudComponentBuilder solrcloud() {
+        return SolrcloudComponentBuilderFactory.solrcloud();
+    }
+    /**
+     * Solr (Secure) (camel-solr)
+     * Perform operations against Apache Lucene Solr.
+     * 
+     * Category: monitoring,search
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-solr
+     * 
+     * @return the dsl builder
+     */
+    static SolrsComponentBuilderFactory.SolrsComponentBuilder solrs() {
+        return SolrsComponentBuilderFactory.solrs();
+    }
+    /**
      * Splunk (camel-splunk)
      * Publish or search for events in Splunk.
      * 
@@ -4176,6 +4215,20 @@ public interface ComponentsBuilderFactory {
      */
     static StubComponentBuilderFactory.StubComponentBuilder stub() {
         return StubComponentBuilderFactory.stub();
+    }
+    /**
+     * Tahu (camel-tahu)
+     * Sparkplug B Edge Node and Host Application support over MQTT using
+     * Eclipse Tahu
+     * 
+     * Category: messaging,iot,monitoring
+     * Since: 4.0
+     * Maven coordinates: org.apache.camel:camel-tahu
+     * 
+     * @return the dsl builder
+     */
+    static org.apache.camel.builder.component.dsl.TahuComponentBuilderFactory.TahuComponentBuilder tahu() {
+        return org.apache.camel.builder.component.dsl.TahuComponentBuilderFactory.tahu();
     }
     /**
      * Telegram (camel-telegram)
